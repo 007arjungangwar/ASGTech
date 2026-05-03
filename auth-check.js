@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v6",
+    cacheName: "asg-tech-v7",
     publicPages: [
         "",
         "index.html",
@@ -147,23 +147,12 @@ function checkPageAccess() {
 }
 
 function navigationGroups(user) {
-    const loggedIn = Boolean(user);
     const admin = user && user.role === "admin";
 
-    const publicLink = (label, page) => ({ label, page, public: true });
     const studentLink = (label, page) => ({ label, page, student: true });
     const adminLink = (label, page) => ({ label, page, admin: true });
 
     const groups = [
-        {
-            title: "Institute",
-            items: [
-                publicLink("Home", "index.html"),
-                publicLink("Blog", "blog.html"),
-                publicLink("Projects", "projects.html"),
-                publicLink("About", "about.html")
-            ]
-        },
         {
             title: "Learn",
             items: [
@@ -230,7 +219,7 @@ function quickActions(user) {
     return [
         { label: "Programs", page: "courses.html", locked: true },
         { label: "Register", page: "login.html" },
-        { label: "Projects", page: "projects.html", public: true }
+        { label: "Practice", page: "coding-practice.html", locked: true }
     ];
 }
 

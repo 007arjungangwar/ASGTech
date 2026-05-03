@@ -91,6 +91,16 @@
                         <input id="quizTopic" type="text" placeholder="Python">
                     </label>
                     <label>
+                        <span>Quiz</span>
+                        <select id="quizSet" onchange="syncQuizTopicFromSet()">
+                            <option value="python">Quiz 1: Python</option>
+                            <option value="machine-learning">Quiz 2: Machine Learning</option>
+                            <option value="pandas">Quiz 3: Pandas</option>
+                            <option value="numpy">Quiz 4: NumPy</option>
+                            <option value="deep-learning">Quiz 5: Deep Learning</option>
+                        </select>
+                    </label>
+                    <label>
                         <span>Difficulty</span>
                         <select id="quizDifficulty">
                             <option>Beginner</option>
@@ -238,6 +248,7 @@
 
         let quizQuestions = [];
         let codingChallenges = [];
+        const adminQuizCatalog = asgGetQuizCatalog();
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -292,6 +303,7 @@
             const stats = [
                 { label: "Registered users", value: users.length },
                 { label: "Students", value: students.length },
+                { label: "Quiz sets", value: adminQuizCatalog.length },
                 { label: "Active quiz questions", value: activeQuiz },
                 { label: "Active coding challenges", value: activeCoding },
                 { label: "Average quiz score", value: percentage(averageQuiz) },
@@ -399,6 +411,7 @@
             document.getElementById("quizEditId").value = "";
             document.getElementById("quizTitle").value = "";
             document.getElementById("quizTopic").value = "General";
+            document.getElementById("quizSet").value = "python";
             document.getElementById("quizDifficulty").value = "Beginner";
             document.getElementById("quizStatus").value = "active";
             document.getElementById("quizPrompt").value = "";
@@ -408,10 +421,21 @@
             document.getElementById("quizOptionD").value = "";
             document.getElementById("quizCorrect").value = "a";
             document.getElementById("quizExplanation").value = "";
+            syncQuizTopicFromSet(true);
+        }
+
+        function syncQuizTopicFromSet(force = false) {
+            const quiz = asgGetQuizById(document.getElementById("quizSet").value);
+            const topicInput = document.getElementById("quizTopic");
+            const knownTopics = adminQuizCatalog.map((item) => item.topic);
+            if (force || !topicInput.value.trim() || topicInput.value === "General" || knownTopics.includes(topicInput.value.trim())) {
+                topicInput.value = quiz.topic;
+            }
         }
 
         function saveQuizQuestion() {
             const editId = document.getElementById("quizEditId").value;
+            const selectedQuiz = asgGetQuizById(document.getElementById("quizSet").value);
             const options = [
                 { id: "a", text: optionValue("quizOptionA") },
                 { id: "b", text: optionValue("quizOptionB") },
@@ -432,8 +456,9 @@
 
             const question = {
                 id: editId || asgCreateId("quiz"),
+                quizId: selectedQuiz.id,
                 title: document.getElementById("quizTitle").value.trim() || "Skill question",
-                topic: document.getElementById("quizTopic").value.trim() || "General",
+                topic: document.getElementById("quizTopic").value.trim() || selectedQuiz.topic,
                 difficulty: document.getElementById("quizDifficulty").value,
                 prompt: document.getElementById("quizPrompt").value.trim(),
                 options,
@@ -461,6 +486,7 @@
             document.getElementById("quizEditId").value = question.id;
             document.getElementById("quizTitle").value = question.title;
             document.getElementById("quizTopic").value = question.topic;
+            document.getElementById("quizSet").value = asgGetQuizById(question.quizId).id;
             document.getElementById("quizDifficulty").value = question.difficulty;
             document.getElementById("quizStatus").value = question.status;
             document.getElementById("quizPrompt").value = question.prompt;
@@ -495,7 +521,7 @@
             list.innerHTML = quizQuestions.map((question, index) => `
                 <article class="asg-admin-list-item">
                     <div>
-                        <span class="asg-item-kicker">${question.status} | ${escapeHtml(question.topic)} | ${escapeHtml(question.difficulty)}</span>
+                        <span class="asg-item-kicker">${question.status} | ${escapeHtml(asgGetQuizById(question.quizId).title)} | ${escapeHtml(question.topic)} | ${escapeHtml(question.difficulty)}</span>
                         <h3>${index + 1}. ${escapeHtml(question.title)}</h3>
                         <p>${escapeHtml(question.prompt)}</p>
                     </div>
@@ -683,7 +709,7 @@
 
         function renderRecentActivity() {
             const quizActivity = asgGetQuizAttempts().map((attempt) => ({
-                type: "Quiz",
+                type: attempt.quizTitle || "Quiz",
                 name: attempt.studentName,
                 score: percentage(attempt.percentage),
                 date: attempt.submittedAt
@@ -709,6 +735,7 @@
         function exportAdminData() {
             const data = {
                 users: getUsers(),
+                quizCatalog: adminQuizCatalog,
                 quizQuestions: asgGetQuizQuestions(true),
                 quizAttempts: asgGetQuizAttempts(),
                 codingChallenges: asgGetCodingChallenges(true),

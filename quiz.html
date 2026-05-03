@@ -34,6 +34,7 @@
             </div>
         </section>
 
+        <section class="asg-quiz-picker" id="quizSelector" aria-label="Available quizzes"></section>
         <section class="asg-live-panel" id="quizMount"></section>
         <section class="asg-live-panel" id="quizResult" hidden></section>
     </main>
@@ -44,8 +45,20 @@
 
     <script>
         const quizUser = getCurrentUser();
+        const quizCatalog = asgGetQuizCatalog();
         let quizQuestions = [];
+        let activeQuizId = getInitialQuizId();
         let quizSubmitted = false;
+
+        function getInitialQuizId() {
+            const params = new URLSearchParams(window.location.search);
+            const requestedQuiz = params.get("quiz") || localStorage.getItem("asgSelectedQuizId") || "python";
+            return asgGetQuizById(requestedQuiz).id;
+        }
+
+        function getActiveQuiz() {
+            return asgGetQuizById(activeQuizId);
+        }
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -57,7 +70,7 @@
         }
 
         function updateQuizStats() {
-            const attempts = asgGetQuizAttempts(quizUser);
+            const attempts = asgGetQuizAttempts(quizUser, activeQuizId);
             const best = attempts.length
                 ? Math.round(Math.max(...attempts.map((attempt) => Number(attempt.percentage || 0))))
                 : 0;
@@ -67,11 +80,50 @@
             document.getElementById("quizAttemptCount").textContent = attempts.length;
         }
 
+        function renderQuizSelector() {
+            const allQuestions = asgGetQuizQuestions(false);
+            const selector = document.getElementById("quizSelector");
+
+            selector.innerHTML = quizCatalog.map((quiz) => {
+                const questionCount = allQuestions.filter((question) => question.quizId === quiz.id).length;
+                const attempts = asgGetQuizAttempts(quizUser, quiz.id);
+                const best = attempts.length
+                    ? Math.round(Math.max(...attempts.map((attempt) => Number(attempt.percentage || 0))))
+                    : 0;
+
+                return `
+                    <button
+                        class="asg-quiz-card ${quiz.id === activeQuizId ? "active" : ""}"
+                        type="button"
+                        onclick="selectQuiz('${quiz.id}')"
+                    >
+                        <span>${escapeHtml(quiz.title)}</span>
+                        <strong>${questionCount} questions</strong>
+                        <small>${attempts.length} attempts | Best ${best}%</small>
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function selectQuiz(quizId) {
+            activeQuizId = asgGetQuizById(quizId).id;
+            quizSubmitted = false;
+            localStorage.setItem("asgSelectedQuizId", activeQuizId);
+
+            const url = new URL(window.location.href);
+            url.searchParams.set("quiz", activeQuizId);
+            window.history.replaceState({}, "", url);
+
+            renderQuiz();
+        }
+
         function renderQuiz() {
-            quizQuestions = asgGetQuizQuestions();
+            const activeQuiz = getActiveQuiz();
+            quizQuestions = asgGetQuizQuestions(false, activeQuiz.id);
             const mount = document.getElementById("quizMount");
             const result = document.getElementById("quizResult");
 
+            renderQuizSelector();
             updateQuizStats();
             result.hidden = true;
             mount.hidden = false;
@@ -79,8 +131,8 @@
             if (!quizQuestions.length) {
                 mount.innerHTML = `
                     <div class="asg-empty-state">
-                        <h2>No active quiz questions yet</h2>
-                        <p>Your admin can publish questions from the dashboard. They will appear here automatically.</p>
+                        <h2>No active questions in ${escapeHtml(activeQuiz.title)}</h2>
+                        <p>Your admin can publish questions from the dashboard.</p>
                     </div>
                 `;
                 return;
@@ -89,8 +141,8 @@
             mount.innerHTML = `
                 <div class="asg-section-header">
                     <div>
-                        <h2>Current quiz</h2>
-                        <p>${quizQuestions.length} questions. Correct answers stay hidden until you submit.</p>
+                        <h2>${escapeHtml(activeQuiz.title)}</h2>
+                        <p>${escapeHtml(activeQuiz.description)}</p>
                     </div>
                     <button class="btn-secondary" type="button" onclick="clearQuizSelection()">Clear answers</button>
                 </div>
@@ -161,7 +213,10 @@
             const score = answers.filter((answer) => answer.isCorrect).length;
             const total = quizQuestions.length;
             const percentage = Math.round((score / total) * 100);
+            const activeQuiz = getActiveQuiz();
             const savedAttempt = asgSaveQuizAttempt({
+                quizId: activeQuiz.id,
+                quizTitle: activeQuiz.title,
                 score,
                 total,
                 percentage,
@@ -171,6 +226,7 @@
             quizSubmitted = true;
             renderResult(savedAttempt);
             updateQuizStats();
+            renderQuizSelector();
         }
 
         function renderResult(attempt) {

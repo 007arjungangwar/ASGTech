@@ -1211,10 +1211,10 @@ button {
     padding: 0 15px;
     border-radius: 8px;
     border: 1px solid transparent;
-    background: linear-gradient(135deg, var(--asg-primary), #14b8a6);
+    background: linear-gradient(135deg, #be123c, #fb7185);
     color: white;
     font-weight: 800;
-    box-shadow: 0 10px 20px rgba(15, 118, 110, 0.16);
+    box-shadow: 0 10px 20px rgba(190, 18, 60, 0.16);
 }
 
 .asg-quick-button:hover {
@@ -1223,14 +1223,14 @@ button {
 }
 
 .asg-quick-button-2 {
-    background: linear-gradient(135deg, var(--asg-blue), #38bdf8);
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.14);
+    background: linear-gradient(135deg, #0e7490, #22d3ee);
+    box-shadow: 0 10px 20px rgba(14, 116, 144, 0.15);
 }
 
 .asg-quick-button-3 {
-    background: linear-gradient(135deg, var(--asg-accent), #fbbf24);
-    color: #281600;
-    box-shadow: 0 10px 20px rgba(245, 158, 11, 0.16);
+    background: linear-gradient(135deg, #7c2d12, #f97316);
+    color: white;
+    box-shadow: 0 10px 20px rgba(124, 45, 18, 0.16);
 }
 
 .asg-menu-group {
@@ -1311,38 +1311,38 @@ button {
 }
 
 .asg-menu-group:nth-child(2) .asg-menu-heading {
-    background: linear-gradient(135deg, var(--asg-blue), #38bdf8);
-    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.14);
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    box-shadow: 0 10px 22px rgba(79, 70, 229, 0.14);
 }
 
 .asg-menu-group:nth-child(3) .asg-menu-heading {
-    background: linear-gradient(135deg, #d97706, var(--asg-accent));
-    box-shadow: 0 10px 22px rgba(245, 158, 11, 0.16);
+    background: linear-gradient(135deg, #2563eb, #60a5fa);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.15);
 }
 
 .asg-menu-group:nth-child(4) .asg-menu-heading {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    box-shadow: 0 10px 22px rgba(79, 70, 229, 0.15);
-}
-
-.asg-menu-group:nth-child(5) .asg-menu-heading {
     background: linear-gradient(135deg, var(--asg-ink), #475569);
     box-shadow: 0 10px 22px rgba(23, 32, 51, 0.16);
 }
 
+.asg-menu-group:nth-child(5) .asg-menu-heading {
+    background: linear-gradient(135deg, #7c3aed, #c084fc);
+    box-shadow: 0 10px 22px rgba(124, 58, 237, 0.16);
+}
+
 .asg-menu-group:nth-child(2) .asg-menu-heading.active,
 .asg-menu-group:nth-child(2) .asg-menu-heading:hover {
-    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 14px 28px rgba(79, 70, 229, 0.2);
 }
 
 .asg-menu-group:nth-child(3) .asg-menu-heading.active,
 .asg-menu-group:nth-child(3) .asg-menu-heading:hover {
-    box-shadow: 0 14px 28px rgba(245, 158, 11, 0.22);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.2);
 }
 
 .asg-menu-group:nth-child(4) .asg-menu-heading.active,
 .asg-menu-group:nth-child(4) .asg-menu-heading:hover {
-    box-shadow: 0 14px 28px rgba(79, 70, 229, 0.22);
+    box-shadow: 0 14px 28px rgba(23, 32, 51, 0.22);
 }
 
 .asg-menu-items {
@@ -2126,6 +2126,57 @@ body.has-asg-shell select {
     margin-bottom: 12px;
 }
 
+.asg-quiz-picker {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.asg-quiz-card {
+    display: grid;
+    gap: 5px;
+    min-height: 118px;
+    padding: 16px;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: white;
+    color: var(--asg-ink);
+    cursor: pointer;
+    text-align: left;
+    box-shadow: 0 12px 30px rgba(23, 32, 51, 0.05);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.asg-quiz-card span {
+    color: var(--asg-primary-dark);
+    font-size: 0.78rem;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.asg-quiz-card strong {
+    color: var(--asg-ink);
+    font-size: 1.15rem;
+    line-height: 1.2;
+}
+
+.asg-quiz-card small {
+    color: var(--asg-muted);
+    font-weight: 700;
+}
+
+.asg-quiz-card:hover,
+.asg-quiz-card.active {
+    border-color: var(--asg-primary);
+    box-shadow: 0 16px 36px rgba(15, 118, 110, 0.12);
+    transform: translateY(-1px);
+}
+
+.asg-quiz-card.active {
+    background: #f0fdfa;
+}
+
 .asg-hero-metrics,
 .asg-admin-status {
     display: grid;
@@ -2478,7 +2529,7 @@ body.has-asg-shell select {
 
 .asg-admin-stat-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
     margin-bottom: 22px;
 }
@@ -2643,6 +2694,10 @@ body.has-asg-shell select {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
+    .asg-quiz-picker {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .asg-admin-layout,
     .asg-practice-shell {
         grid-template-columns: 1fr;
@@ -2664,6 +2719,7 @@ body.has-asg-shell select {
 
     .asg-hero-metrics,
     .asg-admin-stat-grid,
+    .asg-quiz-picker,
     .asg-builder-grid,
     .asg-detail-card dl {
         grid-template-columns: 1fr;
