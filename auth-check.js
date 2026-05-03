@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v4",
+    cacheName: "asg-tech-v5",
     publicPages: [
         "",
         "index.html",
@@ -215,14 +215,13 @@ function quickActions(user) {
     if (user && user.role === "admin") {
         return [
             { label: "Dashboard", page: "admin.html" },
-            { label: "Coding", page: "coding-practice.html" },
-            { label: "Student View", page: "roadmap.html" }
+            { label: "Practice", page: "coding-practice.html" },
+            { label: "Ask Doubt", page: "questions.html" }
         ];
     }
 
     if (user) {
         return [
-            { label: "Continue", page: "roadmap.html" },
             { label: "Practice", page: "coding-practice.html" },
             { label: "Ask Doubt", page: "questions.html" }
         ];
@@ -249,7 +248,12 @@ function renderTopNavigation(user) {
     if (!nav) return;
 
     const loggedIn = Boolean(user);
-    const groups = navigationGroups(user);
+    const publicTopLinks = [
+        { label: "Home", page: "index.html", public: true },
+        { label: "Blog", page: "blog.html", public: true },
+        { label: "Projects", page: "projects.html", public: true },
+        { label: "About", page: "about.html", public: true }
+    ];
 
     nav.className = "asg-navbar";
     nav.innerHTML = `
@@ -263,37 +267,11 @@ function renderTopNavigation(user) {
             </a>
 
             <div class="nav-links asg-top-links" aria-label="Main navigation">
-                ${groups.map((group, index) => {
-                    const activeGroup = group.items.some((item) => isActive(item.page));
-                    return `
-                    <div class="asg-nav-group ${activeGroup ? "active" : ""}">
-                        <button
-                            type="button"
-                            class="asg-nav-button"
-                            aria-expanded="false"
-                            aria-controls="asg-nav-menu-${index}"
-                            onclick="toggleNavGroup('asg-nav-menu-${index}', this)"
-                        >
-                            <span>${group.title}</span>
-                            <span class="asg-nav-chevron" aria-hidden="true">v</span>
-                        </button>
-                        <div class="asg-nav-dropdown" id="asg-nav-menu-${index}" role="menu">
-                            ${group.items.map((item) => `
-                                <a
-                                    href="${itemHref(item, user)}"
-                                    class="${isActive(item.page) ? "active" : ""}"
-                                    role="menuitem"
-                                >
-                                    <span>${item.label}</span>
-                                    ${!item.public && !user ? `<span class="asg-lock">Login</span>` : ""}
-                                </a>
-                            `).join("")}
-                        </div>
-                    </div>`;
-                }).join("")}
-                ${!loggedIn ? `
-                    <a class="asg-top-plain-link" href="${asgUrl("login.html?mode=register")}">Join</a>
-                ` : ""}
+                ${publicTopLinks.map((item) => `
+                    <a href="${asgUrl(item.page)}" class="${isActive(item.page) ? "active" : ""}">
+                        ${item.label}
+                    </a>
+                `).join("")}
             </div>
 
             <div class="asg-auth-area">
@@ -361,13 +339,13 @@ function renderSidebar(user) {
 
     sidebar.innerHTML = `
         <div class="asg-sidebar-title">
-            <span>${user ? `Welcome, ${asgEscapeHtml(user.name.split(" ")[0])}` : "Student Portal"}</span>
-            <small>${user ? (user.role === "admin" ? "Admin workspace" : "Learning workspace") : "Public preview"}</small>
+            <span>${user ? `Welcome, ${asgEscapeHtml(user.name.split(" ")[0])}` : "Learning Menu"}</span>
+            <small>${user ? (user.role === "admin" ? "Admin workspace" : "Student workspace") : "Sign in to unlock tools"}</small>
         </div>
 
         <div class="asg-quick-actions" aria-label="Primary actions">
-            ${actions.map((action) => `
-                <a href="${itemHref(action, user)}" class="asg-quick-button">
+            ${actions.map((action, index) => `
+                <a href="${itemHref(action, user)}" class="asg-quick-button asg-quick-button-${index + 1}">
                     ${action.label}
                     ${action.locked && !user ? `<span class="asg-lock">Login</span>` : ""}
                 </a>
@@ -375,17 +353,29 @@ function renderSidebar(user) {
         </div>
 
         <div class="asg-menu-groups">
-            ${groups.map((group) => `
+            ${groups.map((group, index) => {
+                const activeGroup = group.items.some((item) => isActive(item.page));
+                return `
                 <section class="asg-menu-group">
-                    <h2>${group.title}</h2>
-                    ${group.items.map((item) => `
-                        <a href="${itemHref(item, user)}" class="${isActive(item.page) ? "active" : ""}">
-                            <span>${item.label}</span>
-                            ${!item.public && !user ? `<span class="asg-lock">Login</span>` : ""}
-                        </a>
-                    `).join("")}
+                    <button
+                        class="asg-menu-heading ${activeGroup ? "active" : ""}"
+                        type="button"
+                        aria-expanded="true"
+                        onclick="toggleSidebarGroup(this)"
+                    >
+                        <span>${group.title}</span>
+                        <small>${group.items.length}</small>
+                    </button>
+                    <div class="asg-menu-items">
+                        ${group.items.map((item) => `
+                            <a href="${itemHref(item, user)}" class="${isActive(item.page) ? "active" : ""}">
+                                <span>${item.label}</span>
+                                ${!item.public && !user ? `<span class="asg-lock">Login</span>` : ""}
+                            </a>
+                        `).join("")}
+                    </div>
                 </section>
-            `).join("")}
+            `;}).join("")}
         </div>
     `;
 
@@ -395,6 +385,14 @@ function renderSidebar(user) {
     } else {
         body.insertBefore(sidebar, body.firstChild);
     }
+}
+
+function toggleSidebarGroup(button) {
+    const group = button.closest(".asg-menu-group");
+    if (!group) return;
+
+    const collapsed = group.classList.toggle("collapsed");
+    button.setAttribute("aria-expanded", String(!collapsed));
 }
 
 function createProfileCircle() {
