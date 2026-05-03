@@ -6,339 +6,761 @@
     <title>Admin Dashboard | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
     <script src="auth-check.js"></script>
-    <style>
-        .admin-header {
-            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
-            padding: 2rem;
-            border-radius: 20px;
-            color: white;
-            margin-bottom: 2rem;
-        }
-        
-        .admin-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-        
-        .admin-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .admin-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #ff9800;
-        }
-        
-        .admin-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1rem 0;
-        }
-        
-        .user-table {
-            width: 100%;
-            overflow-x: auto;
-        }
-        
-        .user-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .user-table th, .user-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #eaeaea;
-        }
-        
-        .user-table th {
-            background: #f5f7fa;
-            font-weight: bold;
-        }
-        
-        .delete-btn {
-            background: #ff4444;
-            color: white;
-            border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .promote-btn {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 0.5rem;
-        }
-    </style>
+    <script src="learning-data.js"></script>
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+    <nav></nav>
+
+    <main class="asg-admin-dashboard">
+        <section class="asg-page-hero asg-admin-hero">
+            <div>
+                <div class="asg-eyebrow">Admin workspace</div>
+                <h1>Admin Dashboard</h1>
+                <p>Manage students, publish quizzes, create Python practice questions, and monitor progress from one place.</p>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <div class="admin-header">
-            <h1>📊 Admin Dashboard</h1>
-            <p>Welcome back, <span id="adminName">Admin</span> (<span id="adminEmail"></span>)</p>
-        </div>
-
-        <div class="admin-stats">
-            <div class="admin-card">
-                <div class="admin-number" id="totalUsers">0</div>
-                <div>Total Users</div>
+            <div class="asg-admin-status">
+                <span>Signed in as</span>
+                <strong id="adminIdentity">Admin</strong>
+                <small id="lastSync">Live data ready</small>
             </div>
-            <div class="admin-card">
-                <div class="admin-number" id="totalStudents">0</div>
-                <div>Students</div>
-            </div>
-            <div class="admin-card">
-                <div class="admin-number" id="totalAdmins">0</div>
-                <div>Admins</div>
-            </div>
-            <div class="admin-card">
-                <div class="admin-number" id="newToday">0</div>
-                <div>New Today</div>
-            </div>
-        </div>
+        </section>
 
-        <div class="admin-section">
-            <h3>👥 All Users</h3>
-            <div class="user-table" id="usersTable"></div>
-        </div>
+        <section class="asg-admin-actions">
+            <button class="btn-primary" type="button" onclick="exportAdminData()">Export Data</button>
+            <a class="btn-secondary" href="quiz.html">Preview Quiz</a>
+            <a class="btn-secondary" href="coding-practice.html">Preview Practice</a>
+            <a class="btn-secondary" href="exam-admin.html">Exam Admin</a>
+        </section>
 
-        <div class="admin-section">
-            <h3>📝 Recent Forum Posts</h3>
-            <div id="forumPosts"></div>
-        </div>
+        <section class="asg-admin-stat-grid" id="adminStats"></section>
 
-        <div class="admin-section">
-            <h3>💬 Student Questions</h3>
-            <div id="studentQuestions"></div>
-        </div>
+        <section class="asg-admin-layout">
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Registered Student Progress</h2>
+                        <p>Progress combines tracker activity, quiz attempts, coding submissions, enrollments, and certificates.</p>
+                    </div>
+                    <input class="asg-admin-search" id="studentSearch" type="search" placeholder="Search students" oninput="renderStudentsTable()">
+                </div>
+                <div class="asg-table-wrap" id="studentsTable"></div>
+                <div class="asg-student-detail" id="studentDetail"></div>
+            </article>
 
-        <div class="admin-section">
-            <h3>📊 System Stats</h3>
-            <div id="systemStats"></div>
-        </div>
+            <article class="asg-live-panel">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Student Announcement</h2>
+                        <p>Show a live notice at the top of student pages.</p>
+                    </div>
+                </div>
+                <form class="asg-admin-form" onsubmit="event.preventDefault(); saveAnnouncement();">
+                    <label>
+                        <span>Title</span>
+                        <input id="noticeTitle" type="text" placeholder="Example: New quiz published">
+                    </label>
+                    <label>
+                        <span>Message</span>
+                        <textarea id="noticeBody" rows="4" placeholder="Write a short update for students."></textarea>
+                    </label>
+                    <label class="asg-inline-check">
+                        <input id="noticeActive" type="checkbox">
+                        <span>Visible to students</span>
+                    </label>
+                    <button class="btn-primary" type="submit">Save Announcement</button>
+                </form>
+            </article>
 
-        <button class="btn-primary" onclick="exportData()">📥 Export All Data</button>
-        <button class="btn-secondary" onclick="clearAllData()" style="margin-left: 1rem;">⚠️ Clear Demo Data</button>
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Quiz Builder</h2>
+                        <p>Create questions here. Students see active questions immediately on the Skill Assessment Quiz page.</p>
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="resetQuizForm()">New Question</button>
+                </div>
+
+                <form class="asg-admin-form asg-builder-grid" id="quizBuilderForm" onsubmit="event.preventDefault(); saveQuizQuestion();">
+                    <input id="quizEditId" type="hidden">
+                    <label>
+                        <span>Title</span>
+                        <input id="quizTitle" type="text" placeholder="Python imports">
+                    </label>
+                    <label>
+                        <span>Topic</span>
+                        <input id="quizTopic" type="text" placeholder="Python">
+                    </label>
+                    <label>
+                        <span>Difficulty</span>
+                        <select id="quizDifficulty">
+                            <option>Beginner</option>
+                            <option>Intermediate</option>
+                            <option>Advanced</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Status</span>
+                        <select id="quizStatus">
+                            <option value="active">Active</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Question</span>
+                        <textarea id="quizPrompt" rows="3" placeholder="Write the question students will answer."></textarea>
+                    </label>
+                    <div class="asg-full-field asg-option-editor">
+                        <div class="asg-question-head">
+                            <span>Answer options</span>
+                            <small>Select the correct option below</small>
+                        </div>
+                        <label><span>A</span><input id="quizOptionA" type="text" placeholder="Option A"></label>
+                        <label><span>B</span><input id="quizOptionB" type="text" placeholder="Option B"></label>
+                        <label><span>C</span><input id="quizOptionC" type="text" placeholder="Option C"></label>
+                        <label><span>D</span><input id="quizOptionD" type="text" placeholder="Option D"></label>
+                    </div>
+                    <label>
+                        <span>Correct option</span>
+                        <select id="quizCorrect">
+                            <option value="a">A</option>
+                            <option value="b">B</option>
+                            <option value="c">C</option>
+                            <option value="d">D</option>
+                        </select>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Explanation</span>
+                        <textarea id="quizExplanation" rows="3" placeholder="Explain why the answer is correct."></textarea>
+                    </label>
+                    <div class="asg-form-actions asg-full-field">
+                        <button class="btn-primary" type="submit">Save Quiz Question</button>
+                        <button class="btn-secondary" type="button" onclick="resetQuizForm()">Clear</button>
+                    </div>
+                </form>
+
+                <div class="asg-admin-list" id="quizQuestionList"></div>
+            </article>
+
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Coding Practice Builder</h2>
+                        <p>Create Python challenges. Students write a function named <code>solution</code> and run the tests you define.</p>
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="resetCodingForm()">New Challenge</button>
+                </div>
+
+                <form class="asg-admin-form asg-builder-grid" id="codingBuilderForm" onsubmit="event.preventDefault(); saveCodingChallenge();">
+                    <input id="codingEditId" type="hidden">
+                    <label>
+                        <span>Title</span>
+                        <input id="codingTitle" type="text" placeholder="Sum of Two Numbers">
+                    </label>
+                    <label>
+                        <span>Topic</span>
+                        <input id="codingTopic" type="text" placeholder="Python Basics">
+                    </label>
+                    <label>
+                        <span>Difficulty</span>
+                        <select id="codingDifficulty">
+                            <option>Beginner</option>
+                            <option>Intermediate</option>
+                            <option>Advanced</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Status</span>
+                        <select id="codingStatus">
+                            <option value="active">Active</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Prompt</span>
+                        <textarea id="codingPrompt" rows="3" placeholder="Explain the coding task clearly."></textarea>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Starter code</span>
+                        <textarea id="codingStarter" class="asg-mini-code" rows="7" spellcheck="false">def solution():
+    pass
+</textarea>
+                    </label>
+                    <div class="asg-full-field">
+                        <div class="asg-question-head">
+                            <span>Test cases</span>
+                            <small>Args must be JSON arrays. Expected can be JSON or plain text.</small>
+                        </div>
+                        <div id="codingTests"></div>
+                        <button class="btn-secondary" type="button" onclick="addCodingTestRow()">Add Test Case</button>
+                    </div>
+                    <div class="asg-form-actions asg-full-field">
+                        <button class="btn-primary" type="submit">Save Coding Challenge</button>
+                        <button class="btn-secondary" type="button" onclick="resetCodingForm()">Clear</button>
+                    </div>
+                </form>
+
+                <div class="asg-admin-list" id="codingChallengeList"></div>
+            </article>
+
+            <article class="asg-live-panel">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Student Questions</h2>
+                        <p>Recent questions from the Q&A page.</p>
+                    </div>
+                </div>
+                <div id="studentQuestions"></div>
+            </article>
+
+            <article class="asg-live-panel">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Recent Activity</h2>
+                        <p>Latest quiz and coding submissions.</p>
+                    </div>
+                </div>
+                <div id="recentActivity"></div>
+            </article>
+        </section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Admin Control Panel</p>
+        <p class="copyright">ASG Tech Institute. Admin control panel.</p>
     </footer>
 
     <script>
-        // Get admin user
-        const admin = getCurrentUser();
-        
-        console.log("Admin check:", admin);
-        
-        if(!admin || admin.role !== 'admin') {
-            alert('Access denied. Admin only area. Please login as admin.');
-            window.location.href = 'login.html';
+        const adminUser = getCurrentUser();
+        if (!adminUser || adminUser.role !== "admin") {
+            alert("Access denied. Please login as an admin.");
+            window.location.href = "login.html?next=admin.html";
+            throw new Error("Admin access required.");
         }
-        
-        // Display admin info
-        document.getElementById('adminName').innerHTML = admin.name;
-        document.getElementById('adminEmail').innerHTML = admin.email;
-        
-        function loadAdminData() {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const students = users.filter(u => u.role === 'student');
-            const admins = users.filter(u => u.role === 'admin');
-            
-            document.getElementById('totalUsers').innerHTML = users.length;
-            document.getElementById('totalStudents').innerHTML = students.length;
-            document.getElementById('totalAdmins').innerHTML = admins.length;
-            
-            // New users today
-            const today = new Date().toDateString();
-            const newToday = users.filter(u => new Date(u.joinDate).toDateString() === today);
-            document.getElementById('newToday').innerHTML = newToday.length;
-            
-            // Users table
-            const usersTable = document.getElementById('usersTable');
-            usersTable.innerHTML = `
-                <table>
+
+        let quizQuestions = [];
+        let codingChallenges = [];
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function readJSON(key, fallback) {
+            try {
+                return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        function formatDate(value) {
+            if (!value) return "No activity";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "No activity";
+            return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        }
+
+        function percentage(value) {
+            return `${Math.round(Number(value || 0))}%`;
+        }
+
+        function getUsers() {
+            return readJSON("users", []);
+        }
+
+        function getStudents() {
+            return getUsers().filter((user) => user.role === "student");
+        }
+
+        function renderStats() {
+            const users = getUsers();
+            const students = getStudents();
+            const attempts = asgGetQuizAttempts();
+            const codingSubmissions = asgGetCodingSubmissions();
+            const activeQuiz = quizQuestions.filter((question) => question.status === "active").length;
+            const activeCoding = codingChallenges.filter((challenge) => challenge.status === "active").length;
+            const averageQuiz = attempts.length
+                ? attempts.reduce((sum, attempt) => sum + Number(attempt.percentage || 0), 0) / attempts.length
+                : 0;
+            const averageCoding = codingSubmissions.length
+                ? codingSubmissions.reduce((sum, submission) => sum + Number(submission.percentage || 0), 0) / codingSubmissions.length
+                : 0;
+
+            const stats = [
+                { label: "Registered users", value: users.length },
+                { label: "Students", value: students.length },
+                { label: "Active quiz questions", value: activeQuiz },
+                { label: "Active coding challenges", value: activeCoding },
+                { label: "Average quiz score", value: percentage(averageQuiz) },
+                { label: "Average coding score", value: percentage(averageCoding) }
+            ];
+
+            document.getElementById("adminStats").innerHTML = stats.map((stat) => `
+                <article class="asg-admin-stat-card">
+                    <strong>${escapeHtml(stat.value)}</strong>
+                    <span>${escapeHtml(stat.label)}</span>
+                </article>
+            `).join("");
+        }
+
+        function renderStudentsTable() {
+            const search = document.getElementById("studentSearch").value.trim().toLowerCase();
+            const students = getStudents().filter((student) => {
+                const text = `${student.name} ${student.email}`.toLowerCase();
+                return text.includes(search);
+            });
+
+            const table = document.getElementById("studentsTable");
+            if (!students.length) {
+                table.innerHTML = `<div class="asg-empty-state"><h2>No students found</h2><p>Registered students will appear here.</p></div>`;
+                return;
+            }
+
+            table.innerHTML = `
+                <table class="asg-admin-table">
                     <thead>
-                        <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr>
+                        <tr>
+                            <th>Student</th>
+                            <th>Roadmap</th>
+                            <th>Best Quiz</th>
+                            <th>Coding</th>
+                            <th>Certificates</th>
+                            <th>Last Activity</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        ${users.map(user => `
-                            <tr>
-                                <td>${user.id}</td>
-                                <td>${user.name}</td>
-                                <td>${user.email}</td>
-                                <td><span class="role-badge role-${user.role}">${user.role}</span></td>
-                                <td>${new Date(user.joinDate).toLocaleDateString()}</td>
-                                <td>
-                                    ${user.role !== 'admin' ? `
-                                        <button class="promote-btn" onclick="promoteToAdmin(${user.id})">Promote</button>
-                                        <button class="delete-btn" onclick="deleteUser(${user.id})">Delete</button>
-                                    ` : 'System Admin'}
-                                </td>
-                            </tr>
-                        `).join('')}
+                        ${students.map((student) => {
+                            const progress = asgGetStudentProgress(student);
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>${escapeHtml(student.name)}</strong>
+                                        <small>${escapeHtml(student.email)}</small>
+                                    </td>
+                                    <td>${percentage(progress.progressPercent)}</td>
+                                    <td>${percentage(progress.bestQuiz)} (${progress.quizAttempts} attempts)</td>
+                                    <td>${progress.codingSolved} solved / ${progress.codingAttempts} runs</td>
+                                    <td>${progress.certificates}</td>
+                                    <td>${formatDate(progress.lastActivity || student.joinDate)}</td>
+                                    <td>
+                                        <button class="asg-link-button" type="button" onclick="showStudentDetail('${student.id}')">View</button>
+                                        <button class="asg-link-button danger" type="button" onclick="deleteStudent('${student.id}')">Delete</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join("")}
                     </tbody>
                 </table>
             `;
-            
-            // Forum posts
-            const forumTopics = JSON.parse(localStorage.getItem('forumTopics') || '[]');
-            const forumDiv = document.getElementById('forumPosts');
-            forumDiv.innerHTML = forumTopics.slice(-10).map(topic => `
-                <div style="padding: 0.5rem; border-bottom: 1px solid #eaeaea;">
-                    <strong>${topic.title}</strong> by ${topic.author}<br>
-                    <small>${topic.replies.length} replies | ${new Date(topic.date).toLocaleDateString()}</small>
+        }
+
+        function showStudentDetail(studentId) {
+            const student = getStudents().find((item) => String(item.id) === String(studentId));
+            if (!student) return;
+
+            const progress = asgGetStudentProgress(student);
+            const latestQuiz = progress.latestQuiz;
+            const latestCoding = progress.latestCoding;
+
+            document.getElementById("studentDetail").innerHTML = `
+                <div class="asg-detail-card">
+                    <div>
+                        <h3>${escapeHtml(student.name)}</h3>
+                        <p>${escapeHtml(student.email)}</p>
+                    </div>
+                    <dl>
+                        <div><dt>Joined</dt><dd>${formatDate(student.joinDate)}</dd></div>
+                        <div><dt>Roadmap</dt><dd>${percentage(progress.progressPercent)}</dd></div>
+                        <div><dt>Best quiz</dt><dd>${percentage(progress.bestQuiz)}</dd></div>
+                        <div><dt>Latest quiz</dt><dd>${latestQuiz ? `${latestQuiz.score}/${latestQuiz.total} (${percentage(latestQuiz.percentage)})` : "No quiz yet"}</dd></div>
+                        <div><dt>Coding solved</dt><dd>${progress.codingSolved}</dd></div>
+                        <div><dt>Latest coding</dt><dd>${latestCoding ? `${escapeHtml(latestCoding.challengeTitle)} (${percentage(latestCoding.percentage)})` : "No coding run yet"}</dd></div>
+                    </dl>
                 </div>
-            `).join('') || '<p>No forum posts yet.</p>';
-            
-            // Student questions
-            const questions = JSON.parse(localStorage.getItem('studentQuestions') || '[]');
-            const questionsDiv = document.getElementById('studentQuestions');
-            questionsDiv.innerHTML = questions.slice(-10).map(q => `
-                <div style="padding: 0.5rem; border-bottom: 1px solid #eaeaea;">
-                    <strong>Q: ${q.question}</strong><br>
-                    From: ${q.name} (${q.email})<br>
-                    <small>${new Date(q.date).toLocaleDateString()}</small>
-                    ${!q.answered ? `<button onclick="answerQuestion(${q.id})" class="btn-primary" style="margin-top: 0.5rem;">Answer</button>` : `<p>A: ${q.answer}</p>`}
-                </div>
-            `).join('') || '<p>No questions yet.</p>';
-            
-            // System stats
-            const totalVisits = localStorage.getItem('totalVisits') || 0;
-            const certificates = JSON.parse(localStorage.getItem('certificates') || '[]');
-            const enrollments = JSON.parse(localStorage.getItem('enrollments') || '[]');
-            
-            document.getElementById('systemStats').innerHTML = `
-                <p>📊 Total Website Visits: ${totalVisits}</p>
-                <p>🎓 Certificates Issued: ${certificates.length}</p>
-                <p>💰 Course Enrollments: ${enrollments.length}</p>
-                <p>📝 Forum Topics: ${forumTopics.length}</p>
-                <p>💬 Student Questions: ${questions.length}</p>
             `;
         }
-        
-        function promoteToAdmin(userId) {
-            let users = JSON.parse(localStorage.getItem('users'));
-            const userIndex = users.findIndex(u => u.id === userId);
-            if(userIndex !== -1) {
-                users[userIndex].role = 'admin';
-                localStorage.setItem('users', JSON.stringify(users));
-                loadAdminData();
-                alert('User promoted to admin!');
-            }
+
+        function deleteStudent(studentId) {
+            if (!confirm("Delete this student account?")) return;
+            const users = getUsers().filter((user) => String(user.id) !== String(studentId));
+            localStorage.setItem("users", JSON.stringify(users));
+            refreshDashboard();
         }
-        
-        function deleteUser(userId) {
-            if(confirm('Are you sure you want to delete this user?')) {
-                let users = JSON.parse(localStorage.getItem('users'));
-                users = users.filter(u => u.id !== userId);
-                localStorage.setItem('users', JSON.stringify(users));
-                loadAdminData();
-                alert('User deleted!');
-            }
+
+        function optionValue(id) {
+            return document.getElementById(id).value.trim();
         }
-        
-        function answerQuestion(questionId) {
-            const answer = prompt('Enter your answer:');
-            if(answer) {
-                let questions = JSON.parse(localStorage.getItem('studentQuestions') || '[]');
-                const qIndex = questions.findIndex(q => q.id === questionId);
-                if(qIndex !== -1) {
-                    questions[qIndex].answered = true;
-                    questions[qIndex].answer = answer;
-                    localStorage.setItem('studentQuestions', JSON.stringify(questions));
-                    loadAdminData();
-                    alert('Answer posted!');
-                }
-            }
+
+        function resetQuizForm() {
+            document.getElementById("quizEditId").value = "";
+            document.getElementById("quizTitle").value = "";
+            document.getElementById("quizTopic").value = "General";
+            document.getElementById("quizDifficulty").value = "Beginner";
+            document.getElementById("quizStatus").value = "active";
+            document.getElementById("quizPrompt").value = "";
+            document.getElementById("quizOptionA").value = "";
+            document.getElementById("quizOptionB").value = "";
+            document.getElementById("quizOptionC").value = "";
+            document.getElementById("quizOptionD").value = "";
+            document.getElementById("quizCorrect").value = "a";
+            document.getElementById("quizExplanation").value = "";
         }
-        
-        function exportData() {
-            const data = {
-                users: JSON.parse(localStorage.getItem('users') || '[]'),
-                forumTopics: JSON.parse(localStorage.getItem('forumTopics') || '[]'),
-                studentQuestions: JSON.parse(localStorage.getItem('studentQuestions') || '[]'),
-                certificates: JSON.parse(localStorage.getItem('certificates') || '[]'),
-                enrollments: JSON.parse(localStorage.getItem('enrollments') || '[]'),
-                exportDate: new Date().toISOString()
+
+        function saveQuizQuestion() {
+            const editId = document.getElementById("quizEditId").value;
+            const options = [
+                { id: "a", text: optionValue("quizOptionA") },
+                { id: "b", text: optionValue("quizOptionB") },
+                { id: "c", text: optionValue("quizOptionC") },
+                { id: "d", text: optionValue("quizOptionD") }
+            ].filter((option) => option.text);
+
+            const correctOption = document.getElementById("quizCorrect").value;
+            if (!document.getElementById("quizPrompt").value.trim() || options.length < 2) {
+                alert("Add a question and at least two answer options.");
+                return;
+            }
+
+            if (!options.some((option) => option.id === correctOption)) {
+                alert("The correct option must have answer text.");
+                return;
+            }
+
+            const question = {
+                id: editId || asgCreateId("quiz"),
+                title: document.getElementById("quizTitle").value.trim() || "Skill question",
+                topic: document.getElementById("quizTopic").value.trim() || "General",
+                difficulty: document.getElementById("quizDifficulty").value,
+                prompt: document.getElementById("quizPrompt").value.trim(),
+                options,
+                correctOption,
+                explanation: document.getElementById("quizExplanation").value.trim(),
+                status: document.getElementById("quizStatus").value,
+                order: editId
+                    ? (quizQuestions.find((item) => item.id === editId) || {}).order
+                    : quizQuestions.length + 1
             };
-            
-            const dataStr = JSON.stringify(data, null, 2);
-            const blob = new Blob([dataStr], {type: 'application/json'});
+
+            const nextQuestions = editId
+                ? quizQuestions.map((item) => item.id === editId ? question : item)
+                : [...quizQuestions, question];
+
+            asgSaveQuizQuestions(nextQuestions);
+            resetQuizForm();
+            refreshDashboard();
+        }
+
+        function editQuizQuestion(questionId) {
+            const question = quizQuestions.find((item) => item.id === questionId);
+            if (!question) return;
+
+            document.getElementById("quizEditId").value = question.id;
+            document.getElementById("quizTitle").value = question.title;
+            document.getElementById("quizTopic").value = question.topic;
+            document.getElementById("quizDifficulty").value = question.difficulty;
+            document.getElementById("quizStatus").value = question.status;
+            document.getElementById("quizPrompt").value = question.prompt;
+            document.getElementById("quizCorrect").value = question.correctOption;
+            document.getElementById("quizExplanation").value = question.explanation || "";
+
+            ["a", "b", "c", "d"].forEach((optionId) => {
+                const option = question.options.find((item) => item.id === optionId);
+                document.getElementById(`quizOption${optionId.toUpperCase()}`).value = option ? option.text : "";
+            });
+
+            document.getElementById("quizBuilderForm").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function deleteQuizQuestion(questionId) {
+            if (!confirm("Delete this quiz question?")) return;
+            asgSaveQuizQuestions(quizQuestions.filter((question) => question.id !== questionId));
+            refreshDashboard();
+        }
+
+        function toggleQuizStatus(questionId) {
+            const nextQuestions = quizQuestions.map((question) => {
+                if (question.id !== questionId) return question;
+                return { ...question, status: question.status === "active" ? "draft" : "active" };
+            });
+            asgSaveQuizQuestions(nextQuestions);
+            refreshDashboard();
+        }
+
+        function renderQuizQuestions() {
+            const list = document.getElementById("quizQuestionList");
+            list.innerHTML = quizQuestions.map((question, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${question.status} | ${escapeHtml(question.topic)} | ${escapeHtml(question.difficulty)}</span>
+                        <h3>${index + 1}. ${escapeHtml(question.title)}</h3>
+                        <p>${escapeHtml(question.prompt)}</p>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editQuizQuestion('${question.id}')">Edit</button>
+                        <button class="asg-link-button" type="button" onclick="toggleQuizStatus('${question.id}')">${question.status === "active" ? "Draft" : "Publish"}</button>
+                        <button class="asg-link-button danger" type="button" onclick="deleteQuizQuestion('${question.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No quiz questions</h2><p>Create the first question above.</p></div>`;
+        }
+
+        function parseExpectedValue(value) {
+            const trimmed = value.trim();
+            if (!trimmed) return "";
+            try {
+                return JSON.parse(trimmed);
+            } catch (error) {
+                return trimmed;
+            }
+        }
+
+        function addCodingTestRow(args = "[]", expected = "") {
+            const container = document.getElementById("codingTests");
+            const row = document.createElement("div");
+            row.className = "asg-test-editor-row";
+            row.innerHTML = `
+                <input type="text" class="coding-test-args" value="${escapeHtml(args)}" placeholder="[3, 5]">
+                <input type="text" class="coding-test-expected" value="${escapeHtml(expected)}" placeholder="8">
+                <button class="asg-link-button danger" type="button" onclick="this.closest('.asg-test-editor-row').remove()">Remove</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function resetCodingForm() {
+            document.getElementById("codingEditId").value = "";
+            document.getElementById("codingTitle").value = "";
+            document.getElementById("codingTopic").value = "Python";
+            document.getElementById("codingDifficulty").value = "Beginner";
+            document.getElementById("codingStatus").value = "active";
+            document.getElementById("codingPrompt").value = "";
+            document.getElementById("codingStarter").value = "def solution():\n    pass\n";
+            document.getElementById("codingTests").innerHTML = "";
+            addCodingTestRow("[3, 5]", "8");
+        }
+
+        function collectCodingTests() {
+            const rows = Array.from(document.querySelectorAll(".asg-test-editor-row"));
+            return rows.map((row) => {
+                const argsRaw = row.querySelector(".coding-test-args").value.trim();
+                const expectedRaw = row.querySelector(".coding-test-expected").value.trim();
+                const args = JSON.parse(argsRaw);
+                if (!Array.isArray(args)) throw new Error("Args must be a JSON array.");
+                return {
+                    args,
+                    expected: parseExpectedValue(expectedRaw)
+                };
+            });
+        }
+
+        function saveCodingChallenge() {
+            const editId = document.getElementById("codingEditId").value;
+            let tests = [];
+
+            try {
+                tests = collectCodingTests();
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            if (!document.getElementById("codingTitle").value.trim() || !document.getElementById("codingPrompt").value.trim()) {
+                alert("Add a title and prompt for this coding challenge.");
+                return;
+            }
+
+            if (!tests.length) {
+                alert("Add at least one test case.");
+                return;
+            }
+
+            const challenge = {
+                id: editId || asgCreateId("practice"),
+                title: document.getElementById("codingTitle").value.trim(),
+                topic: document.getElementById("codingTopic").value.trim() || "Python",
+                difficulty: document.getElementById("codingDifficulty").value,
+                prompt: document.getElementById("codingPrompt").value.trim(),
+                starterCode: document.getElementById("codingStarter").value,
+                tests,
+                status: document.getElementById("codingStatus").value,
+                order: editId
+                    ? (codingChallenges.find((item) => item.id === editId) || {}).order
+                    : codingChallenges.length + 1
+            };
+
+            const nextChallenges = editId
+                ? codingChallenges.map((item) => item.id === editId ? challenge : item)
+                : [...codingChallenges, challenge];
+
+            asgSaveCodingChallenges(nextChallenges);
+            resetCodingForm();
+            refreshDashboard();
+        }
+
+        function editCodingChallenge(challengeId) {
+            const challenge = codingChallenges.find((item) => item.id === challengeId);
+            if (!challenge) return;
+
+            document.getElementById("codingEditId").value = challenge.id;
+            document.getElementById("codingTitle").value = challenge.title;
+            document.getElementById("codingTopic").value = challenge.topic;
+            document.getElementById("codingDifficulty").value = challenge.difficulty;
+            document.getElementById("codingStatus").value = challenge.status;
+            document.getElementById("codingPrompt").value = challenge.prompt;
+            document.getElementById("codingStarter").value = challenge.starterCode;
+            document.getElementById("codingTests").innerHTML = "";
+            challenge.tests.forEach((test) => {
+                addCodingTestRow(JSON.stringify(test.args), typeof test.expected === "string" ? test.expected : JSON.stringify(test.expected));
+            });
+
+            document.getElementById("codingBuilderForm").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function deleteCodingChallenge(challengeId) {
+            if (!confirm("Delete this coding challenge?")) return;
+            asgSaveCodingChallenges(codingChallenges.filter((challenge) => challenge.id !== challengeId));
+            refreshDashboard();
+        }
+
+        function toggleCodingStatus(challengeId) {
+            const nextChallenges = codingChallenges.map((challenge) => {
+                if (challenge.id !== challengeId) return challenge;
+                return { ...challenge, status: challenge.status === "active" ? "draft" : "active" };
+            });
+            asgSaveCodingChallenges(nextChallenges);
+            refreshDashboard();
+        }
+
+        function renderCodingChallenges() {
+            const list = document.getElementById("codingChallengeList");
+            list.innerHTML = codingChallenges.map((challenge, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${challenge.status} | ${escapeHtml(challenge.topic)} | ${escapeHtml(challenge.difficulty)}</span>
+                        <h3>${index + 1}. ${escapeHtml(challenge.title)}</h3>
+                        <p>${escapeHtml(challenge.prompt)}</p>
+                        <small>${challenge.tests.length} tests</small>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editCodingChallenge('${challenge.id}')">Edit</button>
+                        <button class="asg-link-button" type="button" onclick="toggleCodingStatus('${challenge.id}')">${challenge.status === "active" ? "Draft" : "Publish"}</button>
+                        <button class="asg-link-button danger" type="button" onclick="deleteCodingChallenge('${challenge.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No coding challenges</h2><p>Create the first challenge above.</p></div>`;
+        }
+
+        function loadAnnouncement() {
+            const notice = asgGetStudentAnnouncement();
+            document.getElementById("noticeTitle").value = notice.title || "";
+            document.getElementById("noticeBody").value = notice.body || "";
+            document.getElementById("noticeActive").checked = Boolean(notice.active);
+        }
+
+        function saveAnnouncement() {
+            asgSaveStudentAnnouncement({
+                title: document.getElementById("noticeTitle").value,
+                body: document.getElementById("noticeBody").value,
+                active: document.getElementById("noticeActive").checked
+            });
+            refreshDashboard();
+        }
+
+        function renderQuestions() {
+            const questions = readJSON("studentQuestions", []);
+            const target = document.getElementById("studentQuestions");
+
+            target.innerHTML = questions.slice(-6).reverse().map((question) => `
+                <article class="asg-activity-item">
+                    <strong>${escapeHtml(question.question || "Student question")}</strong>
+                    <span>${escapeHtml(question.name || "Student")} | ${formatDate(question.date)}</span>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No questions yet</h2><p>Student Q&A posts will appear here.</p></div>`;
+        }
+
+        function renderRecentActivity() {
+            const quizActivity = asgGetQuizAttempts().map((attempt) => ({
+                type: "Quiz",
+                name: attempt.studentName,
+                score: percentage(attempt.percentage),
+                date: attempt.submittedAt
+            }));
+            const codingActivity = asgGetCodingSubmissions().map((submission) => ({
+                type: "Coding",
+                name: submission.studentName,
+                score: `${submission.passed}/${submission.total}`,
+                date: submission.submittedAt
+            }));
+            const activity = [...quizActivity, ...codingActivity]
+                .sort((left, right) => new Date(right.date || 0) - new Date(left.date || 0))
+                .slice(0, 8);
+
+            document.getElementById("recentActivity").innerHTML = activity.map((item) => `
+                <article class="asg-activity-item">
+                    <strong>${escapeHtml(item.type)}: ${escapeHtml(item.name || "Student")}</strong>
+                    <span>${escapeHtml(item.score)} | ${formatDate(item.date)}</span>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No activity yet</h2><p>Quiz and coding submissions will appear here.</p></div>`;
+        }
+
+        function exportAdminData() {
+            const data = {
+                users: getUsers(),
+                quizQuestions: asgGetQuizQuestions(true),
+                quizAttempts: asgGetQuizAttempts(),
+                codingChallenges: asgGetCodingChallenges(true),
+                codingSubmissions: asgGetCodingSubmissions(),
+                studentQuestions: readJSON("studentQuestions", []),
+                forumTopics: readJSON("forumTopics", []),
+                certificates: readJSON("certificates", []),
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `admin_export_${Date.now()}.json`;
-            a.click();
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `asg_admin_export_${Date.now()}.json`;
+            link.click();
             URL.revokeObjectURL(url);
         }
-        
-        function clearAllData() {
-            if(confirm('WARNING: This will delete ALL data! Are you absolutely sure?')) {
-                if(confirm('FINAL WARNING: This action cannot be undone!')) {
-                    localStorage.clear();
-                    // Re-initialize with admin
-                    const defaultAdmin = [{
-                        id: 1,
-                        name: "ASG Tech Admin",
-                        email: "admin@asgtech.com",
-                        password: "admin123",
-                        role: "admin",
-                        joinDate: new Date().toISOString()
-                    }];
-                    localStorage.setItem('users', JSON.stringify(defaultAdmin));
-                    alert('All data cleared. Page will reload.');
-                    location.reload();
-                }
-            }
+
+        function refreshDashboard() {
+            quizQuestions = asgGetQuizQuestions(true);
+            codingChallenges = asgGetCodingChallenges(true);
+            document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
+            document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
+            renderStats();
+            renderStudentsTable();
+            renderQuizQuestions();
+            renderCodingChallenges();
+            renderQuestions();
+            renderRecentActivity();
         }
-        
-        loadAdminData();
+
+        function handleAdminDataUpdate(event) {
+            const watchedKeys = [
+                ASG_LEARNING_KEYS.quizQuestions,
+                ASG_LEARNING_KEYS.quizAttempts,
+                ASG_LEARNING_KEYS.codingChallenges,
+                ASG_LEARNING_KEYS.codingSubmissions,
+                ASG_LEARNING_KEYS.studentAnnouncement,
+                "users",
+                "studentQuestions"
+            ];
+            const key = event.detail ? event.detail.key : event.key;
+            if (watchedKeys.includes(key)) refreshDashboard();
+        }
+
+        window.addEventListener("asg:data-updated", handleAdminDataUpdate);
+        window.addEventListener("storage", handleAdminDataUpdate);
+
+        resetQuizForm();
+        resetCodingForm();
+        loadAnnouncement();
+        refreshDashboard();
     </script>
 </body>
 </html>

@@ -22,6 +22,7 @@ const ASG_AUTH = {
         "certificate.html",
         "assistant.html",
         "quiz.html",
+        "coding-practice.html",
         "forum.html",
         "videos.html",
         "chat.html",
@@ -95,6 +96,15 @@ function getUserAvatar() {
     return savedAvatar || getUserInitials(user);
 }
 
+function asgEscapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function logout() {
     const confirmed = confirm("Do you want to sign out of ASG Tech?");
     if (!confirmed) return;
@@ -166,6 +176,7 @@ function navigationGroups(user) {
             title: "Practice",
             items: [
                 studentLink("Quiz", "quiz.html"),
+                studentLink("Coding Practice", "coding-practice.html"),
                 studentLink("Progress", "tracker.html"),
                 studentLink("Certificate", "certificate.html"),
                 studentLink("AI Assistant", "assistant.html")
@@ -176,8 +187,7 @@ function navigationGroups(user) {
             items: [
                 studentLink("Q&A", "questions.html"),
                 studentLink("Forum", "forum.html"),
-                studentLink("Live Chat", "chat.html"),
-                studentLink("Profile", "profile.html")
+                studentLink("Live Chat", "chat.html")
             ]
         }
     ];
@@ -194,7 +204,9 @@ function navigationGroups(user) {
 
     return groups.map((group) => ({
         ...group,
-        items: group.items.filter((item) => item.public || loggedIn || admin)
+        items: group.title === "Admin"
+            ? group.items.filter((item) => item.admin && admin)
+            : group.items
     })).filter((group) => group.items.length);
 }
 
@@ -202,7 +214,7 @@ function quickActions(user) {
     if (user && user.role === "admin") {
         return [
             { label: "Dashboard", page: "admin.html" },
-            { label: "Exam Admin", page: "exam-admin.html" },
+            { label: "Coding", page: "coding-practice.html" },
             { label: "Student View", page: "roadmap.html" }
         ];
     }
@@ -210,7 +222,7 @@ function quickActions(user) {
     if (user) {
         return [
             { label: "Continue", page: "roadmap.html" },
-            { label: "Progress", page: "tracker.html" },
+            { label: "Practice", page: "coding-practice.html" },
             { label: "Ask Doubt", page: "questions.html" }
         ];
     }
@@ -236,19 +248,7 @@ function renderTopNavigation(user) {
     if (!nav) return;
 
     const loggedIn = Boolean(user);
-    const visibleTopLinks = loggedIn
-        ? [
-            { label: "Courses", page: "courses.html" },
-            { label: "Roadmap", page: "roadmap.html" },
-            { label: "Progress", page: "tracker.html" },
-            { label: "Community", page: "forum.html" }
-        ]
-        : [
-            { label: "Home", page: "index.html", public: true },
-            { label: "Blog", page: "blog.html", public: true },
-            { label: "Projects", page: "projects.html", public: true },
-            { label: "About", page: "about.html", public: true }
-        ];
+    const groups = navigationGroups(user);
 
     nav.className = "asg-navbar";
     nav.innerHTML = `
@@ -261,12 +261,38 @@ function renderTopNavigation(user) {
                 </span>
             </a>
 
-            <div class="nav-links asg-top-links">
-                ${visibleTopLinks.map((item) => `
-                    <a href="${itemHref(item, user)}" class="${isActive(item.page) ? "active" : ""}">
-                        ${item.label}
-                    </a>
-                `).join("")}
+            <div class="nav-links asg-top-links" aria-label="Main navigation">
+                ${groups.map((group, index) => {
+                    const activeGroup = group.items.some((item) => isActive(item.page));
+                    return `
+                    <div class="asg-nav-group ${activeGroup ? "active" : ""}">
+                        <button
+                            type="button"
+                            class="asg-nav-button"
+                            aria-expanded="false"
+                            aria-controls="asg-nav-menu-${index}"
+                            onclick="toggleNavGroup('asg-nav-menu-${index}', this)"
+                        >
+                            <span>${group.title}</span>
+                            <span class="asg-nav-chevron" aria-hidden="true">v</span>
+                        </button>
+                        <div class="asg-nav-dropdown" id="asg-nav-menu-${index}" role="menu">
+                            ${group.items.map((item) => `
+                                <a
+                                    href="${itemHref(item, user)}"
+                                    class="${isActive(item.page) ? "active" : ""}"
+                                    role="menuitem"
+                                >
+                                    <span>${item.label}</span>
+                                    ${!item.public && !user ? `<span class="asg-lock">Login</span>` : ""}
+                                </a>
+                            `).join("")}
+                        </div>
+                    </div>`;
+                }).join("")}
+                ${!loggedIn ? `
+                    <a class="asg-top-plain-link" href="${asgUrl("login.html?mode=register")}">Join</a>
+                ` : ""}
             </div>
 
             <div class="asg-auth-area">
@@ -278,8 +304,8 @@ function renderTopNavigation(user) {
                         <div class="user-dropdown" id="userDropdown">
                             <div class="dropdown-header">
                                 <div class="dropdown-avatar">${getUserAvatar()}</div>
-                                <div class="dropdown-name">${user.name}</div>
-                                <div class="dropdown-email">${user.email}</div>
+                                <div class="dropdown-name">${asgEscapeHtml(user.name)}</div>
+                                <div class="dropdown-email">${asgEscapeHtml(user.email)}</div>
                             </div>
                             <a href="${asgUrl("profile.html")}" class="dropdown-item">My Profile</a>
                             <a href="${asgUrl("tracker.html")}" class="dropdown-item">My Progress</a>
@@ -297,6 +323,28 @@ function renderTopNavigation(user) {
     `;
 }
 
+function closeNavGroups(exceptMenuId = "") {
+    document.querySelectorAll(".asg-nav-dropdown").forEach((menu) => {
+        if (menu.id !== exceptMenuId) menu.classList.remove("show");
+    });
+
+    document.querySelectorAll(".asg-nav-button").forEach((button) => {
+        if (button.getAttribute("aria-controls") !== exceptMenuId) {
+            button.setAttribute("aria-expanded", "false");
+        }
+    });
+}
+
+function toggleNavGroup(menuId, button) {
+    const menu = document.getElementById(menuId);
+    if (!menu) return;
+
+    const willOpen = !menu.classList.contains("show");
+    closeNavGroups(menuId);
+    menu.classList.toggle("show", willOpen);
+    if (button) button.setAttribute("aria-expanded", String(willOpen));
+}
+
 function renderSidebar(user) {
     const body = document.body;
     if (!body) return;
@@ -312,7 +360,7 @@ function renderSidebar(user) {
 
     sidebar.innerHTML = `
         <div class="asg-sidebar-title">
-            <span>${user ? `Welcome, ${user.name.split(" ")[0]}` : "Student Portal"}</span>
+            <span>${user ? `Welcome, ${asgEscapeHtml(user.name.split(" ")[0])}` : "Student Portal"}</span>
             <small>${user ? (user.role === "admin" ? "Admin workspace" : "Learning workspace") : "Public preview"}</small>
         </div>
 
@@ -391,6 +439,38 @@ function updateHomeDashboard(user) {
     }
 }
 
+function getStudentAnnouncement() {
+    try {
+        const notice = JSON.parse(localStorage.getItem("studentAnnouncement") || "null");
+        if (!notice || !notice.active) return null;
+        if (!notice.title && !notice.body) return null;
+        return notice;
+    } catch (error) {
+        return null;
+    }
+}
+
+function renderStudentAnnouncement(user) {
+    const existing = document.querySelector(".asg-live-notice");
+    if (existing) existing.remove();
+
+    if (!user || user.role === "admin" || getCurrentPage() === "login.html") return;
+
+    const notice = getStudentAnnouncement();
+    if (!notice) return;
+
+    const main = document.querySelector("main");
+    if (!main) return;
+
+    const noticeBox = document.createElement("section");
+    noticeBox.className = "asg-live-notice";
+    noticeBox.innerHTML = `
+        <strong>${asgEscapeHtml(notice.title || "Institute update")}</strong>
+        <span>${asgEscapeHtml(notice.body || "")}</span>
+    `;
+    main.insertBefore(noticeBox, main.firstChild);
+}
+
 function showAuthNotice() {
     const notice = sessionStorage.getItem("authNotice");
     if (!notice || getCurrentPage() !== "login.html") return;
@@ -418,6 +498,7 @@ function updateUIForUser() {
     renderSidebar(user);
     updateWelcomeMessage(user);
     updateHomeDashboard(user);
+    renderStudentAnnouncement(user);
     showAuthNotice();
 }
 
@@ -426,6 +507,19 @@ document.addEventListener("click", function(event) {
     const dropdown = document.getElementById("userDropdown");
     if (account && dropdown && !account.contains(event.target)) {
         dropdown.classList.remove("show");
+    }
+
+    const navGroup = event.target.closest ? event.target.closest(".asg-nav-group") : null;
+    if (!navGroup) closeNavGroups();
+});
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") closeNavGroups();
+});
+
+window.addEventListener("storage", function(event) {
+    if (event.key === "studentAnnouncement") {
+        renderStudentAnnouncement(getCurrentUser());
     }
 });
 

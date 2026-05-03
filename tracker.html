@@ -228,16 +228,40 @@
     </footer>
 
     <script>
+        const trackerUser = getCurrentUser();
+        const progressStorageKey = trackerUser ? `progress_${trackerUser.id}` : 'progress_guest';
+
+        function readSavedProgress() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(progressStorageKey) || '{}');
+                return saved && typeof saved === 'object' ? saved : {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function persistProgress(showAlert = false) {
+            const progress = {};
+            document.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
+                progress[index] = checkbox.checked;
+            });
+            localStorage.setItem(progressStorageKey, JSON.stringify(progress));
+            if (showAlert) alert('Progress saved! Come back anytime to continue.');
+        }
+
         // Load saved progress
         function loadProgress() {
             const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const savedProgress = readSavedProgress();
             checkboxes.forEach((checkbox, index) => {
-                const saved = localStorage.getItem(`progress_${index}`);
-                if (saved === 'true') {
+                const saved = savedProgress[index];
+                const legacySaved = localStorage.getItem(`progress_${index}`);
+                if (saved === true || (saved === undefined && legacySaved === 'true')) {
                     checkbox.checked = true;
                 }
             });
             updateAllProgress();
+            persistProgress(false);
         }
 
         // Update progress for all categories
@@ -280,11 +304,7 @@
 
         // Save progress
         function saveProgress() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach((checkbox, index) => {
-                localStorage.setItem(`progress_${index}`, checkbox.checked);
-            });
-            alert('Progress saved! Come back anytime to continue.');
+            persistProgress(true);
         }
 
         // Reset progress
@@ -295,6 +315,7 @@
                     checkbox.checked = false;
                     localStorage.removeItem(`progress_${index}`);
                 });
+                localStorage.removeItem(progressStorageKey);
                 updateAllProgress();
                 alert('Progress reset. Time to start fresh!');
             }
@@ -302,7 +323,10 @@
 
         // Event listeners
         document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', updateAllProgress);
+            cb.addEventListener('change', () => {
+                updateAllProgress();
+                persistProgress(false);
+            });
         });
 
         document.getElementById('save-progress').addEventListener('click', saveProgress);

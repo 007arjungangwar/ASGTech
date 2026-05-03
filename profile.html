@@ -209,7 +209,10 @@
             
             // Progress
             const progress = JSON.parse(localStorage.getItem(`progress_${user.id}`) || '{}');
-            const topicsCompleted = Object.values(progress).filter(v => v === true).length;
+            const progressValues = Object.values(progress);
+            const topicsCompleted = progressValues.length
+                ? Math.round((progressValues.filter(v => v === true).length / progressValues.length) * 100)
+                : 0;
             document.getElementById('userProgress').innerHTML = `
                 <div class="progress-bar" style="margin: 1rem 0;">
                     <div class="progress-fill" style="width: ${topicsCompleted}%; background: #0066cc; height: 10px; border-radius: 5px;"></div>

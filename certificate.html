@@ -176,6 +176,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
+        const certificateUser = getCurrentUser();
         document.getElementById('certDate').innerHTML = new Date().toLocaleDateString();
         document.getElementById('certNumber').innerHTML = Math.floor(Math.random() * 10000);
         
@@ -200,8 +201,20 @@
                 
                 // Save that user generated certificate
                 let certs = JSON.parse(localStorage.getItem('certificates') || '[]');
-                certs.push({name: name, date: new Date().toISOString()});
+                const certificateRecord = {
+                    name: name,
+                    email: certificateUser ? certificateUser.email : '',
+                    userId: certificateUser ? certificateUser.id : '',
+                    date: new Date().toISOString()
+                };
+                certs.push(certificateRecord);
                 localStorage.setItem('certificates', JSON.stringify(certs));
+
+                if(certificateUser) {
+                    const personalCerts = JSON.parse(localStorage.getItem(`certificates_${certificateUser.id}`) || '[]');
+                    personalCerts.push(certificateRecord);
+                    localStorage.setItem(`certificates_${certificateUser.id}`, JSON.stringify(personalCerts));
+                }
             });
         }
         

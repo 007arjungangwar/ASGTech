@@ -266,15 +266,29 @@
 
     <script>
         let currentCourse = {};
+        const courseUser = getCurrentUser();
         
         function enrollCourse(courseName, type) {
             if(type === 'free') {
                 localStorage.setItem(`enrolled_${courseName}`, 'true');
                 alert(`🎉 You've enrolled in ${courseName} for FREE! Check your email for access.`);
                 // Track enrollment
+                const enrollmentRecord = {
+                    course: courseName,
+                    type: 'free',
+                    userId: courseUser ? courseUser.id : '',
+                    email: courseUser ? courseUser.email : '',
+                    date: new Date().toISOString()
+                };
                 let enrollments = JSON.parse(localStorage.getItem('enrollments') || '[]');
-                enrollments.push({course: courseName, type: 'free', date: new Date().toISOString()});
+                enrollments.push(enrollmentRecord);
                 localStorage.setItem('enrollments', JSON.stringify(enrollments));
+
+                if(courseUser) {
+                    const personalEnrollments = JSON.parse(localStorage.getItem(`enrollments_${courseUser.id}`) || '[]');
+                    personalEnrollments.push(enrollmentRecord);
+                    localStorage.setItem(`enrollments_${courseUser.id}`, JSON.stringify(personalEnrollments));
+                }
             }
         }
         
@@ -305,6 +319,7 @@
                 amount: currentCourse.price,
                 name: name,
                 email: email,
+                userId: courseUser ? courseUser.id : '',
                 phone: document.getElementById('userPhone').value,
                 date: new Date().toISOString()
             });

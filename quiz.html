@@ -2,257 +2,239 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skill Assessment Quiz | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .quiz-container {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
-        
-        .question {
-            margin: 1.5rem 0;
-            padding: 1rem;
-            background: #f9f9f9;
-            border-radius: 8px;
-        }
-        
-        .options {
-            margin: 0.5rem 0 0 1rem;
-        }
-        
-        .option {
-            margin: 0.5rem 0;
-        }
-        
-        .quiz-result {
-            text-align: center;
-            padding: 2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 12px;
-            margin: 2rem 0;
-        }
-        
-        .score {
-            font-size: 3rem;
-            font-weight: bold;
-        }
-    </style>
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+    <nav></nav>
+
+    <main class="asg-quiz-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Skill assessment</div>
+                <h1>Skill Assessment Quiz</h1>
+                <p>Answer each question, submit once, and your score will be saved to your student progress.</p>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <h1>📝 Skill Assessment Quiz</h1>
-        <p>Test your Data Science knowledge! Get instant results and recommendations.</p>
-
-        <div class="quiz-container" id="quiz">
-            <div class="question">
-                <p><strong>1. What is the correct way to import Pandas?</strong></p>
-                <div class="options">
-                    <label class="option"><input type="radio" name="q1" value="a"> import pandas</label>
-                    <label class="option"><input type="radio" name="q1" value="b"> import pandas as pd ✅</label>
-                    <label class="option"><input type="radio" name="q1" value="c"> include pandas</label>
+            <div class="asg-hero-metrics">
+                <div>
+                    <strong id="quizQuestionCount">0</strong>
+                    <span>Questions</span>
+                </div>
+                <div>
+                    <strong id="quizBestScore">0%</strong>
+                    <span>Best score</span>
+                </div>
+                <div>
+                    <strong id="quizAttemptCount">0</strong>
+                    <span>Attempts</span>
                 </div>
             </div>
+        </section>
 
-            <div class="question">
-                <p><strong>2. Which algorithm is used for classification?</strong></p>
-                <div class="options">
-                    <label class="option"><input type="radio" name="q2" value="a"> Linear Regression</label>
-                    <label class="option"><input type="radio" name="q2" value="b"> Random Forest ✅</label>
-                    <label class="option"><input type="radio" name="q2" value="c"> K-Means</label>
-                </div>
-            </div>
-
-            <div class="question">
-                <p><strong>3. What does CNN stand for in Deep Learning?</strong></p>
-                <div class="options">
-                    <label class="option"><input type="radio" name="q3" value="a"> Convolutional Neural Network ✅</label>
-                    <label class="option"><input type="radio" name="q3" value="b"> Computer Neural Network</label>
-                    <label class="option"><input type="radio" name="q3" value="c"> Complex Neural Network</label>
-                </div>
-            </div>
-
-            <div class="question">
-                <p><strong>4. Which library is used for data visualization?</strong></p>
-                <div class="options">
-                    <label class="option"><input type="radio" name="q4" value="a"> NumPy</label>
-                    <label class="option"><input type="radio" name="q4" value="b"> Scikit-learn</label>
-                    <label class="option"><input type="radio" name="q4" value="c"> Matplotlib ✅</label>
-                </div>
-            </div>
-
-            <div class="question">
-                <p><strong>5. What is overfitting?</strong></p>
-                <div class="options">
-                    <label class="option"><input type="radio" name="q5" value="a"> Model performs well on training but poorly on test ✅</label>
-                    <label class="option"><input type="radio" name="q5" value="b"> Model performs poorly on both</label>
-                    <label class="option"><input type="radio" name="q5" value="c"> Model is too simple</label>
-                </div>
-            </div>
-
-            <button class="btn-primary" onclick="submitQuiz()">Submit Quiz →</button>
-        </div>
-
-        <div id="result" style="display: none;"></div>
-
-        <div class="recommendations" id="recommendations" style="display: none;"></div>
+        <section class="asg-live-panel" id="quizMount"></section>
+        <section class="asg-live-panel" id="quizResult" hidden></section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">🐙 GitHub</a>
-                <a href="#">💼 LinkedIn</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Test your skills and grow!</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Test your skills and keep improving.</p>
     </footer>
 
     <script>
-        function submitQuiz() {
-            const answers = {
-                q1: 'b',
-                q2: 'b',
-                q3: 'a',
-                q4: 'c',
-                q5: 'a'
-            };
-            
-            let score = 0;
-            let total = 5;
-            
-            for(let i = 1; i <= total; i++) {
-                const selected = document.querySelector(`input[name="q${i}"]:checked`);
-                if(selected && selected.value === answers[`q${i}`]) {
-                    score++;
-                }
+        const quizUser = getCurrentUser();
+        let quizQuestions = [];
+        let quizSubmitted = false;
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function updateQuizStats() {
+            const attempts = asgGetQuizAttempts(quizUser);
+            const best = attempts.length
+                ? Math.round(Math.max(...attempts.map((attempt) => Number(attempt.percentage || 0))))
+                : 0;
+
+            document.getElementById("quizQuestionCount").textContent = quizQuestions.length;
+            document.getElementById("quizBestScore").textContent = `${best}%`;
+            document.getElementById("quizAttemptCount").textContent = attempts.length;
+        }
+
+        function renderQuiz() {
+            quizQuestions = asgGetQuizQuestions();
+            const mount = document.getElementById("quizMount");
+            const result = document.getElementById("quizResult");
+
+            updateQuizStats();
+            result.hidden = true;
+            mount.hidden = false;
+
+            if (!quizQuestions.length) {
+                mount.innerHTML = `
+                    <div class="asg-empty-state">
+                        <h2>No active quiz questions yet</h2>
+                        <p>Your admin can publish questions from the dashboard. They will appear here automatically.</p>
+                    </div>
+                `;
+                return;
             }
-            
-            const percentage = (score / total) * 100;
-            
-            let message = '';
-            let recommendation = '';
-            
-            if(percentage >= 80) {
-                message = '🎉 Excellent! You have strong fundamentals!';
-                recommendation = 'You\'re ready for advanced topics! Check out my Deep Learning projects and research on PINNs.';
-            } else if(percentage >= 60) {
-                message = '👍 Good job! You know the basics well.';
-                recommendation = 'Review the topics you missed and practice with real projects. Check the Resources section!';
-            } else {
-                message = '📚 Keep learning! Start with my beginner tutorials.';
-                recommendation = 'Go through the Python Basics and ML tutorials in the Blog section. You\'ve got this!';
-            }
-            
-            // Save quiz score
-            let scores = JSON.parse(localStorage.getItem('quizScores') || '[]');
-            scores.push({score: percentage, date: new Date().toISOString()});
-            localStorage.setItem('quizScores', scores);
-            
-            document.getElementById('quiz').style.display = 'none';
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('recommendations').style.display = 'block';
-            
-            document.getElementById('result').innerHTML = `
-                <div class="quiz-result">
-                    <div class="score">${score}/${total}</div>
-                    <div class="percentage">${percentage}%</div>
-                    <div class="message">${message}</div>
+
+            mount.innerHTML = `
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Current quiz</h2>
+                        <p>${quizQuestions.length} questions. Correct answers stay hidden until you submit.</p>
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="clearQuizSelection()">Clear answers</button>
                 </div>
+
+                <form id="skillQuizForm" class="asg-quiz-form">
+                    ${quizQuestions.map((question, index) => `
+                        <article class="asg-question-block" data-question-id="${escapeHtml(question.id)}">
+                            <div class="asg-question-head">
+                                <span>Question ${index + 1}</span>
+                                <small>${escapeHtml(question.topic)} | ${escapeHtml(question.difficulty)}</small>
+                            </div>
+                            <h3>${escapeHtml(question.prompt)}</h3>
+                            <div class="asg-option-grid">
+                                ${question.options.map((option) => `
+                                    <label class="asg-option-choice">
+                                        <input type="radio" name="question_${escapeHtml(question.id)}" value="${escapeHtml(option.id)}">
+                                        <span>${escapeHtml(option.text)}</span>
+                                    </label>
+                                `).join("")}
+                            </div>
+                        </article>
+                    `).join("")}
+
+                    <div class="asg-form-actions">
+                        <button class="btn-primary" type="button" onclick="submitSkillQuiz()">Submit Quiz</button>
+                        <a class="btn-secondary" href="coding-practice.html">Open Coding Practice</a>
+                    </div>
+                </form>
             `;
-            
-            document.getElementById('recommendations').innerHTML = `
-                <div class="card">
-                    <h3>📚 Recommended for you:</h3>
-                    <p>${recommendation}</p>
-                    <a href="blog.html" class="read-more">Start Learning →</a>
+        }
+
+        function clearQuizSelection() {
+            document.querySelectorAll("#skillQuizForm input[type='radio']").forEach((input) => {
+                input.checked = false;
+            });
+        }
+
+        function submitSkillQuiz() {
+            if (!quizQuestions.length) return;
+
+            const answers = quizQuestions.map((question) => {
+                const selected = Array.from(document.querySelectorAll("#skillQuizForm input[type='radio']"))
+                    .find((input) => input.name === `question_${question.id}` && input.checked);
+                const selectedOption = selected
+                    ? question.options.find((option) => option.id === selected.value)
+                    : null;
+                const correctOption = question.options.find((option) => option.id === question.correctOption);
+                const isCorrect = Boolean(selected && selected.value === question.correctOption);
+
+                return {
+                    questionId: question.id,
+                    prompt: question.prompt,
+                    selectedOption: selected ? selected.value : "",
+                    selectedText: selectedOption ? selectedOption.text : "Not answered",
+                    correctOption: question.correctOption,
+                    correctText: correctOption ? correctOption.text : "",
+                    explanation: question.explanation,
+                    isCorrect
+                };
+            });
+
+            const unanswered = answers.filter((answer) => !answer.selectedOption).length;
+            if (unanswered > 0) {
+                const confirmed = confirm(`${unanswered} question(s) are unanswered. Submit anyway?`);
+                if (!confirmed) return;
+            }
+
+            const score = answers.filter((answer) => answer.isCorrect).length;
+            const total = quizQuestions.length;
+            const percentage = Math.round((score / total) * 100);
+            const savedAttempt = asgSaveQuizAttempt({
+                score,
+                total,
+                percentage,
+                answers
+            });
+
+            quizSubmitted = true;
+            renderResult(savedAttempt);
+            updateQuizStats();
+        }
+
+        function renderResult(attempt) {
+            const mount = document.getElementById("quizMount");
+            const result = document.getElementById("quizResult");
+            const message = attempt.percentage >= 80
+                ? "Strong work. You are ready for the next level."
+                : attempt.percentage >= 60
+                    ? "Good base. Review the missed questions and try again."
+                    : "Keep practicing. Start with the explanations below and rebuild momentum.";
+
+            mount.hidden = true;
+            result.hidden = false;
+            result.innerHTML = `
+                <div class="asg-result-summary">
+                    <div>
+                        <span>Your score</span>
+                        <strong>${attempt.score}/${attempt.total}</strong>
+                    </div>
+                    <div>
+                        <span>Percentage</span>
+                        <strong>${Math.round(attempt.percentage)}%</strong>
+                    </div>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+
+                <div class="asg-review-list">
+                    ${attempt.answers.map((answer, index) => `
+                        <article class="asg-review-item ${answer.isCorrect ? "correct" : "wrong"}">
+                            <div class="asg-question-head">
+                                <span>Question ${index + 1}</span>
+                                <small>${answer.isCorrect ? "Correct" : "Needs review"}</small>
+                            </div>
+                            <h3>${escapeHtml(answer.prompt)}</h3>
+                            <p><strong>Your answer:</strong> ${escapeHtml(answer.selectedText)}</p>
+                            <p><strong>Correct answer:</strong> ${escapeHtml(answer.correctText)}</p>
+                            ${answer.explanation ? `<p>${escapeHtml(answer.explanation)}</p>` : ""}
+                        </article>
+                    `).join("")}
+                </div>
+
+                <div class="asg-form-actions">
+                    <button class="btn-primary" type="button" onclick="retakeQuiz()">Retake Quiz</button>
+                    <a class="btn-secondary" href="tracker.html">View Progress</a>
                 </div>
             `;
         }
+
+        function retakeQuiz() {
+            quizSubmitted = false;
+            renderQuiz();
+        }
+
+        function handleQuizDataUpdate(event) {
+            const key = event.detail ? event.detail.key : event.key;
+            if (key !== ASG_LEARNING_KEYS.quizQuestions) return;
+            if (quizSubmitted) return;
+            renderQuiz();
+        }
+
+        window.addEventListener("asg:data-updated", handleQuizDataUpdate);
+        window.addEventListener("storage", handleQuizDataUpdate);
+
+        renderQuiz();
     </script>
-
-
 </body>
 </html>
