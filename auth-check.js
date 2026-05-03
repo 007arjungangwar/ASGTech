@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v7",
+    cacheName: "asg-tech-v8",
     publicPages: [
         "",
         "index.html",
@@ -31,8 +31,7 @@ const ASG_AUTH = {
         "exam-result.html"
     ],
     adminPages: [
-        "admin.html",
-        "exam-admin.html"
+        "admin.html"
     ]
 };
 
@@ -186,8 +185,7 @@ function navigationGroups(user) {
         groups.push({
             title: "Admin",
             items: [
-                adminLink("Dashboard", "admin.html"),
-                adminLink("Exam Admin", "exam-admin.html")
+                adminLink("Dashboard", "admin.html")
             ]
         });
     }

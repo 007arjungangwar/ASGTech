@@ -38,7 +38,7 @@
                 <div class="asg-auth-benefits">
                     <div><strong>Public pages:</strong> Home, blog, projects, and about.</div>
                     <div><strong>Student pages:</strong> Courses, roadmap, quiz, progress, videos, Q&A, forum, resources, and certificates.</div>
-                    <div><strong>Admin pages:</strong> Dashboard, students, questions, enrollments, and exam admin.</div>
+                    <div><strong>Admin pages:</strong> Dashboard, students, quizzes, coding practice, and progress reports.</div>
                 </div>
             </section>
 
@@ -57,11 +57,6 @@
                     <button class="auth-btn" type="button" onclick="login()">Login</button>
                     <div id="loginError" class="error-msg"></div>
 
-                    <div class="demo-credentials">
-                        <strong>Demo accounts</strong><br>
-                        Student: student@test.com / student123<br>
-                        Admin: admin@asgtech.com / admin123
-                    </div>
                 </div>
 
                 <div id="registerForm" class="auth-form">
@@ -85,7 +80,7 @@
     </footer>
 
     <script>
-        const adminPages = ["admin.html", "exam-admin.html"];
+        const adminPages = ["admin.html"];
         const nextPage = new URLSearchParams(window.location.search).get("next");
 
         function safeNextFor(user) {
@@ -103,38 +98,6 @@
             } catch (error) {
                 users = [];
             }
-
-            const defaults = [
-                {
-                    id: 1,
-                    name: "ASG Tech Admin",
-                    email: "admin@asgtech.com",
-                    password: "admin123",
-                    role: "admin",
-                    joinDate: new Date().toISOString()
-                },
-                {
-                    id: 2,
-                    name: "Demo Student",
-                    email: "student@test.com",
-                    password: "student123",
-                    role: "student",
-                    joinDate: new Date().toISOString()
-                },
-                {
-                    id: 3,
-                    name: "ASG Tech Owner",
-                    email: "arjungangwariitpkd@gmail.com",
-                    password: "adminarjun@123",
-                    role: "admin",
-                    joinDate: new Date().toISOString()
-                }
-            ];
-
-            defaults.forEach((defaultUser) => {
-                const exists = users.some((user) => user.email.toLowerCase() === defaultUser.email.toLowerCase());
-                if (!exists) users.push(defaultUser);
-            });
 
             localStorage.setItem("users", JSON.stringify(users));
             return users;
