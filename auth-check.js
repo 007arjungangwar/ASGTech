@@ -3,6 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
+    cacheName: "asg-tech-v4",
     publicPages: [
         "",
         "index.html",
@@ -486,6 +487,43 @@ function showAuthNotice() {
     sessionStorage.removeItem("authNotice");
 }
 
+function keepServiceWorkerFresh() {
+    if (!("serviceWorker" in navigator)) return;
+
+    navigator.serviceWorker.getRegistration()
+        .then((registration) => {
+            if (!registration) return;
+
+            registration.update().catch(() => {});
+
+            if (registration.waiting) {
+                registration.waiting.postMessage({ type: "SKIP_WAITING" });
+            }
+
+            registration.addEventListener("updatefound", () => {
+                const worker = registration.installing;
+                if (!worker) return;
+
+                worker.addEventListener("statechange", () => {
+                    if (worker.state === "installed" && navigator.serviceWorker.controller) {
+                        worker.postMessage({ type: "SKIP_WAITING" });
+                    }
+                });
+            });
+        })
+        .catch(() => {});
+
+    if ("caches" in window) {
+        caches.keys()
+            .then((cacheNames) => Promise.all(
+                cacheNames
+                    .filter((cacheName) => cacheName.startsWith("asg-tech-") && cacheName !== ASG_AUTH.cacheName)
+                    .map((cacheName) => caches.delete(cacheName))
+            ))
+            .catch(() => {});
+    }
+}
+
 function updateUIForUser() {
     const body = document.body;
     if (!body) return;
@@ -525,6 +563,7 @@ window.addEventListener("storage", function(event) {
 
 function initializeASGPortal() {
     if (!checkPageAccess()) return;
+    keepServiceWorkerFresh();
     updateUIForUser();
 }
 

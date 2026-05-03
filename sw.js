@@ -1,4 +1,4 @@
-const CACHE_NAME = "asg-tech-v3";
+const CACHE_NAME = "asg-tech-v4";
 const urlsToCache = [
     "/learning-with-arjun/",
     "/learning-with-arjun/index.html",
@@ -16,7 +16,9 @@ self.addEventListener("install", (event) => {
 
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(urlsToCache))
+            .then((cache) => Promise.all(
+                urlsToCache.map((url) => cache.add(new Request(url, { cache: "reload" })))
+            ))
     );
 });
 
@@ -32,15 +34,28 @@ self.addEventListener("activate", (event) => {
     );
 });
 
+self.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "SKIP_WAITING") {
+        self.skipWaiting();
+    }
+});
+
 self.addEventListener("fetch", (event) => {
     if (event.request.method !== "GET") return;
 
+    const requestUrl = new URL(event.request.url);
+    if (requestUrl.origin !== self.location.origin) return;
+
+    const isHtmlPage = event.request.mode === "navigate" || requestUrl.pathname.endsWith(".html");
+
     event.respondWith(
-        fetch(event.request)
+        fetch(event.request, { cache: "no-store" })
             .then((response) => {
-                const copy = response.clone();
-                caches.open(CACHE_NAME)
-                    .then((cache) => cache.put(event.request, copy));
+                if (!isHtmlPage && response.ok) {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME)
+                        .then((cache) => cache.put(event.request, copy));
+                }
                 return response;
             })
             .catch(() => caches.match(event.request))
