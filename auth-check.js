@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v5",
+    cacheName: "asg-tech-v6",
     publicPages: [
         "",
         "index.html",
@@ -356,11 +356,11 @@ function renderSidebar(user) {
             ${groups.map((group, index) => {
                 const activeGroup = group.items.some((item) => isActive(item.page));
                 return `
-                <section class="asg-menu-group">
+                <section class="asg-menu-group collapsed">
                     <button
                         class="asg-menu-heading ${activeGroup ? "active" : ""}"
                         type="button"
-                        aria-expanded="true"
+                        aria-expanded="false"
                         onclick="toggleSidebarGroup(this)"
                     >
                         <span>${group.title}</span>
@@ -391,8 +391,18 @@ function toggleSidebarGroup(button) {
     const group = button.closest(".asg-menu-group");
     if (!group) return;
 
-    const collapsed = group.classList.toggle("collapsed");
-    button.setAttribute("aria-expanded", String(!collapsed));
+    const shouldOpen = group.classList.contains("collapsed");
+
+    document.querySelectorAll(".asg-menu-group").forEach((menuGroup) => {
+        menuGroup.classList.add("collapsed");
+        const heading = menuGroup.querySelector(".asg-menu-heading");
+        if (heading) heading.setAttribute("aria-expanded", "false");
+    });
+
+    if (shouldOpen) {
+        group.classList.remove("collapsed");
+        button.setAttribute("aria-expanded", "true");
+    }
 }
 
 function createProfileCircle() {
