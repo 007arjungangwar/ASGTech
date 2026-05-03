@@ -1,299 +1,443 @@
-// auth-check.js - Complete working authentication
+// ASG Tech shared authentication, navigation, and access control.
 
-// Get current user from session
+const ASG_AUTH = {
+    brand: "ASG Tech",
+    loginPage: "login.html",
+    publicPages: [
+        "",
+        "index.html",
+        "login.html",
+        "about.html",
+        "blog.html",
+        "projects.html",
+        "exam-login.html"
+    ],
+    studentPages: [
+        "courses.html",
+        "resources.html",
+        "questions.html",
+        "roadmap.html",
+        "tracker.html",
+        "profile.html",
+        "certificate.html",
+        "assistant.html",
+        "quiz.html",
+        "forum.html",
+        "videos.html",
+        "chat.html",
+        "exam.html",
+        "exam-result.html"
+    ],
+    adminPages: [
+        "admin.html",
+        "exam-admin.html"
+    ]
+};
+
+function getCurrentPage() {
+    return (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+}
+
+function getBasePath() {
+    return window.location.pathname.includes("/posts/") ? "../" : "";
+}
+
+function asgUrl(page) {
+    if (page.startsWith("http")) return page;
+    return `${getBasePath()}${page}`;
+}
+
 function getCurrentUser() {
-    const user = sessionStorage.getItem('currentUser');
-    if(user) {
+    const user = sessionStorage.getItem("currentUser");
+    if (!user) return null;
+
+    try {
         return JSON.parse(user);
+    } catch (error) {
+        sessionStorage.removeItem("currentUser");
+        return null;
     }
-    return null;
 }
 
-// Check if logged in
 function isLoggedIn() {
-    return getCurrentUser() !== null;
+    return Boolean(getCurrentUser());
 }
 
-// Check if admin
 function isAdmin() {
     const user = getCurrentUser();
-    return user && user.role === 'admin';
+    return Boolean(user && user.role === "admin");
 }
 
-// Get user email
 function getUserEmail() {
     const user = getCurrentUser();
     return user ? user.email : null;
 }
 
-// Get user name
 function getUserName() {
     const user = getCurrentUser();
     return user ? user.name : null;
 }
 
-// Get user avatar
+function getUserInitials(user = getCurrentUser()) {
+    if (!user || !user.name) return "GT";
+    return user.name
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join("");
+}
+
 function getUserAvatar() {
     const user = getCurrentUser();
-    if(!user) return '👤';
+    if (!user) return "GT";
     const savedAvatar = localStorage.getItem(`avatar_${user.id}`);
-    return savedAvatar || '🧑‍🎓';
+    return savedAvatar || getUserInitials(user);
 }
 
-// Logout function
 function logout() {
-    if(confirm('Are you sure you want to logout?')) {
-        sessionStorage.removeItem('currentUser');
-        window.location.href = 'index.html';
-    }
+    const confirmed = confirm("Do you want to sign out of ASG Tech?");
+    if (!confirmed) return;
+
+    sessionStorage.removeItem("currentUser");
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("userEmail");
+    window.location.href = asgUrl("index.html");
 }
 
-// Create profile circle
-function createProfileCircle() {
-    const user = getCurrentUser();
-    
-    const existingCircle = document.querySelector('.user-profile-circle');
-    if(existingCircle) existingCircle.remove();
-    
-    if(user) {
-        const circleHTML = `
-            <div class="user-profile-circle">
-                <div class="profile-circle" onclick="toggleDropdown()">
-                    ${getUserAvatar()}
-                </div>
-                <div class="user-dropdown" id="userDropdown">
-                    <div class="dropdown-header">
-                        <div class="dropdown-avatar">${getUserAvatar()}</div>
-                        <div class="dropdown-name">${user.name}</div>
-                        <div class="dropdown-email">${user.email}</div>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="profile.html" class="dropdown-item">👤 My Profile</a>
-                    <a href="tracker.html" class="dropdown-item">📊 My Progress</a>
-                    <a href="certificate.html" class="dropdown-item">🎓 My Certificates</a>
-                    <div class="dropdown-divider"></div>
-                    ${user.role === 'admin' ? `
-                        <a href="admin.html" class="dropdown-item">📊 Admin Dashboard</a>
-                        <div class="dropdown-divider"></div>
-                    ` : ''}
-                    <div class="dropdown-item logout" onclick="logout()">🚪 Logout</div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', circleHTML);
-    }
+function buildLoginUrl(targetPage) {
+    const next = targetPage && targetPage !== "login.html" ? `?next=${encodeURIComponent(targetPage)}` : "";
+    return asgUrl(`${ASG_AUTH.loginPage}${next}`);
 }
 
-// Toggle dropdown
-function toggleDropdown() {
-    const dropdown = document.getElementById('userDropdown');
-    if(dropdown) {
-        dropdown.classList.toggle('show');
-    }
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
-    const circle = document.querySelector('.user-profile-circle');
-    const dropdown = document.getElementById('userDropdown');
-    if(circle && dropdown && !circle.contains(event.target)) {
-        dropdown.classList.remove('show');
-    }
-});
-
-// Update UI
-function updateUIForUser() {
-    const user = getCurrentUser();
-    
-    // Remove old login link if exists
-    const oldLoginLink = document.querySelector('a[href="login.html"]');
-    const navLinks = document.querySelector('.nav-links');
-    
-    if(user) {
-        if(oldLoginLink) oldLoginLink.remove();
-        createProfileCircle();
-    } else {
-        if(oldLoginLink) return;
-        if(navLinks && !document.querySelector('a[href="login.html"]')) {
-            const loginLink = document.createElement('a');
-            loginLink.href = 'login.html';
-            loginLink.innerHTML = '🔐 Login';
-            navLinks.appendChild(loginLink);
-        }
-    }
-    
-    // Update welcome message
-    const guestMsg = document.getElementById('guestMessage');
-    const userMsg = document.getElementById('userMessage');
-    const userNameSpan = document.getElementById('userName');
-    
-    if(guestMsg && userMsg) {
-        if(user) {
-            guestMsg.style.display = 'none';
-            userMsg.style.display = 'block';
-            if(userNameSpan) userNameSpan.innerHTML = user.name;
-        } else {
-            guestMsg.style.display = 'block';
-            userMsg.style.display = 'none';
-        }
-    }
-}
-
-// Check page access
 function checkPageAccess() {
     const user = getCurrentUser();
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    const publicPages = ['index.html', 'login.html', 'about.html', 'blog.html', 'projects.html'];
-    const loginRequiredPages = ['courses.html', 'forum.html', 'resources.html', 'quiz.html', 
-                                 'certificate.html', 'assistant.html', 'tracker.html', 
-                                 'videos.html', 'roadmap.html', 'profile.html', 'chat.html'];
-    const adminPages = ['admin.html'];
-    
-    if(publicPages.includes(currentPage)) {
-        return true;
-    }
-    
-    if(loginRequiredPages.includes(currentPage)) {
-        if(!user) {
-            alert('Please login to access this page!');
-            window.location.href = 'login.html';
+    const page = getCurrentPage();
+
+    if (ASG_AUTH.adminPages.includes(page)) {
+        if (!user || user.role !== "admin") {
+            sessionStorage.setItem("authNotice", "Admin access is required for that page.");
+            window.location.href = buildLoginUrl(page);
             return false;
         }
         return true;
     }
-    
-    if(adminPages.includes(currentPage)) {
-        if(!user || user.role !== 'admin') {
-            alert('Access denied. Admin only area.');
-            window.location.href = 'login.html';
+
+    if (ASG_AUTH.studentPages.includes(page)) {
+        if (!user) {
+            sessionStorage.setItem("authNotice", "Please sign in or create a free student account to continue.");
+            window.location.href = buildLoginUrl(page);
             return false;
         }
         return true;
     }
-    
+
     return true;
 }
 
-// Add styles
-const authStyles = document.createElement('style');
-authStyles.textContent = `
-    .user-profile-circle {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1001;
-        cursor: pointer;
-    }
-    
-    .profile-circle {
-        width: 45px;
-        height: 45px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: white;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        transition: transform 0.3s;
-    }
-    
-    .profile-circle:hover {
-        transform: scale(1.1);
-    }
-    
-    .user-dropdown {
-        position: absolute;
-        top: 55px;
-        right: 0;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        min-width: 250px;
-        display: none;
-        z-index: 1002;
-        overflow: hidden;
-    }
-    
-    .user-dropdown.show {
-        display: block;
-        animation: fadeIn 0.2s ease;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .dropdown-header {
-        padding: 1rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        text-align: center;
-    }
-    
-    .dropdown-avatar {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .dropdown-name {
-        font-weight: bold;
-        margin-bottom: 0.25rem;
-    }
-    
-    .dropdown-email {
-        font-size: 0.75rem;
-        opacity: 0.9;
-        word-break: break-all;
-    }
-    
-    .dropdown-divider {
-        height: 1px;
-        background: #eaeaea;
-        margin: 0.5rem 0;
-    }
-    
-    .dropdown-item {
-        padding: 0.75rem 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        text-decoration: none;
-        color: #333;
-        transition: background 0.2s;
-    }
-    
-    .dropdown-item:hover {
-        background: #f5f7fa;
-    }
-    
-    .dropdown-item.logout {
-        color: #ff4444;
-        border-top: 1px solid #eaeaea;
-        cursor: pointer;
-    }
-    
-    @media (max-width: 768px) {
-        .user-profile-circle {
-            top: 10px;
-            right: 10px;
+function navigationGroups(user) {
+    const loggedIn = Boolean(user);
+    const admin = user && user.role === "admin";
+
+    const publicLink = (label, page) => ({ label, page, public: true });
+    const studentLink = (label, page) => ({ label, page, student: true });
+    const adminLink = (label, page) => ({ label, page, admin: true });
+
+    const groups = [
+        {
+            title: "Institute",
+            items: [
+                publicLink("Home", "index.html"),
+                publicLink("Blog", "blog.html"),
+                publicLink("Projects", "projects.html"),
+                publicLink("About", "about.html")
+            ]
+        },
+        {
+            title: "Learn",
+            items: [
+                studentLink("Courses", "courses.html"),
+                studentLink("Roadmap", "roadmap.html"),
+                studentLink("Videos", "videos.html"),
+                studentLink("Resources", "resources.html")
+            ]
+        },
+        {
+            title: "Practice",
+            items: [
+                studentLink("Quiz", "quiz.html"),
+                studentLink("Progress", "tracker.html"),
+                studentLink("Certificate", "certificate.html"),
+                studentLink("AI Assistant", "assistant.html")
+            ]
+        },
+        {
+            title: "Community",
+            items: [
+                studentLink("Q&A", "questions.html"),
+                studentLink("Forum", "forum.html"),
+                studentLink("Live Chat", "chat.html"),
+                studentLink("Profile", "profile.html")
+            ]
         }
-        .profile-circle {
-            width: 35px;
-            height: 35px;
-            font-size: 1rem;
-        }
+    ];
+
+    if (admin) {
+        groups.push({
+            title: "Admin",
+            items: [
+                adminLink("Dashboard", "admin.html"),
+                adminLink("Exam Admin", "exam-admin.html")
+            ]
+        });
     }
-`;
 
-document.head.appendChild(authStyles);
+    return groups.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item.public || loggedIn || admin)
+    })).filter((group) => group.items.length);
+}
 
-// Run checks
-checkPageAccess();
-updateUIForUser();
+function quickActions(user) {
+    if (user && user.role === "admin") {
+        return [
+            { label: "Dashboard", page: "admin.html" },
+            { label: "Exam Admin", page: "exam-admin.html" },
+            { label: "Student View", page: "roadmap.html" }
+        ];
+    }
 
-console.log("Auth system loaded. User:", getCurrentUser());
+    if (user) {
+        return [
+            { label: "Continue", page: "roadmap.html" },
+            { label: "Progress", page: "tracker.html" },
+            { label: "Ask Doubt", page: "questions.html" }
+        ];
+    }
+
+    return [
+        { label: "Programs", page: "courses.html", locked: true },
+        { label: "Register", page: "login.html" },
+        { label: "Projects", page: "projects.html", public: true }
+    ];
+}
+
+function itemHref(item, user) {
+    if (item.public || user) return asgUrl(item.page);
+    return buildLoginUrl(item.page);
+}
+
+function isActive(page) {
+    return getCurrentPage() === page.toLowerCase();
+}
+
+function renderTopNavigation(user) {
+    const nav = document.querySelector("nav");
+    if (!nav) return;
+
+    const loggedIn = Boolean(user);
+    const visibleTopLinks = loggedIn
+        ? [
+            { label: "Courses", page: "courses.html" },
+            { label: "Roadmap", page: "roadmap.html" },
+            { label: "Progress", page: "tracker.html" },
+            { label: "Community", page: "forum.html" }
+        ]
+        : [
+            { label: "Home", page: "index.html", public: true },
+            { label: "Blog", page: "blog.html", public: true },
+            { label: "Projects", page: "projects.html", public: true },
+            { label: "About", page: "about.html", public: true }
+        ];
+
+    nav.className = "asg-navbar";
+    nav.innerHTML = `
+        <div class="asg-topbar">
+            <a href="${asgUrl("index.html")}" class="logo asg-logo" aria-label="ASG Tech home">
+                <span class="asg-logo-mark">ASG</span>
+                <span class="asg-logo-copy">
+                    <strong>ASG Tech</strong>
+                    <small>Institute</small>
+                </span>
+            </a>
+
+            <div class="nav-links asg-top-links">
+                ${visibleTopLinks.map((item) => `
+                    <a href="${itemHref(item, user)}" class="${isActive(item.page) ? "active" : ""}">
+                        ${item.label}
+                    </a>
+                `).join("")}
+            </div>
+
+            <div class="asg-auth-area">
+                ${loggedIn ? `
+                    <div class="user-profile-circle asg-account">
+                        <button class="profile-circle" onclick="toggleDropdown()" aria-label="Open profile menu">
+                            ${getUserAvatar()}
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-header">
+                                <div class="dropdown-avatar">${getUserAvatar()}</div>
+                                <div class="dropdown-name">${user.name}</div>
+                                <div class="dropdown-email">${user.email}</div>
+                            </div>
+                            <a href="${asgUrl("profile.html")}" class="dropdown-item">My Profile</a>
+                            <a href="${asgUrl("tracker.html")}" class="dropdown-item">My Progress</a>
+                            <a href="${asgUrl("certificate.html")}" class="dropdown-item">Certificates</a>
+                            ${user.role === "admin" ? `<a href="${asgUrl("admin.html")}" class="dropdown-item">Admin Dashboard</a>` : ""}
+                            <button class="dropdown-item logout" onclick="logout()">Logout</button>
+                        </div>
+                    </div>
+                ` : `
+                    <a class="asg-login-link" href="${asgUrl("login.html")}">Sign in</a>
+                    <a class="asg-register-link" href="${asgUrl("login.html?mode=register")}">Register</a>
+                `}
+            </div>
+        </div>
+    `;
+}
+
+function renderSidebar(user) {
+    const body = document.body;
+    if (!body) return;
+
+    const existingSidebar = document.querySelector(".asg-sidebar");
+    if (existingSidebar) existingSidebar.remove();
+
+    const sidebar = document.createElement("aside");
+    sidebar.className = "asg-sidebar";
+
+    const actions = quickActions(user);
+    const groups = navigationGroups(user);
+
+    sidebar.innerHTML = `
+        <div class="asg-sidebar-title">
+            <span>${user ? `Welcome, ${user.name.split(" ")[0]}` : "Student Portal"}</span>
+            <small>${user ? (user.role === "admin" ? "Admin workspace" : "Learning workspace") : "Public preview"}</small>
+        </div>
+
+        <div class="asg-quick-actions" aria-label="Primary actions">
+            ${actions.map((action) => `
+                <a href="${itemHref(action, user)}" class="asg-quick-button">
+                    ${action.label}
+                    ${action.locked && !user ? `<span class="asg-lock">Login</span>` : ""}
+                </a>
+            `).join("")}
+        </div>
+
+        <div class="asg-menu-groups">
+            ${groups.map((group) => `
+                <section class="asg-menu-group">
+                    <h2>${group.title}</h2>
+                    ${group.items.map((item) => `
+                        <a href="${itemHref(item, user)}" class="${isActive(item.page) ? "active" : ""}">
+                            <span>${item.label}</span>
+                            ${!item.public && !user ? `<span class="asg-lock">Login</span>` : ""}
+                        </a>
+                    `).join("")}
+                </section>
+            `).join("")}
+        </div>
+    `;
+
+    const nav = document.querySelector("nav");
+    if (nav && nav.nextSibling) {
+        nav.parentNode.insertBefore(sidebar, nav.nextSibling);
+    } else {
+        body.insertBefore(sidebar, body.firstChild);
+    }
+}
+
+function createProfileCircle() {
+    renderTopNavigation(getCurrentUser());
+}
+
+function toggleDropdown() {
+    const dropdown = document.getElementById("userDropdown");
+    if (dropdown) dropdown.classList.toggle("show");
+}
+
+function updateWelcomeMessage(user) {
+    const guestMsg = document.getElementById("guestMessage");
+    const userMsg = document.getElementById("userMessage");
+    const userNameSpan = document.getElementById("userName");
+
+    if (!guestMsg || !userMsg) return;
+
+    if (user) {
+        guestMsg.style.display = "none";
+        userMsg.style.display = "block";
+        if (userNameSpan) userNameSpan.textContent = user.name;
+    } else {
+        guestMsg.style.display = "block";
+        userMsg.style.display = "none";
+    }
+}
+
+function updateHomeDashboard(user) {
+    const guestHome = document.getElementById("guestHome");
+    const studentHome = document.getElementById("studentHome");
+    const studentName = document.getElementById("studentName");
+
+    if (!guestHome || !studentHome) return;
+
+    if (user) {
+        guestHome.hidden = true;
+        studentHome.hidden = false;
+        if (studentName) studentName.textContent = user.name;
+    } else {
+        guestHome.hidden = false;
+        studentHome.hidden = true;
+    }
+}
+
+function showAuthNotice() {
+    const notice = sessionStorage.getItem("authNotice");
+    if (!notice || getCurrentPage() !== "login.html") return;
+
+    const target = document.querySelector(".auth-container, main");
+    if (target && !document.querySelector(".auth-notice")) {
+        const noticeBox = document.createElement("div");
+        noticeBox.className = "auth-notice";
+        noticeBox.textContent = notice;
+        target.insertBefore(noticeBox, target.firstChild);
+    }
+
+    sessionStorage.removeItem("authNotice");
+}
+
+function updateUIForUser() {
+    const body = document.body;
+    if (!body) return;
+
+    const user = getCurrentUser();
+    body.classList.add("has-asg-shell");
+    body.dataset.userRole = user ? user.role : "guest";
+
+    renderTopNavigation(user);
+    renderSidebar(user);
+    updateWelcomeMessage(user);
+    updateHomeDashboard(user);
+    showAuthNotice();
+}
+
+document.addEventListener("click", function(event) {
+    const account = document.querySelector(".asg-account");
+    const dropdown = document.getElementById("userDropdown");
+    if (account && dropdown && !account.contains(event.target)) {
+        dropdown.classList.remove("show");
+    }
+});
+
+function initializeASGPortal() {
+    if (!checkPageAccess()) return;
+    updateUIForUser();
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeASGPortal);
+} else {
+    initializeASGPortal();
+}
+
+console.log("ASG Tech auth loaded", getCurrentUser());

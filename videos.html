@@ -4,255 +4,64 @@
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Tutorials | Arjun's Learning Hub</title>
+    <title>Video Tutorials | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .videos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-        
-        .video-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .video-thumbnail {
-            position: relative;
-            cursor: pointer;
-            background: #000;
-        }
-        
-        .video-thumbnail img {
-            width: 100%;
-            aspect-ratio: 16/9;
-            object-fit: cover;
-        }
-        
-        .play-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            color: white;
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-        
-        .video-info {
-            padding: 1rem;
-        }
-        
-        .video-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .video-container {
-            position: relative;
-            width: 80%;
-            max-width: 800px;
-        }
-        
-        .video-container iframe {
-            width: 100%;
-            aspect-ratio: 16/9;
-        }
-        
-        .close-video {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
-        }
-    </style>
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
     <nav>
         <div class="nav-container">
-            <a href="index.html" class="logo">📚 Arjun's Learning Hub</a>
+            <a href="index.html" class="logo">ASG Tech</a>
             <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+                <a href="index.html">Home</a>
+                <a href="courses.html">Courses</a>
+                <a href="roadmap.html">Roadmap</a>
+                <a href="tracker.html">Progress</a>
             </div>
         </div>
     </nav>
 
     <main>
-        <h1>📹 Video Tutorials</h1>
-        <p>Watch and learn from my YouTube tutorials. New videos every week!</p>
+        <section class="asg-section-header">
+            <div>
+                <div class="asg-eyebrow">Student video library</div>
+                <h1>Video tutorials</h1>
+                <p>Organized video modules for students. Add your real YouTube embeds later from this page without changing the portal structure.</p>
+            </div>
+        </section>
 
-        <div class="videos-grid" id="videosGrid"></div>
+        <section class="asg-grid">
+            <article class="asg-workspace-card">
+                <div class="asg-card-kicker">Module 1</div>
+                <h3>Python Foundations</h3>
+                <p>Variables, loops, functions, data structures, and beginner problem solving.</p>
+                <a class="asg-card-link primary" href="courses.html">Open course</a>
+            </article>
 
-        <div class="subscribe-section" style="text-align: center; margin: 2rem 0;">
-            <a href="https://youtube.com/@yourchannel" target="_blank" class="btn-primary" style="background: #ff0000;">🔴 Subscribe on YouTube</a>
-        </div>
+            <article class="asg-workspace-card">
+                <div class="asg-card-kicker">Module 2</div>
+                <h3>Data Analysis</h3>
+                <p>Pandas, cleaning, exploratory analysis, and readable charts for project reports.</p>
+                <a class="asg-card-link secondary" href="resources.html">Open resources</a>
+            </article>
+
+            <article class="asg-workspace-card">
+                <div class="asg-card-kicker">Module 3</div>
+                <h3>Machine Learning</h3>
+                <p>Core ML ideas, model evaluation, and practical workflows for student projects.</p>
+                <a class="asg-card-link secondary" href="roadmap.html">Open roadmap</a>
+            </article>
+
+            <article class="asg-workspace-card">
+                <div class="asg-card-kicker">Module 4</div>
+                <h3>Project Walkthroughs</h3>
+                <p>Guided walkthroughs that connect lessons to portfolio-ready project outcomes.</p>
+                <a class="asg-card-link secondary" href="projects.html">Preview projects</a>
+            </article>
+        </section>
     </main>
 
-    <!-- Video Modal -->
-    <div id="videoModal" class="video-modal">
-        <div class="video-container">
-            <span class="close-video" onclick="closeVideo()">&times;</span>
-            <iframe id="videoFrame" src="" frameborder="0" allowfullscreen></iframe>
-        </div>
-    </div>
-
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>Arjun Gangwar</h4>
-                <p>Data Science @ IIT Palakkad</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">🐙 GitHub</a>
-                <a href="#">💼 LinkedIn</a>
-                <a href="#">🔴 YouTube</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Learn visually with video tutorials</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">© 2026 ASG Tech Institute. Video learning for registered students.</p>
     </footer>
-
-    <script>
-        const videos = [
-            {
-                title: "Python Tutorial for Beginners",
-                description: "Complete Python course in 1 hour. Learn variables, loops, functions.",
-                videoId: "dQw4w9WgXcQ", // Replace with your actual YouTube video ID
-                duration: "1:00:00"
-            },
-            {
-                title: "Machine Learning Basics",
-                description: "What is ML? Types of ML. Real-world applications.",
-                videoId: "dQw4w9WgXcQ",
-                duration: "45:00"
-            },
-            {
-                title: "How to Build Your First Neural Network",
-                description: "Step-by-step guide to building a neural network from scratch.",
-                videoId: "dQw4w9WgXcQ",
-                duration: "1:30:00"
-            },
-            {
-                title: "Data Science Project Walkthrough",
-                description: "Complete end-to-end data science project. From data collection to deployment.",
-                videoId: "dQw4w9WgXcQ",
-                duration: "2:00:00"
-            }
-        ];
-        
-        function loadVideos() {
-            const grid = document.getElementById('videosGrid');
-            grid.innerHTML = videos.map(video => `
-                <div class="video-card">
-                    <div class="video-thumbnail" onclick="playVideo('${video.videoId}')">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 200px; display: flex; align-items: center; justify-content: center;">
-                            <span style="font-size: 3rem;">📹</span>
-                        </div>
-                        <div class="play-icon">▶</div>
-                    </div>
-                    <div class="video-info">
-                        <h3>${video.title}</h3>
-                        <p>${video.description}</p>
-                        <p style="color: #666; font-size: 0.8rem;">⏱️ ${video.duration}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function playVideo(videoId) {
-            const frame = document.getElementById('videoFrame');
-            frame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-            document.getElementById('videoModal').style.display = 'flex';
-            
-            // Track video views
-            let views = JSON.parse(localStorage.getItem('videoViews') || '{}');
-            views[videoId] = (views[videoId] || 0) + 1;
-            localStorage.setItem('videoViews', JSON.stringify(views));
-        }
-        
-        function closeVideo() {
-            document.getElementById('videoModal').style.display = 'none';
-            document.getElementById('videoFrame').src = '';
-        }
-        
-        loadVideos();
-    </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learning Roadmap | Arjun's Learning Hub</title>
+    <title>Learning Roadmap | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <script>
@@ -18,7 +18,7 @@
 <body>
     <nav>
         <div class="nav-container">
-            <a href="index.html" class="logo">📚 Arjun's Learning Hub</a>
+            <a href="index.html" class="logo">📚 ASG Tech</a>
             <div class="nav-links">
                 <a href="index.html">🏠 Home</a>
                 <a href="blog.html">📝 Blog</a>
@@ -149,7 +149,7 @@
         </div>
 
         <div class="roadmap-tip">
-            <h3>💡 Arjun's Tip</h3>
+            <h3>💡 ASG Tech Tip</h3>
             <p>Don't rush. Spend more time on projects than theory. Build something every week, even if it's small. Consistency > intensity.</p>
         </div>
     </main>
@@ -157,8 +157,8 @@
     <footer>
         <div class="footer-content">
             <div>
-                <h4>Arjun Gangwar</h4>
-                <p>Data Science @ IIT Palakkad</p>
+                <h4>ASG Tech Institute</h4>
+                <p>Practical coding and AI training</p>
             </div>
             <div class="social">
                 <a href="https://github.com/007arjungangwar">GitHub</a>
@@ -333,16 +333,7 @@ function showPDF(topic) {
 }
 
 function playVideo(topic) {
-    // YouTube video IDs (replace with your actual videos)
-    const videos = {
-        'python-tutorial': 'dQw4w9WgXcQ',
-        'ml-basics': 'dQw4w9WgXcQ',
-        'dl-basics': 'dQw4w9WgXcQ'
-    };
-    
-    const videoId = videos[topic] || 'dQw4w9WgXcQ';
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    window.open(videoUrl, '_blank');
+    window.location.href = 'videos.html';
 }
 
 function openResource(resource) {
@@ -356,16 +347,16 @@ function openResource(resource) {
     window.open(url, '_blank');
 }
 
-// Add YouTube playlist section
+// Add internal video library section
 function addYouTubePlaylist() {
     const roadmapDiv = document.querySelector('.roadmap');
     const playlistSection = document.createElement('div');
     playlistSection.className = 'youtube-playlist';
-    playlistSection.style.cssText = 'background: #ff000010; padding: 1.5rem; border-radius: 12px; margin: 2rem 0;';
+    playlistSection.style.cssText = 'background: #eef7f5; padding: 1.5rem; border-radius: 8px; margin: 2rem 0; border: 1px solid #dde5ef;';
     playlistSection.innerHTML = `
-        <h3>🎬 Complete Playlist on YouTube</h3>
-        <p>Subscribe and watch all tutorials in order!</p>
-        <a href="https://youtube.com/playlist?list=YOUR_PLAYLIST_ID" target="_blank" class="btn-primary" style="background: #ff0000;">▶ Watch on YouTube</a>
+        <h3>Video library</h3>
+        <p>Watch the student video modules in the ASG Tech portal.</p>
+        <a href="videos.html" class="btn-primary">Open videos</a>
     `;
     roadmapDiv.parentNode.insertBefore(playlistSection, roadmapDiv);
 }

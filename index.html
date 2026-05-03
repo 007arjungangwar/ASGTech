@@ -4,118 +4,193 @@
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arjun's Learning Hub | Free DS & ML Tutorials</title>
+    <title>ASG Tech | Practical Learning Institute</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f766e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0066cc">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<script>
-// Register Service Worker for PWA
-if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(() => {
-        console.log('PWA installed successfully!');
-    });
-}
-
-// Show install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const installBtn = document.createElement('button');
-    installBtn.innerHTML = '📱 Install App';
-    installBtn.className = 'install-btn';
-    installBtn.onclick = () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-            installBtn.remove();
-        });
-    };
-    document.body.appendChild(installBtn);
-});
-</script>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
     <nav>
         <div class="nav-container">
-            <a href="index.html" class="logo">📚 Arjun's Learning Hub</a>
+            <a href="index.html" class="logo">ASG Tech</a>
             <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+                <a href="index.html">Home</a>
+                <a href="blog.html">Blog</a>
+                <a href="projects.html">Projects</a>
+                <a href="about.html">About</a>
+                <a href="login.html">Sign in</a>
             </div>
         </div>
     </nav>
 
     <main>
-        <div class="timer-container">
-            <h3>⏰ Study Timer (Pomodoro)</h3>
-            <div class="timer-session" id="sessionType">Focus Time</div>
-            <div class="timer-display" id="timerDisplay">25:00</div>
-            <div class="timer-buttons">
-                <button onclick="startTimer()">▶ Start</button>
-                <button onclick="pauseTimer()">⏸ Pause</button>
-                <button onclick="resetTimer()">🔄 Reset</button>
-            </div>
-            <p style="margin-top: 1rem; font-size: 0.9rem;">💡 Study for 25 min, then take a 5 min break</p>
-        </div>
+        <section id="guestHome" class="asg-guest-home">
+            <div class="asg-home-hero">
+                <div class="asg-hero-copy">
+                    <div class="asg-eyebrow">Coding, data science, and AI training</div>
+                    <h1>ASG Tech Institute</h1>
+                    <p class="subtitle">
+                        A focused learning portal for students who want practical skills, guided projects,
+                        progress tracking, certificates, and mentor support in one organized workspace.
+                    </p>
 
-        <script>
+                    <div class="asg-hero-actions">
+                        <a class="primary" href="login.html?mode=register">Create free student account</a>
+                        <a class="secondary" href="projects.html">View public projects</a>
+                    </div>
+                </div>
+
+                <aside class="asg-portal-panel" aria-label="Access rules">
+                    <h2>What visitors can access</h2>
+                    <p>Students can preview the institute before registration. The learning tools open after sign in.</p>
+
+                    <div class="asg-access-list">
+                        <div class="asg-access-row">
+                            <strong>Public</strong>
+                            <span>Home, blog, project previews, and about page.</span>
+                        </div>
+                        <div class="asg-access-row">
+                            <strong>Student</strong>
+                            <span>Courses, roadmap, resources, quiz, progress, certificate, videos, forum, live chat, and AI assistant.</span>
+                        </div>
+                        <div class="asg-access-row">
+                            <strong>Admin</strong>
+                            <span>Student management, forum review, questions, enrollments, and exam administration.</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="asg-section-header">
+                <div>
+                    <h2>Popular learning tracks</h2>
+                    <p>Structured paths keep the website professional and stop students from feeling lost after registration.</p>
+                </div>
+            </div>
+
+            <div class="asg-grid">
+                <article class="asg-program-card">
+                    <div class="asg-card-kicker">Beginner Track</div>
+                    <h3>Python Foundations</h3>
+                    <p>Start with programming basics, problem solving, and small guided exercises.</p>
+                    <a class="asg-card-link secondary" href="login.html?next=courses.html">Login to start</a>
+                </article>
+
+                <article class="asg-program-card">
+                    <div class="asg-card-kicker">Career Track</div>
+                    <h3>Data Science and ML</h3>
+                    <p>Learn analysis, visualization, machine learning, and portfolio-ready projects.</p>
+                    <a class="asg-card-link secondary" href="login.html?next=roadmap.html">See roadmap</a>
+                </article>
+
+                <article class="asg-program-card">
+                    <div class="asg-card-kicker">Advanced Track</div>
+                    <h3>AI Projects and PINNs</h3>
+                    <p>Move from concepts to applied AI projects with mentor guidance and certificates.</p>
+                    <a class="asg-card-link secondary" href="projects.html">Preview projects</a>
+                </article>
+            </div>
+        </section>
+
+        <section id="studentHome" class="asg-student-dashboard" hidden>
+            <div class="asg-section-header">
+                <div>
+                    <div class="asg-eyebrow">Student workspace</div>
+                    <h1>Welcome back, <span id="studentName">Student</span></h1>
+                    <p>Continue from your roadmap, check progress, or ask for support when you get stuck.</p>
+                </div>
+            </div>
+
+            <div class="asg-workspace-strip">
+                <article class="asg-workspace-card">
+                    <div class="asg-card-kicker">Next lesson</div>
+                    <h3>Continue your roadmap</h3>
+                    <p>Follow the structured sequence instead of jumping between random pages.</p>
+                    <a class="asg-card-link primary" href="roadmap.html">Open roadmap</a>
+                </article>
+
+                <article class="asg-workspace-card">
+                    <div class="asg-card-kicker">Progress</div>
+                    <h3>Track completed topics</h3>
+                    <p>Mark lessons, build a streak, and prepare for your certificate.</p>
+                    <a class="asg-card-link secondary" href="tracker.html">View progress</a>
+                </article>
+
+                <article class="asg-workspace-card">
+                    <div class="asg-card-kicker">Support</div>
+                    <h3>Ask a learning doubt</h3>
+                    <p>Use Q&A, forum, live chat, or the AI assistant from your student menu.</p>
+                    <a class="asg-card-link secondary" href="questions.html">Ask question</a>
+                </article>
+            </div>
+
+            <div class="asg-grid">
+                <article class="asg-policy-card">
+                    <h3>Focus timer</h3>
+                    <p>Use a 25 minute study block, then take a 5 minute break.</p>
+                    <div class="timer-container asg-mini-timer">
+                        <div class="timer-session" id="sessionType">Focus Time</div>
+                        <div class="timer-display" id="timerDisplay">25:00</div>
+                        <div class="timer-buttons">
+                            <button onclick="startTimer()">Start</button>
+                            <button onclick="pauseTimer()">Pause</button>
+                            <button onclick="resetTimer()">Reset</button>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="asg-policy-card">
+                    <h3>Student access policy</h3>
+                    <p>Registration unlocks learning pages because progress, certificates, forum posts, and chat need a student identity.</p>
+                </article>
+
+                <article class="asg-policy-card">
+                    <h3>Admin access policy</h3>
+                    <p>Admin pages stay hidden from students and visitors. Only accounts with the admin role can open them.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p class="copyright">© 2026 ASG Tech Institute. Learn, build, and grow with structure.</p>
+    </footer>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").catch(() => {});
+        }
+
         let timerInterval;
         let timeLeft = 25 * 60;
         let isStudySession = true;
 
         function updateDisplay() {
+            const timerDisplay = document.getElementById("timerDisplay");
+            if (!timerDisplay) return;
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
-            document.getElementById('timerDisplay').innerHTML = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
         }
 
         function startTimer() {
-            if(timerInterval) clearInterval(timerInterval);
+            if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                if(timeLeft <= 0) {
+                if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    // Switch session
-                    if(isStudySession) {
-                        alert('🎉 Great work! Time for a 5 min break!');
-                        timeLeft = 5 * 60;
-                        isStudySession = false;
-                        document.getElementById('sessionType').innerHTML = 'Break Time ☕';
-                    } else {
-                        alert('✨ Break over! Ready for another study session?');
-                        timeLeft = 25 * 60;
-                        isStudySession = true;
-                        document.getElementById('sessionType').innerHTML = 'Focus Time 🎯';
-                    }
+                    isStudySession = !isStudySession;
+                    timeLeft = isStudySession ? 25 * 60 : 5 * 60;
+                    const sessionType = document.getElementById("sessionType");
+                    if (sessionType) sessionType.textContent = isStudySession ? "Focus Time" : "Break Time";
                     updateDisplay();
                     startTimer();
-                    
-                    // Track study sessions
-                    let sessions = parseInt(localStorage.getItem('studySessions') || '0');
-                    sessions++;
-                    localStorage.setItem('studySessions', sessions);
-                } else {
-                    timeLeft--;
-                    updateDisplay();
+                    return;
                 }
+
+                timeLeft -= 1;
+                updateDisplay();
             }, 1000);
         }
 
@@ -127,295 +202,10 @@ window.addEventListener('beforeinstallprompt', (e) => {
             clearInterval(timerInterval);
             timeLeft = 25 * 60;
             isStudySession = true;
-            document.getElementById('sessionType').innerHTML = 'Focus Time 🎯';
+            const sessionType = document.getElementById("sessionType");
+            if (sessionType) sessionType.textContent = "Focus Time";
             updateDisplay();
         }
-        </script>
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="🔍 Search tutorials, projects, resources... (Try: Python, ML, PINNs)">
-            <div class="search-results" style="display: none;"></div>
-        </div>
-        <section class="hero">
-            <div id="welcomeMessage" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0; text-align: center;">
-                <div id="guestMessage">
-                    <h3>🎓 Welcome to Arjun's Learning Hub!</h3>
-                    <p><a href="login.html" style="color: white; font-weight: bold;">Login or Register</a> to track your progress, earn certificates, and access all features for FREE!</p>
-                </div>
-                <div id="userMessage" style="display: none;">
-                    <h3>Welcome back, <span id="userName"></span>! 🎉</h3>
-                    <p>Continue your learning journey. You've got this!</p>
-                </div>
-            </div>
-
-            <script>
-            const currentUser = getCurrentUser();
-            if(currentUser) {
-                document.getElementById('guestMessage').style.display = 'none';
-                document.getElementById('userMessage').style.display = 'block';
-                document.getElementById('userName').innerHTML = currentUser.name;
-                
-                // Track user visit
-                let visits = JSON.parse(localStorage.getItem(`user_visits_${currentUser.id}`) || '0');
-                visits++;
-                localStorage.setItem(`user_visits_${currentUser.id}`, visits);
-            }
-            </script>
-            <h1>Free Data Science & ML <span class="highlight">Tutorials</span></h1>
-            <p class="subtitle">Simple explanations. Real projects. No fluff. Made for students by a student at IIT Palakkad.</p>
-            <div class="hero-buttons">
-                <a href="roadmap.html" class="btn-primary">🗺️ Start Roadmap →</a>
-                <a href="resources.html" class="btn-secondary">🎁 Free Resources →</a>
-            </div>
-        </section>
-
-        <div class="stats">
-            <div class="stat">
-                <span class="stat-number">15+</span>
-                <span class="stat-label">Free Tutorials</span>
-            </div>
-            <div class="stat">
-                <span class="stat-number">5+</span>
-                <span class="stat-label">Real Projects</span>
-            </div>
-            <div class="stat">
-                <span class="stat-number">100%</span>
-                <span class="stat-label">Free Forever</span>
-            </div>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature">
-                <span class="feature-icon">📝</span>
-                <h3>Blog Tutorials</h3>
-                <p>Step-by-step guides with code examples. Learn at your pace.</p>
-                <a href="blog.html">Read blog →</a>
-            </div>
-            <div class="feature">
-                <span class="feature-icon">💻</span>
-                <h3>Real Projects</h3>
-                <p>See complete projects with GitHub repos. Learn by doing.</p>
-                <a href="projects.html">View projects →</a>
-            </div>
-            <div class="feature">
-                <span class="feature-icon">🎁</span>
-                <h3>Free Resources</h3>
-                <p>Cheat sheets, roadmaps, interview Q&A. No email required.</p>
-                <a href="resources.html">Get resources →</a>
-            </div>
-            <div class="feature">
-                <span class="feature-icon">💬</span>
-                <h3>Student Q&A</h3>
-                <p>Got questions? Ask me anything about DS/ML/IIT.</p>
-                <a href="questions.html">Ask a question →</a>
-            </div>
-        </div>
-
-        <div class="featured-post">
-            <h2>🔥 Latest from the blog</h2>
-            <div class="card">
-                <h3>How to Start Learning Python (Free Resources)</h3>
-                <p>A complete beginner's guide with links to the best free courses that actually helped me.</p>
-                <a href="posts/python-beginners-guide.html" class="read-more">Read more →</a>
-            </div>
-        </div>
-        <div class="newsletter">
-            <h3>📧 Join 50+ students learning together</h3>
-            <p>Get weekly tutorials straight to your inbox. No spam, ever.</p>
-            <form action="https://formspree.io/f/mykljwbg" method="POST">
-                <input type="email" name="email" placeholder="Enter your email" required>
-                <button type="submit">Subscribe →</button>
-            </form>
-            <small>Free. Unsubscribe anytime.</small>
-        </div>
-    </main>
-
-    <footer>
-        <div class="footer-content">
-            <div>
-                <h4>Arjun Gangwar</h4>
-                <p>Data Science @ IIT Palakkad</p>
-                <p style="font-size: 0.8rem; margin-top: 0.5rem;">📍 Helping students learn DS/ML for free</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">🐙 GitHub</a>
-                <a href="#">💼 LinkedIn</a>
-                <a href="#">🐦 Twitter</a>
-                <a href="#">📧 Email</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 Arjun Gangwar | Built for students, by a student</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
-    </footer>
-<script>
-// Simple search functionality
-const searchBox = document.querySelector('.search-box');
-const resultsDiv = document.querySelector('.search-results');
-
-const content = [
-    { title: "How to Start Learning Python", url: "posts/python-beginners-guide.html", category: "Blog" },
-    { title: "What is Machine Learning?", url: "posts/what-is-ml.html", category: "Blog" },
-    { title: "What are PINNs?", url: "posts/pinns-explained.html", category: "Blog" },
-    { title: "PINNs for Richards' Equation", url: "projects.html", category: "Project" },
-    { title: "Python Cheat Sheet", url: "resources.html", category: "Resource" },
-    { title: "ML Algorithms Mind Map", url: "resources.html", category: "Resource" },
-    { title: "Data Science Roadmap", url: "roadmap.html", category: "Guide" }
-];
-
-searchBox.addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    if (query.length < 2) {
-        resultsDiv.style.display = 'none';
-        return;
-    }
-    
-    const matches = content.filter(item => 
-        item.title.toLowerCase().includes(query)
-    );
-    
-    if (matches.length > 0) {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = matches.map(match => `
-            <div class="search-result-item" onclick="window.location.href='${match.url}'">
-                <strong>${match.title}</strong><br>
-                <small style="color: #666;">${match.category}</small>
-            </div>
-        `).join('');
-    } else {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = '<div class="search-result-item">No results found</div>';
-    }
-});
-
-// Hide results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!searchBox.contains(e.target)) {
-        resultsDiv.style.display = 'none';
-    }
-});
-</script>
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
-
-<script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (document.body.classList.contains('dark-mode')) {
-        btn.innerHTML = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        btn.innerHTML = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
-
-// Load dark mode preference
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    document.querySelector('.dark-mode-toggle').innerHTML = '☀️';
-}
-</script>
-<a href="questions.html" class="help-btn">💬</a>
-
-<div class="help-popup" id="helpPopup">
-    <h4>Need help? 🙋‍♂️</h4>
-    <p>Go to the <a href="questions.html">Q&A page</a> to ask your question. I reply within 24 hours!</p>
-    <button onclick="closeHelp()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem;">Close</button>
-</div>
-
-<script>
-const helpBtn = document.querySelector('.help-btn');
-const helpPopup = document.getElementById('helpPopup');
-
-helpBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    helpPopup.classList.toggle('active');
-    setTimeout(() => helpPopup.classList.remove('active'), 5000);
-});
-
-function closeHelp() {
-    helpPopup.classList.remove('active');
-}
-</script>
-<div class="social-login" style="text-align: center; margin: 1rem 0;">
-    <button onclick="socialLogin('google')" style="background: #db4437;">🔴 Continue with Google</button>
-    <button onclick="socialLogin('github')" style="background: #333;">🐙 Continue with GitHub</button>
-</div>
-
-<script>
-function socialLogin(provider) {
-    // Store login state
-    localStorage.setItem('loggedIn', 'true');
-    localStorage.setItem('loginProvider', provider);
-    localStorage.setItem('loginTime', new Date().toISOString());
-    
-    // Get user email (demo - in real implementation, use OAuth)
-    const email = prompt(`Enter your ${provider} email:`);
-    if(email) {
-        localStorage.setItem('userEmail', email);
-        alert(`Welcome! You're now logged in with ${provider}.`);
-        location.reload();
-    }
-}
-
-// Check login status
-if(localStorage.getItem('loggedIn')) {
-    const loginDiv = document.querySelector('.social-login');
-    if(loginDiv) {
-        loginDiv.innerHTML = `<p>✅ Logged in as ${localStorage.getItem('userEmail')} | <a href="#" onclick="logout()">Logout</a></p>`;
-    }
-}
-
-function logout() {
-    localStorage.removeItem('loggedIn');
-    localStorage.removeItem('userEmail');
-    location.reload();
-}
-</script>
+    </script>
 </body>
 </html>

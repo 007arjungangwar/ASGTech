@@ -4,211 +4,69 @@
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About | Your Name</title>
+    <title>About | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
     <nav>
         <div class="nav-container">
-            <a href="index.html" class="logo">Your Name</a>
+            <a href="index.html" class="logo">ASG Tech</a>
             <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+                <a href="index.html">Home</a>
+                <a href="blog.html">Blog</a>
+                <a href="projects.html">Projects</a>
+                <a href="about.html">About</a>
             </div>
         </div>
     </nav>
 
     <main>
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="🔍 Search tutorials, projects, resources... (Try: Python, ML, PINNs)">
-            <div class="search-results" style="display: none;"></div>
-        </div>
-        <h1>About Me</h1>
-        
-        <div class="card">
-            <h3>👋 Hi, I'm [Your Name]</h3>
-            <p>I'm a Data Science student at <strong>IIT Palakkad</strong>. I created this website to share what I'm learning — so other students don't have to struggle as much as I did.</p>
-        </div>
+        <section class="asg-home-hero">
+            <div class="asg-hero-copy">
+                <div class="asg-eyebrow">About the institute</div>
+                <h1>ASG Tech helps students learn technology with structure.</h1>
+                <p class="subtitle">
+                    The portal is designed for practical learning: clear roadmaps, project-based courses,
+                    saved progress, certificates, and student support after registration.
+                </p>
+                <div class="asg-hero-actions">
+                    <a class="primary" href="login.html?mode=register">Join as student</a>
+                    <a class="secondary" href="projects.html">See public projects</a>
+                </div>
+            </div>
 
-        <div class="card">
-            <h3>🎯 What I'm working on</h3>
-            <p>Physics-Informed Neural Networks (PINNs) for Richards' Equation — combining deep learning with physics to solve real-world problems.</p>
-        </div>
+            <aside class="asg-portal-panel">
+                <h2>Why the portal requires login</h2>
+                <p>
+                    Student-only pages store personal progress, quiz results, certificates, forum activity,
+                    and chat history. A basic account keeps those features connected to the right learner.
+                </p>
+            </aside>
+        </section>
 
-        <div class="card">
-            <h3>📚 What you'll find here</h3>
-            <ul style="margin-left: 1.5rem;">
-                <li>Free Python & ML tutorials</li>
-                <li>Real projects with code</li>
-                <li>My learning journey (honest struggles included)</li>
-            </ul>
-        </div>
+        <section class="asg-grid">
+            <article class="asg-program-card">
+                <div class="asg-card-kicker">Mission</div>
+                <h3>Make learning less confusing</h3>
+                <p>Students get a guided sequence instead of a messy list of links.</p>
+            </article>
 
-        <div class="card">
-            <h3>📧 Let's connect</h3>
-            <p>Have questions? Want to collaborate? Reach out!</p>
-            <p>Email: <a href="mailto:your.email@example.com">your.email@example.com</a></p>
-            <p>GitHub: <a href="https://github.com/YOUR_USERNAME">github.com/YOUR_USERNAME</a></p>
-            <p>LinkedIn: <a href="https://linkedin.com/in/YOUR_USERNAME">linkedin.com/in/YOUR_USERNAME</a></p>
-        </div>
+            <article class="asg-program-card">
+                <div class="asg-card-kicker">Method</div>
+                <h3>Learn by building</h3>
+                <p>Courses and projects are arranged so students practice while they learn.</p>
+            </article>
+
+            <article class="asg-program-card">
+                <div class="asg-card-kicker">Support</div>
+                <h3>Ask, discuss, improve</h3>
+                <p>The Q&A, forum, live chat, and AI assistant give students multiple ways to get help.</p>
+            </article>
+        </section>
     </main>
 
     <footer>
-        <p>© 2024 Your Name | Free resources for students</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">© 2026 ASG Tech Institute. Practical technology learning for students.</p>
     </footer>
-
-<script>
-// Simple search functionality
-const searchBox = document.querySelector('.search-box');
-const resultsDiv = document.querySelector('.search-results');
-
-const content = [
-    { title: "How to Start Learning Python", url: "posts/python-beginners-guide.html", category: "Blog" },
-    { title: "What is Machine Learning?", url: "posts/what-is-ml.html", category: "Blog" },
-    { title: "What are PINNs?", url: "posts/pinns-explained.html", category: "Blog" },
-    { title: "PINNs for Richards' Equation", url: "projects.html", category: "Project" },
-    { title: "Python Cheat Sheet", url: "resources.html", category: "Resource" },
-    { title: "ML Algorithms Mind Map", url: "resources.html", category: "Resource" },
-    { title: "Data Science Roadmap", url: "roadmap.html", category: "Guide" }
-];
-
-searchBox.addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    if (query.length < 2) {
-        resultsDiv.style.display = 'none';
-        return;
-    }
-    
-    const matches = content.filter(item => 
-        item.title.toLowerCase().includes(query)
-    );
-    
-    if (matches.length > 0) {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = matches.map(match => `
-            <div class="search-result-item" onclick="window.location.href='${match.url}'">
-                <strong>${match.title}</strong><br>
-                <small style="color: #666;">${match.category}</small>
-            </div>
-        `).join('');
-    } else {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = '<div class="search-result-item">No results found</div>';
-    }
-});
-
-// Hide results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!searchBox.contains(e.target)) {
-        resultsDiv.style.display = 'none';
-    }
-});
-</script>
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
-
-<script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (document.body.classList.contains('dark-mode')) {
-        btn.innerHTML = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        btn.innerHTML = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
-
-// Load dark mode preference
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    document.querySelector('.dark-mode-toggle').innerHTML = '☀️';
-}
-</script>
-<a href="questions.html" class="help-btn">💬</a>
-
-<div class="help-popup" id="helpPopup">
-    <h4>Need help? 🙋‍♂️</h4>
-    <p>Go to the <a href="questions.html">Q&A page</a> to ask your question. I reply within 24 hours!</p>
-    <button onclick="closeHelp()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem;">Close</button>
-</div>
-
-<script>
-const helpBtn = document.querySelector('.help-btn');
-const helpPopup = document.getElementById('helpPopup');
-
-helpBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    helpPopup.classList.toggle('active');
-    setTimeout(() => helpPopup.classList.remove('active'), 5000);
-});
-
-function closeHelp() {
-    helpPopup.classList.remove('active');
-}
-</script>
 </body>
 </html>
