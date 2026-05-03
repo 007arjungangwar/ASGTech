@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v8",
+    cacheName: "asg-tech-v9",
     publicPages: [
         "",
         "index.html",
