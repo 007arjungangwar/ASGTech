@@ -7,11 +7,12 @@ const ASG_LEARNING_KEYS = {
     codingChallenges: "asgCodingChallenges",
     codingSubmissions: "asgCodingSubmissions",
     courses: "asgCourses",
+    certificatePermissions: "asgCertificatePermissions",
     studentAnnouncement: "studentAnnouncement",
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 3;
+const ASG_LEARNING_DATA_VERSION = 4;
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -915,6 +916,11 @@ function asgEnsureLearningData() {
         asgWriteJSON(ASG_LEARNING_KEYS.codingSubmissions, []);
     }
 
+    const certificatePermissions = asgReadJSON(ASG_LEARNING_KEYS.certificatePermissions, null);
+    if (!certificatePermissions || typeof certificatePermissions !== "object" || Array.isArray(certificatePermissions)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.certificatePermissions, {});
+    }
+
     const courses = asgReadJSON(ASG_LEARNING_KEYS.courses, null);
     if (!Array.isArray(courses) || (courses.length === 0 && shouldUpgradeDefaults)) {
         asgWriteJSON(ASG_LEARNING_KEYS.courses, asgClone(ASG_DEFAULT_COURSES));
@@ -1162,6 +1168,81 @@ function asgGetStudentCertificates(user) {
     ));
 
     return asgUniqueLearningRecords([...personal, ...matchingGlobal]);
+}
+
+function asgGetCertificatePermissionKey(user) {
+    if (!user) return "guest";
+    return String(user.id || user.email || user.name || "guest").toLowerCase();
+}
+
+function asgGetCertificatePermissions() {
+    asgEnsureLearningData();
+    return asgReadJSON(ASG_LEARNING_KEYS.certificatePermissions, {});
+}
+
+function asgGetCertificatePermission(user) {
+    const permissions = asgGetCertificatePermissions();
+    if (!user) return null;
+
+    const candidates = [
+        user.id,
+        user.email,
+        asgGetCertificatePermissionKey(user)
+    ].filter(Boolean).map((value) => String(value).toLowerCase());
+
+    for (const key of candidates) {
+        if (permissions[key]) return permissions[key];
+    }
+
+    return null;
+}
+
+function asgCanDownloadCertificate(user) {
+    const permission = asgGetCertificatePermission(user);
+    return Boolean(permission && permission.allowed);
+}
+
+function asgSaveCertificatePermission(user, allowed, note = "", admin = null) {
+    asgEnsureLearningData();
+    const permissions = asgReadJSON(ASG_LEARNING_KEYS.certificatePermissions, {});
+    const key = asgGetCertificatePermissionKey(user);
+    permissions[key] = {
+        userId: user ? user.id || "" : "",
+        email: user ? user.email || "" : "",
+        name: user ? user.name || "" : "",
+        allowed: Boolean(allowed),
+        note: String(note || "").trim(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: admin ? admin.email || admin.name || "Admin" : "Admin"
+    };
+    asgWriteJSON(ASG_LEARNING_KEYS.certificatePermissions, permissions);
+    return permissions[key];
+}
+
+function asgSaveCertificateRecord(record) {
+    const savedRecord = {
+        id: record.id || asgCreateId("certificate"),
+        name: String(record.name || "").trim(),
+        email: String(record.email || "").trim(),
+        userId: record.userId || "",
+        certificateId: record.certificateId || `ASG-${Date.now()}`,
+        course: record.course || "Data Science & Machine Learning",
+        date: record.date || new Date().toISOString(),
+        downloadAllowed: Boolean(record.downloadAllowed)
+    };
+
+    const certs = asgReadJSON("certificates", []);
+    certs.push(savedRecord);
+    asgWriteJSON("certificates", certs);
+
+    if (savedRecord.userId) {
+        const personalKey = `certificates_${savedRecord.userId}`;
+        const personalCerts = asgReadJSON(personalKey, []);
+        personalCerts.push(savedRecord);
+        asgWriteJSON(personalKey, personalCerts);
+    }
+
+    return savedRecord;
 }
 
 function asgGetStudentEnrollments(user) {

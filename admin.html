@@ -48,6 +48,17 @@
                 <div class="asg-student-detail" id="studentDetail"></div>
             </article>
 
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Certificate Download Permissions</h2>
+                        <p>Students can preview certificates, but download is locked until you allow access here.</p>
+                    </div>
+                    <a class="btn-secondary" href="certificate.html">Preview Certificate</a>
+                </div>
+                <div class="asg-table-wrap" id="certificatePermissions"></div>
+            </article>
+
             <article class="asg-live-panel">
                 <div class="asg-section-header">
                     <div>
@@ -524,6 +535,74 @@
                         <div><dt>Latest coding</dt><dd>${latestCoding ? `${escapeHtml(latestCoding.challengeTitle)} (${percentage(latestCoding.percentage)})` : "No coding run yet"}</dd></div>
                     </dl>
                 </div>
+            `;
+        }
+
+        function getLatestCertificateRequest(student) {
+            const requests = readJSON("asgCertificateRequests", []);
+            return requests
+                .filter((request) => (
+                    String(request.userId || "") === String(student.id || "") ||
+                    String(request.email || "").toLowerCase() === String(student.email || "").toLowerCase()
+                ))
+                .sort((left, right) => new Date(right.requestedAt || 0) - new Date(left.requestedAt || 0))[0] || null;
+        }
+
+        function setCertificateDownloadAccess(studentId, allowed) {
+            const student = getStudents().find((item) => String(item.id) === String(studentId));
+            if (!student) return;
+            asgSaveCertificatePermission(
+                student,
+                allowed,
+                allowed ? "Admin approved certificate download." : "Admin revoked certificate download.",
+                adminUser
+            );
+            refreshDashboard();
+        }
+
+        function renderCertificatePermissions() {
+            const students = getStudents();
+            const target = document.getElementById("certificatePermissions");
+            if (!students.length) {
+                target.innerHTML = `<div class="asg-empty-state"><h2>No students found</h2><p>Student certificate permissions will appear here.</p></div>`;
+                return;
+            }
+
+            target.innerHTML = `
+                <table class="asg-admin-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Progress</th>
+                            <th>Request</th>
+                            <th>Download Access</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${students.map((student) => {
+                            const progress = asgGetStudentProgress(student);
+                            const permission = asgGetCertificatePermission(student);
+                            const request = getLatestCertificateRequest(student);
+                            const allowed = Boolean(permission && permission.allowed);
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>${escapeHtml(student.name)}</strong>
+                                        <small>${escapeHtml(student.email)}</small>
+                                    </td>
+                                    <td>${percentage(progress.progressPercent)}</td>
+                                    <td>${request ? `Requested ${formatDate(request.requestedAt)}` : "No request"}</td>
+                                    <td>${allowed ? "Allowed" : "Locked"}</td>
+                                    <td>
+                                        <button class="asg-link-button" type="button" onclick="setCertificateDownloadAccess('${student.id}', true)">Allow</button>
+                                        <button class="asg-link-button danger" type="button" onclick="setCertificateDownloadAccess('${student.id}', false)">Revoke</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join("")}
+                    </tbody>
+                </table>
             `;
         }
 
@@ -1114,6 +1193,8 @@
                 codingChallenges: asgGetCodingChallenges(true),
                 codingSubmissions: asgGetCodingSubmissions(),
                 courses: asgGetCourses(true),
+                certificatePermissions: asgGetCertificatePermissions(),
+                certificateRequests: readJSON("asgCertificateRequests", []),
                 studentQuestions: readJSON("studentQuestions", []),
                 forumTopics: readJSON("forumTopics", []),
                 certificates: readJSON("certificates", []),
@@ -1138,6 +1219,7 @@
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
             renderStats();
             renderStudentsTable();
+            renderCertificatePermissions();
             renderQuizCatalog();
             renderQuizQuestions();
             renderCodingChallenges();
@@ -1154,9 +1236,11 @@
                 ASG_LEARNING_KEYS.codingChallenges,
                 ASG_LEARNING_KEYS.codingSubmissions,
                 ASG_LEARNING_KEYS.courses,
+                ASG_LEARNING_KEYS.certificatePermissions,
                 ASG_LEARNING_KEYS.studentAnnouncement,
                 "users",
-                "studentQuestions"
+                "studentQuestions",
+                "asgCertificateRequests"
             ];
             const key = event.detail ? event.detail.key : event.key;
             if (watchedKeys.includes(key)) refreshDashboard();
