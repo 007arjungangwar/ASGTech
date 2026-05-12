@@ -2913,6 +2913,248 @@ body.has-asg-shell select {
     background: #f8fafc;
 }
 
+.asg-learning-hero {
+    min-height: min(640px, calc(100vh - 132px));
+}
+
+.asg-home-proof {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 1.4rem;
+}
+
+.asg-home-proof div,
+.asg-dashboard-preview,
+.asg-next-action-card,
+.asg-home-course-card,
+.asg-feature-row article,
+.asg-progress-category {
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.07);
+}
+
+.asg-home-proof div {
+    padding: 0.85rem;
+}
+
+.asg-home-proof strong {
+    display: block;
+    color: var(--asg-ink);
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.asg-home-proof span {
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 750;
+}
+
+.asg-dashboard-preview {
+    display: grid;
+    gap: 1rem;
+    align-content: center;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    background:
+        linear-gradient(145deg, rgba(15, 118, 110, 0.08), rgba(197, 138, 38, 0.1)),
+        #ffffff;
+}
+
+.asg-preview-top,
+.asg-preview-progress,
+.asg-preview-stack div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+}
+
+.asg-preview-top span,
+.asg-preview-stack span {
+    color: var(--asg-muted);
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.asg-preview-progress {
+    display: grid;
+    padding: 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.asg-mini-progress {
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.asg-mini-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--asg-primary), #c58a26);
+    transition: width 0.25s ease;
+}
+
+.asg-preview-stack {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.asg-preview-stack div {
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.asg-feature-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.asg-feature-row article {
+    padding: 1.15rem;
+}
+
+.asg-feature-row span {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #0f766e;
+    color: #ffffff;
+    font-weight: 900;
+}
+
+.asg-learning-command,
+.asg-progress-command {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.asg-next-action-card {
+    padding: 1.25rem;
+}
+
+.asg-next-action-card h2 {
+    margin: 0.75rem 0 0.35rem;
+}
+
+.asg-home-course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.asg-home-course-card {
+    display: grid;
+    gap: 0.7rem;
+    padding: 1rem;
+}
+
+.asg-home-course-card > span {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #eef7f5;
+    color: var(--asg-primary-dark);
+    font-weight: 900;
+}
+
+.asg-progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.asg-progress-category {
+    padding: 1rem;
+}
+
+.asg-progress-category h3 {
+    margin: 0.6rem 0;
+    color: var(--asg-ink);
+    font-size: 1rem;
+}
+
+.asg-topic-checklist {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 1rem;
+}
+
+.asg-topic-check {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+
+.asg-topic-check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--asg-primary);
+}
+
+.asg-topic-check:has(input:checked) {
+    border-color: rgba(15, 118, 110, 0.28);
+    background: #f0fdfa;
+}
+
+.asg-streak-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.4rem;
+    margin-top: 1rem;
+}
+
+.asg-streak-calendar span {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: var(--asg-muted);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.asg-streak-calendar span.studied {
+    background: #0f766e;
+    color: #ffffff;
+}
+
+.asg-streak-calendar span.today {
+    outline: 2px solid #c58a26;
+    outline-offset: 2px;
+}
+
+body.has-asg-shell button:disabled,
+body.has-asg-shell .btn-primary:disabled,
+body.has-asg-shell .btn-secondary:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+}
+
 @media (max-width: 900px) {
     .asg-course-layout {
         grid-template-columns: 1fr;
@@ -2921,5 +3163,12 @@ body.has-asg-shell select {
     .asg-topic-sidebar {
         position: static;
         max-height: none;
+    }
+
+    .asg-home-proof,
+    .asg-feature-row,
+    .asg-learning-command,
+    .asg-progress-command {
+        grid-template-columns: 1fr;
     }
 }

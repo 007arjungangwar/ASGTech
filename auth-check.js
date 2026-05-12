@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v11",
+    cacheName: "asg-tech-v12",
     publicPages: [
         "",
         "index.html",
@@ -574,5 +574,3 @@ if (document.readyState === "loading") {
 } else {
     initializeASGPortal();
 }
-
-console.log("ASG Tech auth loaded", getCurrentUser());

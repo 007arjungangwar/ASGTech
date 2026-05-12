@@ -2,475 +2,274 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learning Progress Tracker | ASG Tech</title>
+    <title>Progress Center | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+    <nav></nav>
+
+    <main class="asg-progress-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Progress center</div>
+                <h1>Learning Progress Tracker</h1>
+                <p>Track roadmap topics, build a study streak, and see when you are ready to request certificate download approval.</p>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <div class="achievements">
-            <h3>🏆 Your Achievements</h3>
-            <div class="badges" id="badges-container">
-                <!-- Badges will appear here -->
-            </div>
-        </div>
-
-        <script>
-        function checkAchievements() {
-            const totalProgress = parseInt(document.getElementById('progress-percent').innerText);
-            const badgesDiv = document.getElementById('badges-container');
-            let badges = '';
-            
-            if(totalProgress >= 10) {
-                badges += '<span class="badge">🌱 Beginner</span>';
-            }
-            if(totalProgress >= 25) {
-                badges += '<span class="badge">📚 Learning</span>';
-            }
-            if(totalProgress >= 50) {
-                badges += '<span class="badge">🔥 On Fire</span>';
-            }
-            if(totalProgress >= 75) {
-                badges += '<span class="badge">⭐ Almost There</span>';
-            }
-            if(totalProgress >= 100) {
-                badges += '<span class="badge">🏆 Master</span>';
-            }
-            
-            badgesDiv.innerHTML = badges || '<p>Complete topics to earn badges! 🎯</p>';
-        }
-
-        // Call this after updating progress
-        // Add this line inside updateAllProgress() function:
-        // checkAchievements();
-        </script>
-        <h1>📊 Your Learning Progress Tracker</h1>
-        <p>Check what you've learned. Stay motivated. Keep going! 💪</p>
-
-        <div class="progress-overall">
-            <div class="progress-circle">
-                <span id="progress-percent">0</span>%
-            </div>
-            <p>Overall Progress</p>
-        </div>
-
-        <div class="tracker-categories">
-            <div class="category">
-                <h3>🐍 Python Basics</h3>
-                <div class="topic-list">
-                    <label class="topic">
-                        <input type="checkbox" data-category="python"> Variables & Data Types
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="python"> Loops & Conditionals
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="python"> Functions
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="python"> Lists & Dictionaries
-                    </label>
+            <div class="asg-hero-metrics">
+                <div>
+                    <strong id="progressPercent">0%</strong>
+                    <span>Overall</span>
                 </div>
-                <div class="category-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="python-progress"></div>
-                    </div>
-                    <span id="python-count">0/4</span>
+                <div>
+                    <strong id="completedCount">0/0</strong>
+                    <span>Topics</span>
+                </div>
+                <div>
+                    <strong id="streakCount">0</strong>
+                    <span>Day streak</span>
                 </div>
             </div>
+        </section>
 
-            <div class="category">
-                <h3>📊 Data Analysis</h3>
-                <div class="topic-list">
-                    <label class="topic">
-                        <input type="checkbox" data-category="pandas"> NumPy Basics
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="pandas"> Pandas DataFrames
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="pandas"> Data Cleaning
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="pandas"> Matplotlib Visualization
-                    </label>
+        <section class="asg-progress-command">
+            <article class="asg-live-panel">
+                <div class="asg-question-head">
+                    <span>Recommended next step</span>
+                    <small id="certificateStatus">Certificate locked</small>
                 </div>
-                <div class="category-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="pandas-progress"></div>
-                    </div>
-                    <span id="pandas-count">0/4</span>
+                <h2 id="nextTopicTitle">Start your roadmap</h2>
+                <p id="nextTopicCopy">Check off topics as you finish them. Your progress is saved automatically.</p>
+                <div class="asg-mini-progress"><span id="overallProgressBar" style="width: 0%"></span></div>
+                <div class="asg-form-actions">
+                    <button class="btn-primary" type="button" onclick="saveProgress(true)">Save Progress</button>
+                    <a class="btn-secondary" href="certificate.html">Certificate</a>
                 </div>
+            </article>
+
+            <article class="asg-live-panel">
+                <div class="asg-question-head">
+                    <span>Study rhythm</span>
+                    <small>Last 14 days</small>
+                </div>
+                <h2>Consistency calendar</h2>
+                <p>Opening the tracker marks today as a study day.</p>
+                <div class="asg-streak-calendar" id="streakCalendar"></div>
+            </article>
+        </section>
+
+        <section class="asg-section-header">
+            <div>
+                <h2>Roadmap checklist</h2>
+                <p>Use this like a professional learning dashboard: each topic is small, visible, and measurable.</p>
             </div>
+            <button class="btn-secondary" type="button" onclick="resetProgress()">Reset</button>
+        </section>
 
-            <div class="category">
-                <h3>🤖 Machine Learning</h3>
-                <div class="topic-list">
-                    <label class="topic">
-                        <input type="checkbox" data-category="ml"> Regression
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="ml"> Classification
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="ml"> Decision Trees
-                    </label>
-                    <label class="topic">
-                        <input type="checkbox" data-category="ml"> Clustering
-                    </label>
-                </div>
-                <div class="category-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="ml-progress"></div>
-                    </div>
-                    <span id="ml-count">0/4</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="tracker-actions">
-            <button class="btn-primary" id="reset-progress">Reset All Progress</button>
-            <button class="btn-secondary" id="save-progress">Save Progress</button>
-        </div>
-
-        <div class="motivation-message" id="motivation-msg">
-            🌟 Keep going! Every small step counts.
-        </div>
+        <section class="asg-progress-grid" id="progressGrid"></section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">🐙 GitHub</a>
-                <a href="#">💼 LinkedIn</a>
-                <a href="#">🐦 Twitter</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Track your progress. Stay consistent.</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Track progress, practice, and earn credentials.</p>
     </footer>
 
     <script>
         const trackerUser = getCurrentUser();
-        const progressStorageKey = trackerUser ? `progress_${trackerUser.id}` : 'progress_guest';
+        const progressStorageKey = trackerUser ? `progress_${trackerUser.id}` : "progress_guest";
+        const trackerCategories = [
+            {
+                id: "python",
+                title: "Python Foundations",
+                description: "Programming basics needed before data science.",
+                topics: [
+                    "Variables and data types",
+                    "Operators and input/output",
+                    "Conditionals and loops",
+                    "Lists, tuples, sets, dictionaries",
+                    "Functions and scope",
+                    "Files and exceptions"
+                ]
+            },
+            {
+                id: "data",
+                title: "Data Analysis",
+                description: "Core NumPy and Pandas workflow.",
+                topics: [
+                    "NumPy arrays",
+                    "Pandas DataFrames",
+                    "Reading CSV and Excel files",
+                    "Cleaning missing data",
+                    "Grouping and aggregation",
+                    "Basic visualization"
+                ]
+            },
+            {
+                id: "ml",
+                title: "Machine Learning",
+                description: "Model workflow from data to evaluation.",
+                topics: [
+                    "Train/test split",
+                    "Regression models",
+                    "Classification models",
+                    "Model evaluation metrics",
+                    "Overfitting and regularization",
+                    "Mini ML project"
+                ]
+            }
+        ];
 
         function readSavedProgress() {
             try {
-                const saved = JSON.parse(localStorage.getItem(progressStorageKey) || '{}');
-                return saved && typeof saved === 'object' ? saved : {};
+                const saved = JSON.parse(localStorage.getItem(progressStorageKey) || "{}");
+                return saved && typeof saved === "object" ? saved : {};
             } catch (error) {
                 return {};
             }
         }
 
-        function persistProgress(showAlert = false) {
+        function topicKey(categoryId, topicIndex) {
+            return `${categoryId}_${topicIndex}`;
+        }
+
+        function renderProgressGrid() {
+            const saved = readSavedProgress();
+            let legacyIndex = 0;
+            document.getElementById("progressGrid").innerHTML = trackerCategories.map((category) => `
+                <article class="asg-progress-category" data-category="${category.id}">
+                    <div class="asg-question-head">
+                        <span>${category.title}</span>
+                        <small id="${category.id}Count">0/${category.topics.length}</small>
+                    </div>
+                    <h3>${category.description}</h3>
+                    <div class="asg-mini-progress"><span id="${category.id}Bar" style="width: 0%"></span></div>
+                    <div class="asg-topic-checklist">
+                        ${category.topics.map((topic, index) => {
+                            const key = topicKey(category.id, index);
+                            const legacyValue = localStorage.getItem(`progress_${legacyIndex}`);
+                            const checked = saved[key] === true || (saved[key] === undefined && legacyValue === "true");
+                            legacyIndex += 1;
+                            return `
+                                <label class="asg-topic-check">
+                                    <input type="checkbox" data-topic-key="${key}" ${checked ? "checked" : ""}>
+                                    <span>${topic}</span>
+                                </label>
+                            `;
+                        }).join("")}
+                    </div>
+                </article>
+            `).join("");
+
+            document.querySelectorAll("[data-topic-key]").forEach((checkbox) => {
+                checkbox.addEventListener("change", () => {
+                    markStudied();
+                    updateAllProgress();
+                    saveProgress(false);
+                });
+            });
+        }
+
+        function collectProgress() {
             const progress = {};
-            document.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
-                progress[index] = checkbox.checked;
+            document.querySelectorAll("[data-topic-key]").forEach((checkbox) => {
+                progress[checkbox.dataset.topicKey] = checkbox.checked;
             });
-            localStorage.setItem(progressStorageKey, JSON.stringify(progress));
-            if (showAlert) alert('Progress saved! Come back anytime to continue.');
+            return progress;
         }
 
-        // Load saved progress
-        function loadProgress() {
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            const savedProgress = readSavedProgress();
-            checkboxes.forEach((checkbox, index) => {
-                const saved = savedProgress[index];
-                const legacySaved = localStorage.getItem(`progress_${index}`);
-                if (saved === true || (saved === undefined && legacySaved === 'true')) {
-                    checkbox.checked = true;
-                }
-            });
-            updateAllProgress();
-            persistProgress(false);
+        function saveProgress(showAlert = false) {
+            localStorage.setItem(progressStorageKey, JSON.stringify(collectProgress()));
+            if (showAlert) alert("Progress saved.");
         }
 
-        // Update progress for all categories
         function updateAllProgress() {
-            const categories = ['python', 'pandas', 'ml'];
             let totalChecked = 0;
             let totalTopics = 0;
+            let nextTopic = "";
 
-            categories.forEach(cat => {
-                const checkboxes = document.querySelectorAll(`input[data-category="${cat}"]`);
-                const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
-                const percent = (checked / checkboxes.length) * 100;
-                
-                const fillBar = document.getElementById(`${cat}-progress`);
-                if (fillBar) fillBar.style.width = `${percent}%`;
-                
-                document.getElementById(`${cat}-count`).innerHTML = `${checked}/${checkboxes.length}`;
-                
+            trackerCategories.forEach((category) => {
+                const checkboxes = Array.from(document.querySelectorAll(`[data-topic-key^="${category.id}_"]`));
+                const checked = checkboxes.filter((checkbox) => checkbox.checked).length;
+                const percent = checkboxes.length ? Math.round((checked / checkboxes.length) * 100) : 0;
                 totalChecked += checked;
                 totalTopics += checkboxes.length;
+
+                const count = document.getElementById(`${category.id}Count`);
+                const bar = document.getElementById(`${category.id}Bar`);
+                if (count) count.textContent = `${checked}/${checkboxes.length}`;
+                if (bar) bar.style.width = `${percent}%`;
+
+                if (!nextTopic) {
+                    const next = checkboxes.find((checkbox) => !checkbox.checked);
+                    if (next) nextTopic = next.closest("label").querySelector("span").textContent;
+                }
             });
 
-            const overallPercent = Math.round((totalChecked / totalTopics) * 100);
-            document.getElementById('progress-percent').innerHTML = overallPercent;
-            
-            // Motivation message
-            const msgDiv = document.getElementById('motivation-msg');
-            if (overallPercent === 100) {
-                msgDiv.innerHTML = '🎉 AMAZING! You completed everything! Now build projects and help others! 🎉';
-            } else if (overallPercent >= 50) {
-                msgDiv.innerHTML = '🔥 You\'re on fire! Halfway there! Keep pushing! 🔥';
-            } else if (overallPercent >= 25) {
-                msgDiv.innerHTML = '💪 Great start! Consistency is key. You got this! 💪';
-            } else if (overallPercent > 0) {
-                msgDiv.innerHTML = '🌟 First step complete! Every expert was once a beginner. 🌟';
-            } else {
-                msgDiv.innerHTML = '🌟 Start by checking what you know. Every small step counts! 🌟';
-            }
+            const overall = totalTopics ? Math.round((totalChecked / totalTopics) * 100) : 0;
+            document.getElementById("progressPercent").textContent = `${overall}%`;
+            document.getElementById("completedCount").textContent = `${totalChecked}/${totalTopics}`;
+            document.getElementById("overallProgressBar").style.width = `${overall}%`;
+            document.getElementById("nextTopicTitle").textContent = nextTopic || "Roadmap complete";
+            document.getElementById("nextTopicCopy").textContent = nextTopic
+                ? "This is the next unfinished topic in your roadmap."
+                : "Strong work. Move into exams, projects, and certificate download approval.";
+            document.getElementById("certificateStatus").textContent = overall >= 50
+                ? "Ready to request approval"
+                : "Reach 50% for certificate";
         }
 
-        // Save progress
-        function saveProgress() {
-            persistProgress(true);
-        }
-
-        // Reset progress
         function resetProgress() {
-            if (confirm('Are you sure? This will reset all your learning progress.')) {
-                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-                checkboxes.forEach((checkbox, index) => {
-                    checkbox.checked = false;
-                    localStorage.removeItem(`progress_${index}`);
-                });
-                localStorage.removeItem(progressStorageKey);
-                updateAllProgress();
-                alert('Progress reset. Time to start fresh!');
-            }
+            if (!confirm("Reset all tracker progress?")) return;
+            document.querySelectorAll("[data-topic-key]").forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+            localStorage.removeItem(progressStorageKey);
+            updateAllProgress();
         }
 
-        // Event listeners
-        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', () => {
-                updateAllProgress();
-                persistProgress(false);
-            });
-        });
+        function markStudied() {
+            const today = new Date().toDateString();
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
+            const lastStudy = localStorage.getItem("lastStudyDate");
+            let streak = Number(localStorage.getItem("studyStreak") || 0);
 
-        document.getElementById('save-progress').addEventListener('click', saveProgress);
-        document.getElementById('reset-progress').addEventListener('click', resetProgress);
+            if (lastStudy === today) {
+                return;
+            }
 
-        // Initialize
-        loadProgress();
+            streak = lastStudy === yesterday ? streak + 1 : 1;
+            localStorage.setItem("studyStreak", String(streak));
+            localStorage.setItem("lastStudyDate", today);
+            localStorage.setItem(`study_${today}`, "true");
+        }
+
+        function renderStreak() {
+            markStudied();
+            const streak = Number(localStorage.getItem("studyStreak") || 0);
+            const today = new Date().toDateString();
+            document.getElementById("streakCount").textContent = streak;
+
+            const days = [];
+            for (let index = 13; index >= 0; index -= 1) {
+                const date = new Date(Date.now() - index * 86400000);
+                const key = date.toDateString();
+                days.push({
+                    label: date.getDate(),
+                    studied: Boolean(localStorage.getItem(`study_${key}`)),
+                    today: key === today
+                });
+            }
+
+            document.getElementById("streakCalendar").innerHTML = days.map((day) => `
+                <span class="${day.studied ? "studied" : ""} ${day.today ? "today" : ""}">${day.label}</span>
+            `).join("");
+        }
+
+        renderProgressGrid();
+        renderStreak();
+        updateAllProgress();
+        saveProgress(false);
     </script>
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
-
-<script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (document.body.classList.contains('dark-mode')) {
-        btn.innerHTML = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        btn.innerHTML = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
-
-// Load dark mode preference
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    document.querySelector('.dark-mode-toggle').innerHTML = '☀️';
-}
-</script>
-<a href="questions.html" class="help-btn">💬</a>
-
-<div class="help-popup" id="helpPopup">
-    <h4>Need help? 🙋‍♂️</h4>
-    <p>Go to the <a href="questions.html">Q&A page</a> to ask your question. I reply within 24 hours!</p>
-    <button onclick="closeHelp()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem;">Close</button>
-</div>
-
-<script>
-const helpBtn = document.querySelector('.help-btn');
-const helpPopup = document.getElementById('helpPopup');
-
-helpBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    helpPopup.classList.toggle('active');
-    setTimeout(() => helpPopup.classList.remove('active'), 5000);
-});
-
-function closeHelp() {
-    helpPopup.classList.remove('active');
-}
-</script>
-<div class="streak-section">
-    <h3>🔥 Study Streak</h3>
-    <div class="streak-display">
-        <div class="streak-count" id="streakCount">0</div>
-        <p>days in a row!</p>
-    </div>
-    <div id="calendar"></div>
-</div>
-
-<style>
-.streak-section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    margin: 2rem 0;
-    text-align: center;
-}
-
-.streak-count {
-    font-size: 3rem;
-    font-weight: bold;
-    color: #ff6b35;
-}
-
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    margin-top: 1rem;
-}
-
-.calendar-day {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background: #f0f0f0;
-    font-size: 0.75rem;
-}
-
-.calendar-day.studied {
-    background: #4caf50;
-    color: white;
-}
-
-.calendar-day.today {
-    border: 2px solid #0066cc;
-}
-</style>
-
-<script>
-function updateStreak() {
-    let lastStudy = localStorage.getItem('lastStudyDate');
-    let streak = parseInt(localStorage.getItem('studyStreak') || '0');
-    const today = new Date().toDateString();
-    
-    if(lastStudy === today) {
-        // Already studied today
-    } else if(lastStudy === new Date(Date.now() - 86400000).toDateString()) {
-        streak++;
-        localStorage.setItem('studyStreak', streak);
-    } else {
-        streak = 1;
-        localStorage.setItem('studyStreak', streak);
-    }
-    
-    localStorage.setItem('lastStudyDate', today);
-    document.getElementById('streakCount').innerHTML = streak;
-    
-    // Generate calendar
-    const calendarDiv = document.getElementById('calendar');
-    const dates = [];
-    for(let i = 27; i >= 0; i--) {
-        const date = new Date(Date.now() - (i * 86400000));
-        dates.push(date);
-    }
-    
-    calendarDiv.innerHTML = dates.map(date => {
-        const isStudied = localStorage.getItem(`study_${date.toDateString()}`);
-        const isToday = date.toDateString() === today;
-        return `<div class="calendar-day ${isStudied ? 'studied' : ''} ${isToday ? 'today' : ''}">${date.getDate()}</div>`;
-    }).join('');
-}
-
-// Mark today as studied when user visits
-function markStudied() {
-    const today = new Date().toDateString();
-    localStorage.setItem(`study_${today}`, 'true');
-    updateStreak();
-}
-
-markStudied();
-</script>
 </body>
 </html>
