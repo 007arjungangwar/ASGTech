@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Exam | ASG Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav></nav>
+
+    <main class="asg-practice-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Coding exam</div>
+                <h1 id="examTitle">Coding Exam</h1>
+                <p>Solve the questions for this subject. Runs are saved to your progress.</p>
+            </div>
+            <div class="asg-hero-metrics">
+                <div><strong id="examQuestionCount">0</strong><span>Questions</span></div>
+                <div><strong id="examSolvedCount">0</strong><span>Solved</span></div>
+                <div><strong id="examRunCount">0</strong><span>Runs</span></div>
+            </div>
+        </section>
+
+        <section class="asg-practice-shell">
+            <aside class="asg-challenge-list" id="challengeList"></aside>
+
+            <section class="asg-code-workspace">
+                <div id="challengeDetails" class="asg-live-panel"></div>
+                <div class="asg-editor-toolbar">
+                    <span id="engineStatus">Python engine loads when you run code.</span>
+                    <div>
+                        <button class="btn-secondary" type="button" onclick="resetStarterCode()">Reset</button>
+                        <button class="btn-primary" type="button" onclick="runExamCode()">Run Code</button>
+                    </div>
+                </div>
+                <textarea id="pythonEditor" class="asg-python-editor" spellcheck="false" wrap="off"></textarea>
+                <div class="asg-output-panel" id="runOutput">
+                    <h3>Run output</h3>
+                    <p>Run your code to see stdout and test results.</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <p class="copyright">ASG Tech Institute. Coding exam.</p>
+    </footer>
+
+    <script>
+        const examUser = getCurrentUser();
+        const editor = document.getElementById("pythonEditor");
+        const params = new URLSearchParams(window.location.search);
+        const activeTopic = params.get("topic") || "Python";
+        let pyodideInstance = null;
+        let pyodideLoading = null;
+        let challenges = [];
+        let currentChallengeIndex = 0;
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function draftKey(challengeId) {
+            const userId = examUser ? examUser.id : "guest";
+            return `codingExamDraft_${userId}_${challengeId}`;
+        }
+
+        function updateStats() {
+            const submissions = asgGetCodingSubmissions(examUser).filter((submission) => {
+                const challenge = challenges.find((item) => item.id === submission.challengeId);
+                return Boolean(challenge);
+            });
+            const solvedIds = new Set(submissions.filter((submission) => submission.total > 0 && submission.passed === submission.total).map((submission) => submission.challengeId));
+            document.getElementById("examQuestionCount").textContent = challenges.length;
+            document.getElementById("examSolvedCount").textContent = solvedIds.size;
+            document.getElementById("examRunCount").textContent = submissions.length;
+        }
+
+        function renderChallengeList() {
+            const submissions = asgGetCodingSubmissions(examUser);
+            const solvedIds = new Set(submissions.filter((submission) => submission.total > 0 && submission.passed === submission.total).map((submission) => submission.challengeId));
+            document.getElementById("challengeList").innerHTML = `
+                <div class="asg-challenge-list-head">
+                    <h2>${escapeHtml(activeTopic)}</h2>
+                    <a href="exam-center.html">Exam Center</a>
+                </div>
+                ${challenges.map((challenge, index) => `
+                    <button class="asg-challenge-button ${index === currentChallengeIndex ? "active" : ""}" type="button" onclick="selectChallenge(${index})">
+                        <span>${escapeHtml(challenge.title)}</span>
+                        <small>${escapeHtml(challenge.difficulty)} | ${solvedIds.has(challenge.id) ? "Solved" : "Open"}</small>
+                    </button>
+                `).join("")}
+            `;
+        }
+
+        function renderChallengeDetails() {
+            const challenge = challenges[currentChallengeIndex];
+            if (!challenge) {
+                document.getElementById("challengeDetails").innerHTML = `
+                    <div class="asg-empty-state">
+                        <h2>No coding questions</h2>
+                        <p>Your admin can publish ${escapeHtml(activeTopic)} questions from the dashboard.</p>
+                    </div>
+                `;
+                editor.value = "";
+                return;
+            }
+
+            editor.value = localStorage.getItem(draftKey(challenge.id)) || challenge.starterCode || "def solution():\n    pass\n";
+            document.getElementById("challengeDetails").innerHTML = `
+                <div class="asg-question-head">
+                    <span>${escapeHtml(challenge.topic)}</span>
+                    <small>${escapeHtml(challenge.difficulty)}</small>
+                </div>
+                <h2>${escapeHtml(challenge.title)}</h2>
+                <p>${escapeHtml(challenge.prompt)}</p>
+                <div class="asg-test-preview">
+                    <h3>Sample tests</h3>
+                    ${challenge.tests.map((test, index) => `
+                        <div class="asg-test-row">
+                            <span>Test ${index + 1}</span>
+                            <code>solution(${escapeHtml(test.args.map((arg) => JSON.stringify(arg)).join(", "))})</code>
+                            <code>Expected: ${escapeHtml(JSON.stringify(test.expected))}</code>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        function selectChallenge(index) {
+            currentChallengeIndex = index;
+            renderChallengeList();
+            renderChallengeDetails();
+            renderOutputIdle();
+        }
+
+        function renderOutputIdle() {
+            document.getElementById("runOutput").innerHTML = "<h3>Run output</h3><p>Run your code to see stdout and test results.</p>";
+        }
+
+        function resetStarterCode() {
+            const challenge = challenges[currentChallengeIndex];
+            if (!challenge || !confirm("Reset this editor to the starter code?")) return;
+            editor.value = challenge.starterCode || "def solution():\n    pass\n";
+            localStorage.setItem(draftKey(challenge.id), editor.value);
+            renderOutputIdle();
+        }
+
+        editor.addEventListener("keydown", (event) => {
+            if (event.key === "Tab") {
+                event.preventDefault();
+                const start = editor.selectionStart;
+                editor.value = `${editor.value.slice(0, start)}    ${editor.value.slice(editor.selectionEnd)}`;
+                editor.selectionStart = editor.selectionEnd = start + 4;
+            }
+        });
+
+        editor.addEventListener("input", () => {
+            const challenge = challenges[currentChallengeIndex];
+            if (challenge) localStorage.setItem(draftKey(challenge.id), editor.value);
+        });
+
+        function loadPyodideScript() {
+            if (window.loadPyodide) return Promise.resolve();
+            return new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function getPyodideEngine() {
+            if (pyodideInstance) return pyodideInstance;
+            if (!pyodideLoading) {
+                document.getElementById("engineStatus").textContent = "Loading Python engine...";
+                pyodideLoading = loadPyodideScript()
+                    .then(() => window.loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/" }))
+                    .then((engine) => {
+                        pyodideInstance = engine;
+                        document.getElementById("engineStatus").textContent = "Python engine ready.";
+                        return engine;
+                    });
+            }
+            return pyodideLoading;
+        }
+
+        function buildHarness(code, tests) {
+            return `
+import contextlib, io, json, traceback
+USER_CODE = ${JSON.stringify(code)}
+TESTS = json.loads(${JSON.stringify(JSON.stringify(tests))})
+payload = {"passed": 0, "total": len(TESTS), "results": [], "stdout": "", "error": ""}
+buffer = io.StringIO()
+namespace = {}
+try:
+    with contextlib.redirect_stdout(buffer):
+        exec(USER_CODE, namespace)
+    solution = namespace.get("solution")
+    if not callable(solution):
+        raise Exception("Define a function named solution.")
+    for index, test in enumerate(TESTS, start=1):
+        try:
+            got = solution(*test.get("args", []))
+            expected = test.get("expected")
+            passed = got == expected
+            if passed:
+                payload["passed"] += 1
+            payload["results"].append({"index": index, "passed": passed, "expected": expected, "got": got})
+        except Exception as error:
+            payload["results"].append({"index": index, "passed": False, "expected": test.get("expected"), "got": "Error: " + str(error)})
+except Exception:
+    payload["error"] = traceback.format_exc(limit=4)
+payload["stdout"] = buffer.getvalue()
+json.dumps(payload, default=str)
+`;
+        }
+
+        function renderRunResult(payload) {
+            const percentage = payload.total ? Math.round((payload.passed / payload.total) * 100) : 0;
+            document.getElementById("runOutput").innerHTML = `
+                <div class="asg-result-summary">
+                    <div><span>Tests passed</span><strong>${payload.passed}/${payload.total}</strong></div>
+                    <div><span>Score</span><strong>${percentage}%</strong></div>
+                    <p>Run saved to your progress.</p>
+                </div>
+                ${payload.error ? `<pre class="asg-error-output">${escapeHtml(payload.error)}</pre>` : ""}
+                <h3>Stdout</h3>
+                ${payload.stdout ? `<pre>${escapeHtml(payload.stdout)}</pre>` : "<p>No printed output.</p>"}
+                <h3>Test details</h3>
+                <div class="asg-review-list">
+                    ${payload.results.map((result) => `
+                        <article class="asg-review-item ${result.passed ? "correct" : "wrong"}">
+                            <div class="asg-question-head"><span>Test ${result.index}</span><small>${result.passed ? "Passed" : "Failed"}</small></div>
+                            <p><strong>Expected:</strong> ${escapeHtml(JSON.stringify(result.expected))}</p>
+                            <p><strong>Got:</strong> ${escapeHtml(JSON.stringify(result.got))}</p>
+                        </article>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        async function runExamCode() {
+            const challenge = challenges[currentChallengeIndex];
+            if (!challenge) return;
+            const runButton = document.querySelector(".asg-editor-toolbar .btn-primary");
+            runButton.disabled = true;
+            runButton.textContent = "Running...";
+
+            try {
+                const engine = await getPyodideEngine();
+                const payload = JSON.parse(await engine.runPythonAsync(buildHarness(editor.value, challenge.tests)));
+                const percentage = payload.total ? Math.round((payload.passed / payload.total) * 100) : 0;
+                asgSaveCodingSubmission({
+                    challengeId: challenge.id,
+                    challengeTitle: `${activeTopic} Exam: ${challenge.title}`,
+                    passed: payload.passed,
+                    total: payload.total,
+                    percentage,
+                    code: editor.value,
+                    results: payload.results,
+                    stdout: payload.stdout
+                });
+                renderRunResult(payload);
+                updateStats();
+                renderChallengeList();
+            } catch (error) {
+                document.getElementById("engineStatus").textContent = "Python engine failed to load.";
+                document.getElementById("runOutput").innerHTML = `<h3>Run output</h3><pre class="asg-error-output">${escapeHtml(error.message || error)}</pre>`;
+            } finally {
+                runButton.disabled = false;
+                runButton.textContent = "Run Code";
+            }
+        }
+
+        function loadExam() {
+            document.getElementById("examTitle").textContent = `${activeTopic} Coding Exam`;
+            challenges = asgGetCodingChallenges().filter((challenge) => challenge.topic.toLowerCase() === activeTopic.toLowerCase());
+            updateStats();
+            renderChallengeList();
+            renderChallengeDetails();
+        }
+
+        loadExam();
+    </script>
+</body>
+</html>

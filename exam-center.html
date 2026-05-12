@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Center | ASG Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav></nav>
+
+    <main class="asg-exam-center">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Student exam area</div>
+                <h1>Exam Center</h1>
+                <p>Click appear to choose between quiz exams and coding exams. Your admin can publish more exams anytime.</p>
+            </div>
+            <div class="asg-hero-metrics">
+                <div><strong id="examQuizCount">0</strong><span>Quiz exams</span></div>
+                <div><strong id="examCodingCount">0</strong><span>Coding exams</span></div>
+                <div><strong>Live</strong><span>Updated</span></div>
+            </div>
+        </section>
+
+        <section class="asg-live-panel">
+            <div class="asg-section-header">
+                <div>
+                    <h2>Appear for Exam</h2>
+                    <p>Choose an exam type after clicking appear.</p>
+                </div>
+                <button class="btn-primary" type="button" onclick="showExamChoices()">Appear</button>
+            </div>
+
+            <div class="asg-exam-choice-grid" id="examChoices" hidden>
+                <article>
+                    <h3>Quiz Exam</h3>
+                    <p>Python, Machine Learning, Deep Learning, SQL, Pandas, NumPy, and any new quiz exam created by admin.</p>
+                    <button class="btn-primary" type="button" onclick="showQuizExams()">Quiz Exam</button>
+                </article>
+                <article>
+                    <h3>Coding Exam</h3>
+                    <p>Python, Machine Learning, and Pandas coding questions, including new admin-created questions.</p>
+                    <button class="btn-primary" type="button" onclick="showCodingExams()">Coding Exam</button>
+                </article>
+            </div>
+        </section>
+
+        <section class="asg-live-panel" id="examList" hidden></section>
+    </main>
+
+    <footer>
+        <p class="copyright">ASG Tech Institute. Exam center.</p>
+    </footer>
+
+    <script>
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function updateExamStats() {
+            document.getElementById("examQuizCount").textContent = asgGetQuizCatalog().filter((quiz) => quiz.status !== "draft").length;
+            document.getElementById("examCodingCount").textContent = asgGetCodingChallenges().length;
+        }
+
+        function showExamChoices() {
+            document.getElementById("examChoices").hidden = false;
+            document.getElementById("examList").hidden = true;
+        }
+
+        function showQuizExams() {
+            const quizzes = asgGetQuizCatalog().filter((quiz) => quiz.status !== "draft");
+            const questions = asgGetQuizQuestions(false);
+            const target = document.getElementById("examList");
+            target.hidden = false;
+            target.innerHTML = `
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Quiz Exams</h2>
+                        <p>Select a subject to begin.</p>
+                    </div>
+                </div>
+                <div class="asg-exam-list-grid">
+                    ${quizzes.map((quiz) => {
+                        const count = questions.filter((question) => question.quizId === quiz.id).length;
+                        return `
+                            <a class="asg-exam-card" href="quiz.html?quiz=${encodeURIComponent(quiz.id)}">
+                                <span>${escapeHtml(quiz.topic)}</span>
+                                <strong>${escapeHtml(quiz.title)}</strong>
+                                <small>${count} questions</small>
+                            </a>
+                        `;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        function showCodingExams() {
+            const examTopics = ["Python", "Machine Learning", "Pandas"];
+            const challenges = asgGetCodingChallenges().filter((challenge) => (
+                examTopics.some((topic) => topic.toLowerCase() === challenge.topic.toLowerCase())
+            ));
+            const topics = [...new Set(challenges.map((challenge) => challenge.topic))];
+            const target = document.getElementById("examList");
+            target.hidden = false;
+            target.innerHTML = `
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Coding Exams</h2>
+                        <p>Select a subject to solve coding questions.</p>
+                    </div>
+                </div>
+                <div class="asg-exam-list-grid">
+                    ${topics.map((topic) => {
+                        const count = challenges.filter((challenge) => challenge.topic === topic).length;
+                        return `
+                            <a class="asg-exam-card" href="coding-exam.html?topic=${encodeURIComponent(topic)}">
+                                <span>${escapeHtml(topic)}</span>
+                                <strong>${escapeHtml(topic)} Coding Exam</strong>
+                                <small>${count} questions</small>
+                            </a>
+                        `;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        updateExamStats();
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "asg-tech-v9";
+const CACHE_NAME = "asg-tech-v10";
 const urlsToCache = [
     "/learning-with-arjun/",
     "/learning-with-arjun/index.html",
@@ -8,7 +8,12 @@ const urlsToCache = [
     "/learning-with-arjun/login.html",
     "/learning-with-arjun/admin.html",
     "/learning-with-arjun/quiz.html",
-    "/learning-with-arjun/coding-practice.html"
+    "/learning-with-arjun/coding-practice.html",
+    "/learning-with-arjun/exam-center.html",
+    "/learning-with-arjun/coding-exam.html",
+    "/learning-with-arjun/courses.html",
+    "/learning-with-arjun/course-detail.html",
+    "/learning-with-arjun/topic-detail.html"
 ];
 
 self.addEventListener("install", (event) => {

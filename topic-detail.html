@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topic | ASG Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav></nav>
+
+    <main class="asg-topic-page">
+        <section class="asg-page-hero" id="topicHero"></section>
+        <section class="asg-course-layout">
+            <aside class="asg-topic-sidebar" id="topicList"></aside>
+            <section class="asg-live-panel asg-topic-workspace">
+                <div class="asg-topic-tabs" role="tablist">
+                    <button class="active" type="button" onclick="selectTopicTab('content', this)">Content</button>
+                    <button type="button" onclick="selectTopicTab('quiz', this)">Quiz</button>
+                    <button type="button" onclick="selectTopicTab('video', this)">Video</button>
+                </div>
+                <article class="asg-topic-content" id="topicPanel"></article>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <p class="copyright">ASG Tech Institute. Topic lesson.</p>
+    </footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const course = asgGetCourseById(params.get("course"));
+        const topic = course ? asgGetTopicById(course.id, params.get("topic")) : null;
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function getEmbedUrl(url) {
+            const value = String(url || "").trim();
+            if (!value) return "";
+            if (value.includes("youtube.com/watch?v=")) return value.replace("watch?v=", "embed/");
+            if (value.includes("youtu.be/")) return `https://www.youtube.com/embed/${value.split("youtu.be/")[1].split(/[?&]/)[0]}`;
+            return value;
+        }
+
+        function renderVideo() {
+            if (!topic.videoUrl) {
+                return `<div class="asg-empty-state"><h2>No video added</h2><p>The admin can add a topic video link from the dashboard.</p></div>`;
+            }
+            const embedUrl = getEmbedUrl(topic.videoUrl);
+            return `
+                <div class="asg-video-frame">
+                    <iframe src="${escapeHtml(embedUrl)}" title="${escapeHtml(topic.title)} video" allowfullscreen></iframe>
+                </div>
+                <p><a href="${escapeHtml(topic.videoUrl)}" target="_blank" rel="noopener">Open video link</a></p>
+            `;
+        }
+
+        function selectTopicTab(tab, button) {
+            document.querySelectorAll(".asg-topic-tabs button").forEach((item) => item.classList.remove("active"));
+            button.classList.add("active");
+
+            const panel = document.getElementById("topicPanel");
+            if (tab === "quiz") {
+                panel.innerHTML = topic.quizHtml || `<div class="asg-empty-state"><h2>No quiz content</h2><p>The admin can add topic quiz HTML from the dashboard.</p></div>`;
+                return;
+            }
+            if (tab === "video") {
+                panel.innerHTML = renderVideo();
+                return;
+            }
+            panel.innerHTML = topic.content;
+        }
+
+        function renderTopic() {
+            if (!course || !topic) {
+                document.querySelector("main").innerHTML = `
+                    <section class="asg-empty-state">
+                        <h2>Topic not found</h2>
+                        <p>Return to courses and choose an active topic.</p>
+                        <a class="btn-primary" href="courses.html">Back to Courses</a>
+                    </section>
+                `;
+                return;
+            }
+
+            document.title = `${topic.title} | ASG Tech`;
+            document.getElementById("topicHero").innerHTML = `
+                <div>
+                    <div class="asg-eyebrow">${escapeHtml(course.title)}</div>
+                    <h1>${escapeHtml(topic.title)}</h1>
+                    <p>Use the left topic list to move through the course. This page keeps content, quiz, and video together for one topic.</p>
+                </div>
+                <div class="asg-hero-metrics">
+                    <div><strong>3</strong><span>Views</span></div>
+                    <div><strong>${escapeHtml(topic.status)}</strong><span>Status</span></div>
+                    <div><strong>${escapeHtml(course.icon)}</strong><span>Course</span></div>
+                </div>
+            `;
+            document.getElementById("topicList").innerHTML = `
+                <div class="asg-challenge-list-head">
+                    <h2>${escapeHtml(course.title)}</h2>
+                    <a href="course-detail.html?course=${encodeURIComponent(course.id)}">Course Home</a>
+                </div>
+                ${course.topics.map((item) => `
+                    <a class="asg-topic-link ${item.id === topic.id ? "active" : ""}" href="topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(item.id)}">
+                        <span>${escapeHtml(item.title)}</span>
+                    </a>
+                `).join("")}
+            `;
+            document.getElementById("topicPanel").innerHTML = topic.content;
+        }
+
+        renderTopic();
+    </script>
+</body>
+</html>

@@ -2,346 +2,116 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courses | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .courses-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-        
-        .course-card {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-        
-        .course-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .course-image {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-        }
-        
-        .course-content {
-            padding: 1.5rem;
-        }
-        
-        .price {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #0066cc;
-            margin: 1rem 0;
-        }
-        
-        .price.free {
-            color: #28a745;
-        }
-        
-        .enroll-btn {
-            width: 100%;
-            padding: 0.75rem;
-            background: #0066cc;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .enroll-btn.free-btn {
-            background: #28a745;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 16px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .close-modal {
-            float: right;
-            cursor: pointer;
-            font-size: 1.5rem;
-        }
-    </style>
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+    <nav></nav>
+
+    <main class="asg-course-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Learning paths</div>
+                <h1>Courses</h1>
+                <p>Open a course to see its welcome note, cheat sheet, topic list, content, quiz area, and video link.</p>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <h1>💰 Courses & Learning Paths</h1>
-        <p>Free courses to get you started. Premium courses for serious learners.</p>
-
-        <div class="courses-grid">
-            <!-- Free Course -->
-            <div class="course-card">
-                <div class="course-image">🐍</div>
-                <div class="course-content">
-                    <h3>Python for Beginners</h3>
-                    <p>Complete Python programming from zero to hero. 20+ hours of content.</p>
-                    <div class="price free">FREE</div>
-                    <button class="enroll-btn free-btn" onclick="enrollCourse('Python for Beginners', 'free')">Start Learning →</button>
+            <div class="asg-hero-metrics">
+                <div>
+                    <strong id="courseCount">0</strong>
+                    <span>Courses</span>
+                </div>
+                <div>
+                    <strong id="topicCount">0</strong>
+                    <span>Topics</span>
+                </div>
+                <div>
+                    <strong>Admin</strong>
+                    <span>Editable</span>
                 </div>
             </div>
+        </section>
 
-            <!-- Premium Course -->
-            <div class="course-card">
-                <div class="course-image">🤖</div>
-                <div class="course-content">
-                    <h3>Machine Learning Mastery</h3>
-                    <p>From basics to advanced ML algorithms. Real projects included.</p>
-                    <div class="price">₹999 <span style="font-size: 0.8rem; color: #888;">(One-time)</span></div>
-                    <button class="enroll-btn" onclick="showPayment('Machine Learning Mastery', 999)">Enroll Now →</button>
-                </div>
-            </div>
-
-            <!-- Premium Course -->
-            <div class="course-card">
-                <div class="course-image">🧠</div>
-                <div class="course-content">
-                    <h3>Deep Learning & PINNs</h3>
-                    <p>Neural networks, CNNs, and Physics-Informed Neural Networks.</p>
-                    <div class="price">₹1499 <span style="font-size: 0.8rem; color: #888;">(Includes certificate)</span></div>
-                    <button class="enroll-btn" onclick="showPayment('Deep Learning & PINNs', 1499)">Enroll Now →</button>
-                </div>
-            </div>
-
-            <!-- Free Course -->
-            <div class="course-card">
-                <div class="course-image">📊</div>
-                <div class="course-content">
-                    <h3>Data Analysis with Pandas</h3>
-                    <p>Master data manipulation and visualization.</p>
-                    <div class="price free">FREE</div>
-                    <button class="enroll-btn free-btn" onclick="enrollCourse('Data Analysis with Pandas', 'free')">Start Learning →</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="note" style="background: #f0f7ff; padding: 1.5rem; border-radius: 12px;">
-            <h3>🎓 What you get with Premium:</h3>
-            <ul>
-                <li>✅ Complete video lectures</li>
-                <li>✅ Downloadable resources</li>
-                <li>✅ Certificate of completion</li>
-                <li>✅ Direct mentorship access</li>
-                <li>✅ Lifetime updates</li>
-            </ul>
-        </div>
+        <section class="asg-course-grid" id="courseGrid"></section>
     </main>
 
-    <!-- Payment Modal -->
-    <div id="paymentModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closePayment()">&times;</span>
-            <h2>💰 Complete Payment</h2>
-            <p id="courseName"></p>
-            <p id="coursePrice"></p>
-            
-            <div style="margin: 1rem 0;">
-                <input type="text" placeholder="Full Name" id="userName" class="form-input" style="width: 100%; margin: 0.5rem 0;">
-                <input type="email" placeholder="Email" id="userEmail" class="form-input" style="width: 100%; margin: 0.5rem 0;">
-                <input type="text" placeholder="Phone (Optional)" id="userPhone" class="form-input" style="width: 100%; margin: 0.5rem 0;">
-            </div>
-            
-            <button class="btn-primary" onclick="processPayment()" style="width: 100%;">Proceed to Payment →</button>
-            <p style="font-size: 0.8rem; margin-top: 1rem;">🔒 Secure payment via UPI/Card/NetBanking</p>
-        </div>
-    </div>
-
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">🐙 GitHub</a>
-                <a href="#">💼 LinkedIn</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Learn, Grow, Succeed</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Learn, practice, grow.</p>
     </footer>
 
     <script>
-        let currentCourse = {};
         const courseUser = getCurrentUser();
-        
-        function enrollCourse(courseName, type) {
-            if(type === 'free') {
-                localStorage.setItem(`enrolled_${courseName}`, 'true');
-                alert(`🎉 You've enrolled in ${courseName} for FREE! Check your email for access.`);
-                // Track enrollment
-                const enrollmentRecord = {
-                    course: courseName,
-                    type: 'free',
-                    userId: courseUser ? courseUser.id : '',
-                    email: courseUser ? courseUser.email : '',
-                    date: new Date().toISOString()
-                };
-                let enrollments = JSON.parse(localStorage.getItem('enrollments') || '[]');
-                enrollments.push(enrollmentRecord);
-                localStorage.setItem('enrollments', JSON.stringify(enrollments));
 
-                if(courseUser) {
-                    const personalEnrollments = JSON.parse(localStorage.getItem(`enrollments_${courseUser.id}`) || '[]');
-                    personalEnrollments.push(enrollmentRecord);
-                    localStorage.setItem(`enrollments_${courseUser.id}`, JSON.stringify(personalEnrollments));
-                }
-            }
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
-        
-        function showPayment(courseName, price) {
-            currentCourse = {name: courseName, price: price};
-            document.getElementById('courseName').innerHTML = `<strong>Course:</strong> ${courseName}`;
-            document.getElementById('coursePrice').innerHTML = `<strong>Amount:</strong> ₹${price}`;
-            document.getElementById('paymentModal').style.display = 'flex';
-        }
-        
-        function closePayment() {
-            document.getElementById('paymentModal').style.display = 'none';
-        }
-        
-        function processPayment() {
-            const name = document.getElementById('userName').value;
-            const email = document.getElementById('userEmail').value;
-            
-            if(!name || !email) {
-                alert('Please enter your name and email!');
-                return;
-            }
-            
-            // Store enrollment request
-            const pending = JSON.parse(localStorage.getItem('pendingEnrollments') || '[]');
-            pending.push({
-                course: currentCourse.name,
-                amount: currentCourse.price,
-                name: name,
-                email: email,
-                userId: courseUser ? courseUser.id : '',
-                phone: document.getElementById('userPhone').value,
+
+        function saveEnrollment(course) {
+            const enrollmentRecord = {
+                course: course.title,
+                type: course.price.toLowerCase().includes("free") ? "free" : "premium",
+                userId: courseUser ? courseUser.id : "",
+                email: courseUser ? courseUser.email : "",
                 date: new Date().toISOString()
-            });
-            localStorage.setItem('pendingEnrollments', JSON.stringify(pending));
-            
-            alert(`📧 Thank you ${name}! We've sent payment instructions to ${email}. You'll get access within 24 hours.`);
-            closePayment();
-            
-            // Clear form
-            document.getElementById('userName').value = '';
-            document.getElementById('userEmail').value = '';
-            document.getElementById('userPhone').value = '';
-        }
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('paymentModal');
-            if (event.target == modal) {
-                closePayment();
+            };
+            const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
+            enrollments.push(enrollmentRecord);
+            localStorage.setItem("enrollments", JSON.stringify(enrollments));
+
+            if (courseUser) {
+                const personalEnrollments = JSON.parse(localStorage.getItem(`enrollments_${courseUser.id}`) || "[]");
+                personalEnrollments.push(enrollmentRecord);
+                localStorage.setItem(`enrollments_${courseUser.id}`, JSON.stringify(personalEnrollments));
             }
         }
-    </script>
 
+        function openCourse(courseId) {
+            const course = asgGetCourseById(courseId);
+            if (course) saveEnrollment(course);
+            window.location.href = `course-detail.html?course=${encodeURIComponent(courseId)}`;
+        }
+
+        function renderCourses() {
+            const courses = asgGetCourses();
+            document.getElementById("courseCount").textContent = courses.length;
+            document.getElementById("topicCount").textContent = courses.reduce((sum, course) => sum + course.topics.length, 0);
+
+            document.getElementById("courseGrid").innerHTML = courses.map((course) => `
+                <article class="asg-course-card">
+                    <div class="asg-course-mark">${escapeHtml(course.icon)}</div>
+                    <div>
+                        <div class="asg-question-head">
+                            <span>${escapeHtml(course.price)}</span>
+                            <small>${course.topics.length} topics</small>
+                        </div>
+                        <h2>${escapeHtml(course.title)}</h2>
+                        <p>${escapeHtml(course.summary)}</p>
+                    </div>
+                    <button class="btn-primary" type="button" onclick="openCourse('${escapeHtml(course.id)}')">Start Learning</button>
+                </article>
+            `).join("") || `
+                <div class="asg-empty-state">
+                    <h2>No active courses</h2>
+                    <p>Your admin can publish courses from the dashboard.</p>
+                </div>
+            `;
+        }
+
+        window.addEventListener("asg:data-updated", (event) => {
+            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.courses) renderCourses();
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key === ASG_LEARNING_KEYS.courses) renderCourses();
+        });
+
+        renderCourses();
+    </script>
 </body>
 </html>

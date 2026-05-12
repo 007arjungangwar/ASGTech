@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course | ASG Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav></nav>
+
+    <main class="asg-course-reader">
+        <section class="asg-page-hero" id="courseHero"></section>
+        <section class="asg-course-layout">
+            <aside class="asg-topic-sidebar" id="topicList"></aside>
+            <section class="asg-live-panel">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Cheat Sheet</h2>
+                        <p>Quick reference before you open the lessons.</p>
+                    </div>
+                </div>
+                <div class="asg-cheat-sheet" id="courseCheatSheet"></div>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <p class="copyright">ASG Tech Institute. Course workspace.</p>
+    </footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const course = asgGetCourseById(params.get("course"));
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function renderCourse() {
+            if (!course) {
+                document.querySelector("main").innerHTML = `
+                    <section class="asg-empty-state">
+                        <h2>Course not found</h2>
+                        <p>Return to courses and choose an active course.</p>
+                        <a class="btn-primary" href="courses.html">Back to Courses</a>
+                    </section>
+                `;
+                return;
+            }
+
+            document.title = `${course.title} | ASG Tech`;
+            document.getElementById("courseHero").innerHTML = `
+                <div>
+                    <div class="asg-eyebrow">Course workspace</div>
+                    <h1>${escapeHtml(course.title)}</h1>
+                    <p>${escapeHtml(course.welcome)}</p>
+                </div>
+                <div class="asg-hero-metrics">
+                    <div><strong>${course.topics.length}</strong><span>Topics</span></div>
+                    <div><strong>${escapeHtml(course.price)}</strong><span>Access</span></div>
+                    <div><strong>${escapeHtml(course.icon)}</strong><span>Course</span></div>
+                </div>
+            `;
+
+            document.getElementById("courseCheatSheet").textContent = course.cheatSheet;
+            document.getElementById("topicList").innerHTML = `
+                <div class="asg-challenge-list-head">
+                    <h2>Topics</h2>
+                    <span>${course.topics.length} active</span>
+                </div>
+                ${course.topics.map((topic) => `
+                    <a class="asg-topic-link" href="topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(topic.id)}">
+                        <span>${escapeHtml(topic.title)}</span>
+                    </a>
+                `).join("")}
+            `;
+        }
+
+        renderCourse();
+    </script>
+</body>
+</html>

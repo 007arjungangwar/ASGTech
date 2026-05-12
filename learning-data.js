@@ -1,15 +1,17 @@
 // ASG Tech shared learning data for quizzes, coding practice, and admin reports.
 
 const ASG_LEARNING_KEYS = {
+    quizCatalog: "asgQuizCatalog",
     quizQuestions: "asgQuizQuestions",
     quizAttempts: "asgQuizAttempts",
     codingChallenges: "asgCodingChallenges",
     codingSubmissions: "asgCodingSubmissions",
+    courses: "asgCourses",
     studentAnnouncement: "studentAnnouncement",
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 2;
+const ASG_LEARNING_DATA_VERSION = 3;
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -46,6 +48,13 @@ const ASG_QUIZ_CATALOG = [
         topic: "Deep Learning",
         description: "Neural networks, layers, activation, and training concepts.",
         order: 5
+    },
+    {
+        id: "sql",
+        title: "Quiz 6: SQL",
+        topic: "SQL",
+        description: "Queries, filters, joins, grouping, and database basics.",
+        order: 6
     }
 ];
 
@@ -319,6 +328,42 @@ const ASG_DEFAULT_QUIZ_QUESTIONS = [
         explanation: "Backpropagation calculates gradients so optimizers can update model weights.",
         status: "active",
         order: 3
+    },
+    {
+        id: "quiz_sql_select",
+        quizId: "sql",
+        title: "Select Rows",
+        topic: "SQL",
+        difficulty: "Beginner",
+        prompt: "Which SQL statement reads all columns from a table named students?",
+        options: [
+            { id: "a", text: "SELECT * FROM students;" },
+            { id: "b", text: "READ students ALL;" },
+            { id: "c", text: "GET * students;" },
+            { id: "d", text: "OPEN TABLE students;" }
+        ],
+        correctOption: "a",
+        explanation: "SELECT * FROM table_name reads every column from that table.",
+        status: "active",
+        order: 1
+    },
+    {
+        id: "quiz_sql_where",
+        quizId: "sql",
+        title: "Filtering Rows",
+        topic: "SQL",
+        difficulty: "Beginner",
+        prompt: "Which clause filters rows in a SQL query?",
+        options: [
+            { id: "a", text: "WHERE" },
+            { id: "b", text: "FILTER BY" },
+            { id: "c", text: "ONLY" },
+            { id: "d", text: "PICK" }
+        ],
+        correctOption: "a",
+        explanation: "WHERE is used to return only rows matching a condition.",
+        status: "active",
+        order: 2
     }
 ];
 
@@ -472,6 +517,243 @@ const ASG_DEFAULT_CODING_CHALLENGES = [
         ],
         status: "active",
         order: 10
+    },
+    {
+        id: "exam_python_palindrome",
+        title: "Palindrome Check",
+        difficulty: "Beginner",
+        topic: "Python",
+        prompt: "Create a function named solution that returns True when a word reads the same forward and backward.",
+        starterCode: "def solution(text):\n    # return True if text is a palindrome\n    pass\n",
+        tests: [
+            { args: ["madam"], expected: true },
+            { args: ["python"], expected: false },
+            { args: ["level"], expected: true }
+        ],
+        status: "active",
+        order: 11
+    },
+    {
+        id: "exam_python_unique_values",
+        title: "Unique Values",
+        difficulty: "Beginner",
+        topic: "Python",
+        prompt: "Create a function named solution that returns the sorted unique values from a list.",
+        starterCode: "def solution(values):\n    # return sorted unique values\n    pass\n",
+        tests: [
+            { args: [[3, 1, 3, 2]], expected: [1, 2, 3] },
+            { args: [["b", "a", "b"]], expected: ["a", "b"] },
+            { args: [[5, 5, 5]], expected: [5] }
+        ],
+        status: "active",
+        order: 12
+    },
+    {
+        id: "exam_ml_accuracy",
+        title: "Classification Accuracy",
+        difficulty: "Intermediate",
+        topic: "Machine Learning",
+        prompt: "Create a function named solution that receives two lists, y_true and y_pred, and returns accuracy rounded to two decimals.",
+        starterCode: "def solution(y_true, y_pred):\n    # return correct predictions / total predictions, rounded to 2 decimals\n    pass\n",
+        tests: [
+            { args: [[1, 0, 1], [1, 1, 1]], expected: 0.67 },
+            { args: [["cat", "dog"], ["cat", "dog"]], expected: 1.0 },
+            { args: [[0, 0, 1, 1], [1, 0, 0, 1]], expected: 0.5 }
+        ],
+        status: "active",
+        order: 13
+    },
+    {
+        id: "exam_ml_train_test_split",
+        title: "Train Test Count",
+        difficulty: "Beginner",
+        topic: "Machine Learning",
+        prompt: "Create a function named solution that returns the number of training rows after reserving test_percent percent for testing.",
+        starterCode: "def solution(total_rows, test_percent):\n    # return rows left for training after the test split\n    pass\n",
+        tests: [
+            { args: [100, 20], expected: 80 },
+            { args: [250, 30], expected: 175 },
+            { args: [10, 50], expected: 5 }
+        ],
+        status: "active",
+        order: 14
+    },
+    {
+        id: "exam_pandas_column_total",
+        title: "Column Total",
+        difficulty: "Beginner",
+        topic: "Pandas",
+        prompt: "Create a function named solution that receives table rows as dictionaries and returns the sum of one column.",
+        starterCode: "def solution(rows, column):\n    # rows is a list of dictionaries\n    pass\n",
+        tests: [
+            { args: [[{ "sales": 10 }, { "sales": 15 }], "sales"], expected: 25 },
+            { args: [[{ "age": 20 }, { "age": 30 }, { "age": 25 }], "age"], expected: 75 },
+            { args: [[{ "qty": 2 }, { "qty": 8 }], "qty"], expected: 10 }
+        ],
+        status: "active",
+        order: 15
+    },
+    {
+        id: "exam_pandas_filter_rows",
+        title: "Filter Rows",
+        difficulty: "Intermediate",
+        topic: "Pandas",
+        prompt: "Create a function named solution that returns rows where the given column is greater than the threshold.",
+        starterCode: "def solution(rows, column, threshold):\n    # return matching dictionaries in their original order\n    pass\n",
+        tests: [
+            { args: [[{ "score": 80 }, { "score": 45 }], "score", 50], expected: [{ "score": 80 }] },
+            { args: [[{ "x": 1 }, { "x": 3 }, { "x": 2 }], "x", 1], expected: [{ "x": 3 }, { "x": 2 }] },
+            { args: [[{ "price": 99 }, { "price": 120 }], "price", 100], expected: [{ "price": 120 }] }
+        ],
+        status: "active",
+        order: 16
+    }
+];
+
+const ASG_PYTHON_BEGINNER_TOPICS = [
+    "Python Basics: Variables, Data Types, Operators, and Input/Output",
+    "Control Flow: Conditional Statements (if, elif, else), Loops (for, while)",
+    "Data Structures: Lists, Tuples, Sets, Dictionaries",
+    "Functions: Definition, Parameters, Return Values, Scope, Lambda Functions",
+    "File Handling: Reading from and Writing to Files",
+    "Error and Exception Handling: Try, Except, Finally",
+    "Modules and Packages: Importing, Creating, and Using Libraries",
+    "Introduction to Object-Oriented Programming (OOP): Classes and Objects",
+    "Basic Algorithms: Searching, Sorting, and Recursion",
+    "Introduction to Python Libraries for Data: NumPy and Pandas (Overview)"
+];
+
+const ASG_DEFAULT_COURSES = [
+    {
+        id: "python-for-beginners",
+        title: "Python for Beginners",
+        summary: "Complete Python programming from zero to hero.",
+        icon: "PY",
+        price: "FREE",
+        status: "active",
+        welcome: "Welcome to Python for Beginners. Start with the cheat sheet, then open each topic from the left.",
+        cheatSheet: "Variables store values. Use if/elif/else for choices, loops for repetition, functions for reusable logic, and lists/dicts for everyday data.",
+        topics: ASG_PYTHON_BEGINNER_TOPICS.map((title, index) => ({
+            id: `python-beginner-topic-${index + 1}`,
+            title,
+            content: `<h2>${title}</h2><p>This lesson page is ready for your full HTML content from the admin dashboard.</p><pre><code># Add examples, notes, and exercises here</code></pre>`,
+            quizHtml: `<h2>${title} Quiz</h2><p>Add topic-specific quiz HTML from the admin dashboard.</p>`,
+            videoUrl: "",
+            order: index + 1,
+            status: "active"
+        }))
+    },
+    {
+        id: "python-for-data-science",
+        title: "Python for Data Science",
+        summary: "Python workflows for data cleaning, analysis, NumPy, Pandas, and visualization.",
+        icon: "DS",
+        price: "FREE",
+        status: "active",
+        welcome: "Welcome to Python for Data Science. Use these lessons to move from Python basics into real analysis workflows.",
+        cheatSheet: "Keep data in arrays, Series, and DataFrames. Inspect shape, clean missing values, group data, summarize, and visualize patterns.",
+        topics: [
+            "NumPy Arrays and Vectorized Operations",
+            "Pandas Series and DataFrames",
+            "Reading CSV, Excel, and JSON Files",
+            "Cleaning Missing and Duplicate Data",
+            "Filtering, Sorting, and Grouping Data",
+            "Merging and Joining DataFrames",
+            "Basic Data Visualization",
+            "Mini Data Analysis Project"
+        ].map((title, index) => ({
+            id: `python-data-science-topic-${index + 1}`,
+            title,
+            content: `<h2>${title}</h2><p>Add the complete lesson content from the admin dashboard.</p>`,
+            quizHtml: `<h2>${title} Quiz</h2><p>Add quiz HTML here.</p>`,
+            videoUrl: "",
+            order: index + 1,
+            status: "active"
+        }))
+    },
+    {
+        id: "machine-learning-mastery",
+        title: "Machine Learning Mastery",
+        summary: "From basics to advanced ML algorithms with real projects.",
+        icon: "ML",
+        price: "Rs. 999",
+        status: "active",
+        welcome: "Welcome to Machine Learning Mastery. Follow each topic in order and keep notes from experiments.",
+        cheatSheet: "ML workflow: define the target, prepare features, split data, train, validate, tune, and monitor model quality.",
+        topics: [
+            "Machine Learning Workflow",
+            "Supervised vs Unsupervised Learning",
+            "Regression Models",
+            "Classification Models",
+            "Model Evaluation Metrics",
+            "Feature Engineering",
+            "Overfitting and Regularization",
+            "End-to-End ML Project"
+        ].map((title, index) => ({
+            id: `machine-learning-topic-${index + 1}`,
+            title,
+            content: `<h2>${title}</h2><p>Add the complete machine learning lesson from the admin dashboard.</p>`,
+            quizHtml: `<h2>${title} Quiz</h2><p>Add quiz HTML here.</p>`,
+            videoUrl: "",
+            order: index + 1,
+            status: "active"
+        }))
+    },
+    {
+        id: "deep-learning-pinns",
+        title: "Deep Learning & PINNs",
+        summary: "Neural networks, CNNs, and Physics-Informed Neural Networks.",
+        icon: "DL",
+        price: "Rs. 1499",
+        status: "active",
+        welcome: "Welcome to Deep Learning & PINNs. Build a strong neural-network base before moving into physics-informed models.",
+        cheatSheet: "Neural networks learn weights with backpropagation. PINNs add physics equations to the loss function.",
+        topics: [
+            "Neural Network Foundations",
+            "Activation Functions and Loss",
+            "Backpropagation and Optimizers",
+            "CNN Basics",
+            "Regularization and Dropout",
+            "Introduction to PINNs",
+            "Physics Loss Functions",
+            "PINN Mini Project"
+        ].map((title, index) => ({
+            id: `deep-learning-topic-${index + 1}`,
+            title,
+            content: `<h2>${title}</h2><p>Add the full deep learning lesson from the admin dashboard.</p>`,
+            quizHtml: `<h2>${title} Quiz</h2><p>Add quiz HTML here.</p>`,
+            videoUrl: "",
+            order: index + 1,
+            status: "active"
+        }))
+    },
+    {
+        id: "data-analysis-with-pandas",
+        title: "Data Analysis with Pandas",
+        summary: "Master data manipulation, cleaning, and analysis.",
+        icon: "PD",
+        price: "FREE",
+        status: "active",
+        welcome: "Welcome to Data Analysis with Pandas. Practice each topic with small datasets.",
+        cheatSheet: "Use read_csv, head, info, describe, isnull, dropna, fillna, groupby, merge, pivot_table, and plot.",
+        topics: [
+            "Pandas Setup and DataFrames",
+            "Importing and Inspecting Data",
+            "Selecting Rows and Columns",
+            "Cleaning Missing Data",
+            "GroupBy and Aggregation",
+            "Merging DataFrames",
+            "Time Series Basics",
+            "Analysis Project"
+        ].map((title, index) => ({
+            id: `pandas-topic-${index + 1}`,
+            title,
+            content: `<h2>${title}</h2><p>Add the full Pandas lesson from the admin dashboard.</p>`,
+            quizHtml: `<h2>${title} Quiz</h2><p>Add quiz HTML here.</p>`,
+            videoUrl: "",
+            order: index + 1,
+            status: "active"
+        }))
     }
 ];
 
@@ -503,15 +785,42 @@ function asgCreateId(prefix) {
     return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function asgSlugify(value, fallback = "item") {
+    const slug = String(value || "")
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    return slug || `${fallback}-${Date.now()}`;
+}
+
 function asgGetQuizCatalog() {
-    return asgSortByOrder(asgClone(ASG_QUIZ_CATALOG));
+    return asgSortByOrder(asgReadJSON(ASG_LEARNING_KEYS.quizCatalog, ASG_QUIZ_CATALOG).map(asgNormalizeQuizCatalogItem));
+}
+
+function asgNormalizeQuizCatalogItem(item, index) {
+    const title = String(item.title || item.topic || `Quiz ${index + 1}`).trim();
+    const topic = String(item.topic || title.replace(/^quiz\s+\d+:\s*/i, "")).trim();
+    return {
+        id: asgSlugify(item.id || topic || title, "quiz"),
+        title,
+        topic,
+        description: String(item.description || `${topic} assessment questions.`).trim(),
+        order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+        status: item.status === "draft" ? "draft" : "active"
+    };
+}
+
+function asgSaveQuizCatalog(catalog) {
+    const normalized = catalog.map(asgNormalizeQuizCatalogItem);
+    asgWriteJSON(ASG_LEARNING_KEYS.quizCatalog, asgSortByOrder(normalized));
 }
 
 function asgResolveQuizId(value) {
     const rawValue = String(value || "").toLowerCase().trim();
     const compactValue = rawValue.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-    const matchedQuiz = ASG_QUIZ_CATALOG.find((quiz) => {
+    const matchedQuiz = asgGetQuizCatalog().find((quiz) => {
         const aliases = [
             quiz.id,
             quiz.title,
@@ -541,6 +850,7 @@ function asgInferQuizId(question) {
     ].join(" ").toLowerCase();
 
     if (searchable.includes("deep")) return "deep-learning";
+    if (searchable.includes("sql") || searchable.includes("query") || searchable.includes("database")) return "sql";
     if (searchable.includes("numpy") || searchable.includes("num py")) return "numpy";
     if (searchable.includes("pandas") || searchable.includes("dataframe")) return "pandas";
     if (searchable.includes("machine") || searchable.includes("classification") || searchable.includes("model")) {
@@ -563,6 +873,16 @@ function asgMergeDefaultItems(existingItems, defaultItems, normalizeItem) {
 function asgEnsureLearningData() {
     const storedVersion = Number(localStorage.getItem(ASG_LEARNING_KEYS.dataVersion) || 0);
     const shouldUpgradeDefaults = storedVersion < ASG_LEARNING_DATA_VERSION;
+    const quizCatalog = asgReadJSON(ASG_LEARNING_KEYS.quizCatalog, null);
+    if (!Array.isArray(quizCatalog) || (quizCatalog.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.quizCatalog, asgClone(ASG_QUIZ_CATALOG));
+    } else if (shouldUpgradeDefaults) {
+        const mergedCatalog = asgMergeDefaultItems(quizCatalog, ASG_QUIZ_CATALOG, asgNormalizeQuizCatalogItem);
+        if (mergedCatalog.length !== quizCatalog.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.quizCatalog, asgSortByOrder(mergedCatalog));
+        }
+    }
+
     const quizQuestions = asgReadJSON(ASG_LEARNING_KEYS.quizQuestions, null);
     if (!Array.isArray(quizQuestions) || (quizQuestions.length === 0 && shouldUpgradeDefaults)) {
         asgWriteJSON(ASG_LEARNING_KEYS.quizQuestions, asgClone(ASG_DEFAULT_QUIZ_QUESTIONS));
@@ -595,6 +915,16 @@ function asgEnsureLearningData() {
         asgWriteJSON(ASG_LEARNING_KEYS.codingSubmissions, []);
     }
 
+    const courses = asgReadJSON(ASG_LEARNING_KEYS.courses, null);
+    if (!Array.isArray(courses) || (courses.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.courses, asgClone(ASG_DEFAULT_COURSES));
+    } else if (shouldUpgradeDefaults) {
+        const mergedCourses = asgMergeDefaultItems(courses, ASG_DEFAULT_COURSES, asgNormalizeCourse);
+        if (mergedCourses.length !== courses.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.courses, asgSortByOrder(mergedCourses));
+        }
+    }
+
     const announcement = asgReadJSON(ASG_LEARNING_KEYS.studentAnnouncement, null);
     if (!announcement) {
         asgWriteJSON(ASG_LEARNING_KEYS.studentAnnouncement, {
@@ -611,10 +941,10 @@ function asgEnsureLearningData() {
 function asgSortByOrder(items) {
     return [...items].sort((left, right) => {
         const leftQuizOrder = left.quizId
-            ? (ASG_QUIZ_CATALOG.find((quiz) => quiz.id === left.quizId) || {}).order || 9999
+            ? (asgReadJSON(ASG_LEARNING_KEYS.quizCatalog, ASG_QUIZ_CATALOG).find((quiz) => quiz.id === left.quizId) || {}).order || 9999
             : 9999;
         const rightQuizOrder = right.quizId
-            ? (ASG_QUIZ_CATALOG.find((quiz) => quiz.id === right.quizId) || {}).order || 9999
+            ? (asgReadJSON(ASG_LEARNING_KEYS.quizCatalog, ASG_QUIZ_CATALOG).find((quiz) => quiz.id === right.quizId) || {}).order || 9999
             : 9999;
         if (leftQuizOrder !== rightQuizOrder) return leftQuizOrder - rightQuizOrder;
 
@@ -917,6 +1247,64 @@ function asgSaveStudentAnnouncement(notice) {
         body: String(notice.body || "").trim(),
         updatedAt: new Date().toISOString()
     });
+}
+
+function asgNormalizeTopic(topic, index) {
+    const title = String(topic.title || `Topic ${index + 1}`).trim();
+    return {
+        id: asgSlugify(topic.id || title, "topic"),
+        title,
+        content: String(topic.content || `<h2>${title}</h2><p>Add lesson content from the admin dashboard.</p>`),
+        quizHtml: String(topic.quizHtml || `<h2>${title} Quiz</h2><p>Add quiz content from the admin dashboard.</p>`),
+        videoUrl: String(topic.videoUrl || "").trim(),
+        order: Number.isFinite(Number(topic.order)) ? Number(topic.order) : index + 1,
+        status: topic.status === "draft" ? "draft" : "active",
+        updatedAt: topic.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgNormalizeCourse(course, index) {
+    const title = String(course.title || `Course ${index + 1}`).trim();
+    const topics = Array.isArray(course.topics) ? course.topics.map(asgNormalizeTopic) : [];
+    return {
+        id: asgSlugify(course.id || title, "course"),
+        title,
+        summary: String(course.summary || "Course lessons and practice.").trim(),
+        icon: String(course.icon || title.slice(0, 2).toUpperCase()).slice(0, 4),
+        price: String(course.price || "FREE").trim(),
+        status: course.status === "draft" ? "draft" : "active",
+        welcome: String(course.welcome || `Welcome to ${title}.`).trim(),
+        cheatSheet: String(course.cheatSheet || "Add the course cheat sheet from the admin dashboard.").trim(),
+        topics: asgSortByOrder(topics),
+        order: Number.isFinite(Number(course.order)) ? Number(course.order) : index + 1,
+        updatedAt: course.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgGetCourses(includeDrafts = false) {
+    asgEnsureLearningData();
+    const courses = asgReadJSON(ASG_LEARNING_KEYS.courses, []);
+    const normalized = courses.map(asgNormalizeCourse);
+    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((course) => course.status === "active"));
+}
+
+function asgSaveCourses(courses) {
+    const normalized = courses.map(asgNormalizeCourse);
+    asgWriteJSON(ASG_LEARNING_KEYS.courses, asgSortByOrder(normalized));
+}
+
+function asgGetCourseById(courseId, includeDrafts = false) {
+    const courses = asgGetCourses(includeDrafts);
+    const resolvedId = asgSlugify(courseId, "course");
+    return courses.find((course) => course.id === resolvedId) || courses[0] || null;
+}
+
+function asgGetTopicById(courseId, topicId, includeDrafts = false) {
+    const course = asgGetCourseById(courseId, includeDrafts);
+    if (!course) return null;
+    const resolvedTopicId = asgSlugify(topicId, "topic");
+    const topics = includeDrafts ? course.topics : course.topics.filter((topic) => topic.status === "active");
+    return topics.find((topic) => topic.id === resolvedTopicId) || topics[0] || null;
 }
 
 asgEnsureLearningData();

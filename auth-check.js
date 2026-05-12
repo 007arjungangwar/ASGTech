@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v9",
+    cacheName: "asg-tech-v10",
     publicPages: [
         "",
         "index.html",
@@ -24,10 +24,14 @@ const ASG_AUTH = {
         "assistant.html",
         "quiz.html",
         "coding-practice.html",
+        "exam-center.html",
         "forum.html",
         "videos.html",
         "chat.html",
         "exam.html",
+        "coding-exam.html",
+        "course-detail.html",
+        "topic-detail.html",
         "exam-result.html"
     ],
     adminPages: [
@@ -166,6 +170,7 @@ function navigationGroups(user) {
             items: [
                 studentLink("Quiz", "quiz.html"),
                 studentLink("Coding Practice", "coding-practice.html"),
+                studentLink("Exam", "exam-center.html"),
                 studentLink("Progress", "tracker.html"),
                 studentLink("Certificate", "certificate.html"),
                 studentLink("AI Assistant", "assistant.html")
@@ -203,6 +208,7 @@ function quickActions(user) {
         return [
             { label: "Dashboard", page: "admin.html" },
             { label: "Practice", page: "coding-practice.html" },
+            { label: "Exam", page: "exam-center.html" },
             { label: "Ask Doubt", page: "questions.html" }
         ];
     }
@@ -210,6 +216,7 @@ function quickActions(user) {
     if (user) {
         return [
             { label: "Practice", page: "coding-practice.html" },
+            { label: "Exam", page: "exam-center.html" },
             { label: "Ask Doubt", page: "questions.html" }
         ];
     }

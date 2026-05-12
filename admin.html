@@ -29,6 +29,8 @@
             <button class="btn-primary" type="button" onclick="exportAdminData()">Export Data</button>
             <a class="btn-secondary" href="quiz.html">Preview Quiz</a>
             <a class="btn-secondary" href="coding-practice.html">Preview Practice</a>
+            <a class="btn-secondary" href="exam-center.html">Preview Exam</a>
+            <a class="btn-secondary" href="courses.html">Preview Courses</a>
         </section>
 
         <section class="asg-admin-stat-grid" id="adminStats"></section>
@@ -153,6 +155,38 @@
             <article class="asg-live-panel asg-admin-wide">
                 <div class="asg-section-header">
                     <div>
+                        <h2>Quiz Exam Catalog</h2>
+                        <p>Add new quiz exam subjects. Questions can then be assigned to that subject above.</p>
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="resetQuizCatalogForm()">New Quiz Exam</button>
+                </div>
+
+                <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveQuizCatalogItem();">
+                    <input id="quizCatalogEditId" type="hidden">
+                    <label>
+                        <span>Title</span>
+                        <input id="quizCatalogTitle" type="text" placeholder="Quiz 7: Data Visualization">
+                    </label>
+                    <label>
+                        <span>Topic</span>
+                        <input id="quizCatalogTopic" type="text" placeholder="Data Visualization">
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Description</span>
+                        <textarea id="quizCatalogDescription" rows="3" placeholder="What this quiz exam covers."></textarea>
+                    </label>
+                    <div class="asg-form-actions asg-full-field">
+                        <button class="btn-primary" type="submit">Save Quiz Exam</button>
+                        <button class="btn-secondary" type="button" onclick="resetQuizCatalogForm()">Clear</button>
+                    </div>
+                </form>
+
+                <div class="asg-admin-list" id="quizCatalogList"></div>
+            </article>
+
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
                         <h2>Coding Practice Builder</h2>
                         <p>Create Python challenges. Students write a function named <code>solution</code> and run the tests you define.</p>
                     </div>
@@ -167,7 +201,7 @@
                     </label>
                     <label>
                         <span>Topic</span>
-                        <input id="codingTopic" type="text" placeholder="Python Basics">
+                        <input id="codingTopic" type="text" placeholder="Python, Machine Learning, or Pandas">
                     </label>
                     <label>
                         <span>Difficulty</span>
@@ -211,6 +245,92 @@
                 <div class="asg-admin-list" id="codingChallengeList"></div>
             </article>
 
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Course & Topic Builder</h2>
+                        <p>Create course pages, topic HTML content, topic quiz HTML, and video links for students.</p>
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="resetCourseForm()">New Course</button>
+                </div>
+
+                <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveCourse();">
+                    <input id="courseEditId" type="hidden">
+                    <label>
+                        <span>Course title</span>
+                        <input id="courseTitle" type="text" placeholder="Python for Data Science">
+                    </label>
+                    <label>
+                        <span>Icon text</span>
+                        <input id="courseIcon" type="text" maxlength="4" placeholder="PY">
+                    </label>
+                    <label>
+                        <span>Price label</span>
+                        <input id="coursePrice" type="text" placeholder="FREE">
+                    </label>
+                    <label>
+                        <span>Status</span>
+                        <select id="courseStatus">
+                            <option value="active">Active</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Summary</span>
+                        <textarea id="courseSummary" rows="2" placeholder="Short course card description."></textarea>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Welcome message</span>
+                        <textarea id="courseWelcome" rows="3" placeholder="Welcome message shown on the course page."></textarea>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Cheat sheet</span>
+                        <textarea id="courseCheatSheet" rows="4" placeholder="Course cheat sheet text."></textarea>
+                    </label>
+                    <div class="asg-form-actions asg-full-field">
+                        <button class="btn-primary" type="submit">Save Course</button>
+                        <button class="btn-secondary" type="button" onclick="resetCourseForm()">Clear</button>
+                    </div>
+                </form>
+
+                <form class="asg-admin-form asg-builder-grid asg-topic-admin-form" onsubmit="event.preventDefault(); saveTopic();">
+                    <input id="topicEditId" type="hidden">
+                    <label>
+                        <span>Course</span>
+                        <select id="topicCourse"></select>
+                    </label>
+                    <label>
+                        <span>Topic title</span>
+                        <input id="topicTitle" type="text" placeholder="Python Basics">
+                    </label>
+                    <label>
+                        <span>Status</span>
+                        <select id="topicStatus">
+                            <option value="active">Active</option>
+                            <option value="draft">Draft</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Video link</span>
+                        <input id="topicVideoUrl" type="url" placeholder="https://youtu.be/...">
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Content HTML</span>
+                        <textarea id="topicContent" class="asg-mini-code" rows="7" placeholder="<h2>Lesson</h2><p>Content...</p>"></textarea>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Quiz HTML</span>
+                        <textarea id="topicQuizHtml" class="asg-mini-code" rows="5" placeholder="<h2>Quiz</h2><p>Questions...</p>"></textarea>
+                    </label>
+                    <div class="asg-form-actions asg-full-field">
+                        <button class="btn-primary" type="submit">Save Topic</button>
+                        <button class="btn-secondary" type="button" onclick="resetTopicForm()">Clear Topic</button>
+                    </div>
+                </form>
+
+                <div class="asg-admin-list" id="courseList"></div>
+            </article>
+
             <article class="asg-live-panel">
                 <div class="asg-section-header">
                     <div>
@@ -247,7 +367,8 @@
 
         let quizQuestions = [];
         let codingChallenges = [];
-        const adminQuizCatalog = asgGetQuizCatalog();
+        let adminQuizCatalog = [];
+        let adminCourses = [];
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -315,6 +436,17 @@
                     <span>${escapeHtml(stat.label)}</span>
                 </article>
             `).join("");
+        }
+
+        function renderQuizSetOptions(selectedId = "") {
+            const quizSet = document.getElementById("quizSet");
+            if (!quizSet) return;
+            quizSet.innerHTML = adminQuizCatalog.map((quiz) => `
+                <option value="${escapeHtml(quiz.id)}">${escapeHtml(quiz.title)}</option>
+            `).join("");
+            if (selectedId && adminQuizCatalog.some((quiz) => quiz.id === selectedId)) {
+                quizSet.value = selectedId;
+            }
         }
 
         function renderStudentsTable() {
@@ -410,7 +542,7 @@
             document.getElementById("quizEditId").value = "";
             document.getElementById("quizTitle").value = "";
             document.getElementById("quizTopic").value = "General";
-            document.getElementById("quizSet").value = "python";
+            renderQuizSetOptions(adminQuizCatalog[0] ? adminQuizCatalog[0].id : "python");
             document.getElementById("quizDifficulty").value = "Beginner";
             document.getElementById("quizStatus").value = "active";
             document.getElementById("quizPrompt").value = "";
@@ -485,7 +617,7 @@
             document.getElementById("quizEditId").value = question.id;
             document.getElementById("quizTitle").value = question.title;
             document.getElementById("quizTopic").value = question.topic;
-            document.getElementById("quizSet").value = asgGetQuizById(question.quizId).id;
+            renderQuizSetOptions(asgGetQuizById(question.quizId).id);
             document.getElementById("quizDifficulty").value = question.difficulty;
             document.getElementById("quizStatus").value = question.status;
             document.getElementById("quizPrompt").value = question.prompt;
@@ -531,6 +663,81 @@
                     </div>
                 </article>
             `).join("") || `<div class="asg-empty-state"><h2>No quiz questions</h2><p>Create the first question above.</p></div>`;
+        }
+
+        function resetQuizCatalogForm() {
+            document.getElementById("quizCatalogEditId").value = "";
+            document.getElementById("quizCatalogTitle").value = "";
+            document.getElementById("quizCatalogTopic").value = "";
+            document.getElementById("quizCatalogDescription").value = "";
+        }
+
+        function saveQuizCatalogItem() {
+            const editId = document.getElementById("quizCatalogEditId").value;
+            const title = document.getElementById("quizCatalogTitle").value.trim();
+            const topic = document.getElementById("quizCatalogTopic").value.trim();
+            if (!title || !topic) {
+                alert("Add a quiz title and topic.");
+                return;
+            }
+
+            const item = {
+                id: editId || asgSlugify(topic, "quiz"),
+                title,
+                topic,
+                description: document.getElementById("quizCatalogDescription").value.trim(),
+                order: editId
+                    ? (adminQuizCatalog.find((quiz) => quiz.id === editId) || {}).order
+                    : adminQuizCatalog.length + 1,
+                status: "active"
+            };
+
+            const nextCatalog = editId
+                ? adminQuizCatalog.map((quiz) => quiz.id === editId ? item : quiz)
+                : [...adminQuizCatalog, item];
+
+            asgSaveQuizCatalog(nextCatalog);
+            resetQuizCatalogForm();
+            refreshDashboard();
+        }
+
+        function editQuizCatalogItem(quizId) {
+            const quiz = adminQuizCatalog.find((item) => item.id === quizId);
+            if (!quiz) return;
+            document.getElementById("quizCatalogEditId").value = quiz.id;
+            document.getElementById("quizCatalogTitle").value = quiz.title;
+            document.getElementById("quizCatalogTopic").value = quiz.topic;
+            document.getElementById("quizCatalogDescription").value = quiz.description;
+        }
+
+        function deleteQuizCatalogItem(quizId) {
+            const hasQuestions = quizQuestions.some((question) => question.quizId === quizId);
+            if (hasQuestions) {
+                alert("Move or delete this quiz exam's questions before deleting the catalog item.");
+                return;
+            }
+            if (!confirm("Delete this quiz exam subject?")) return;
+            asgSaveQuizCatalog(adminQuizCatalog.filter((quiz) => quiz.id !== quizId));
+            refreshDashboard();
+        }
+
+        function renderQuizCatalog() {
+            document.getElementById("quizCatalogList").innerHTML = adminQuizCatalog.map((quiz, index) => {
+                const count = quizQuestions.filter((question) => question.quizId === quiz.id).length;
+                return `
+                    <article class="asg-admin-list-item">
+                        <div>
+                            <span class="asg-item-kicker">Quiz exam | ${count} questions</span>
+                            <h3>${index + 1}. ${escapeHtml(quiz.title)}</h3>
+                            <p>${escapeHtml(quiz.description)}</p>
+                        </div>
+                        <div class="asg-item-actions">
+                            <button class="asg-link-button" type="button" onclick="editQuizCatalogItem('${quiz.id}')">Edit</button>
+                            <button class="asg-link-button danger" type="button" onclick="deleteQuizCatalogItem('${quiz.id}')">Delete</button>
+                        </div>
+                    </article>
+                `;
+            }).join("");
         }
 
         function parseExpectedValue(value) {
@@ -678,6 +885,173 @@
             `).join("") || `<div class="asg-empty-state"><h2>No coding challenges</h2><p>Create the first challenge above.</p></div>`;
         }
 
+        function renderTopicCourseOptions(selectedId = "") {
+            const select = document.getElementById("topicCourse");
+            select.innerHTML = adminCourses.map((course) => `
+                <option value="${escapeHtml(course.id)}">${escapeHtml(course.title)}</option>
+            `).join("");
+            if (selectedId && adminCourses.some((course) => course.id === selectedId)) {
+                select.value = selectedId;
+            }
+        }
+
+        function resetCourseForm() {
+            document.getElementById("courseEditId").value = "";
+            document.getElementById("courseTitle").value = "";
+            document.getElementById("courseIcon").value = "";
+            document.getElementById("coursePrice").value = "FREE";
+            document.getElementById("courseStatus").value = "active";
+            document.getElementById("courseSummary").value = "";
+            document.getElementById("courseWelcome").value = "";
+            document.getElementById("courseCheatSheet").value = "";
+        }
+
+        function saveCourse() {
+            const editId = document.getElementById("courseEditId").value;
+            const title = document.getElementById("courseTitle").value.trim();
+            if (!title) {
+                alert("Add a course title.");
+                return;
+            }
+
+            const existing = adminCourses.find((course) => course.id === editId);
+            const course = {
+                id: editId || asgSlugify(title, "course"),
+                title,
+                icon: document.getElementById("courseIcon").value.trim() || title.slice(0, 2).toUpperCase(),
+                price: document.getElementById("coursePrice").value.trim() || "FREE",
+                status: document.getElementById("courseStatus").value,
+                summary: document.getElementById("courseSummary").value.trim(),
+                welcome: document.getElementById("courseWelcome").value.trim(),
+                cheatSheet: document.getElementById("courseCheatSheet").value.trim(),
+                topics: existing ? existing.topics : [],
+                order: existing ? existing.order : adminCourses.length + 1
+            };
+
+            const nextCourses = editId
+                ? adminCourses.map((item) => item.id === editId ? course : item)
+                : [...adminCourses, course];
+
+            asgSaveCourses(nextCourses);
+            resetCourseForm();
+            refreshDashboard();
+        }
+
+        function editCourse(courseId) {
+            const course = adminCourses.find((item) => item.id === courseId);
+            if (!course) return;
+            document.getElementById("courseEditId").value = course.id;
+            document.getElementById("courseTitle").value = course.title;
+            document.getElementById("courseIcon").value = course.icon;
+            document.getElementById("coursePrice").value = course.price;
+            document.getElementById("courseStatus").value = course.status;
+            document.getElementById("courseSummary").value = course.summary;
+            document.getElementById("courseWelcome").value = course.welcome;
+            document.getElementById("courseCheatSheet").value = course.cheatSheet;
+        }
+
+        function deleteCourse(courseId) {
+            if (!confirm("Delete this course and all its topics?")) return;
+            asgSaveCourses(adminCourses.filter((course) => course.id !== courseId));
+            refreshDashboard();
+        }
+
+        function resetTopicForm() {
+            document.getElementById("topicEditId").value = "";
+            renderTopicCourseOptions(adminCourses[0] ? adminCourses[0].id : "");
+            document.getElementById("topicTitle").value = "";
+            document.getElementById("topicStatus").value = "active";
+            document.getElementById("topicVideoUrl").value = "";
+            document.getElementById("topicContent").value = "";
+            document.getElementById("topicQuizHtml").value = "";
+        }
+
+        function saveTopic() {
+            const courseId = document.getElementById("topicCourse").value;
+            const editId = document.getElementById("topicEditId").value;
+            const title = document.getElementById("topicTitle").value.trim();
+            if (!courseId || !title) {
+                alert("Choose a course and add a topic title.");
+                return;
+            }
+
+            const nextCourses = adminCourses.map((course) => {
+                if (course.id !== courseId) return course;
+                const existingTopic = course.topics.find((topic) => topic.id === editId);
+                const topic = {
+                    id: editId || asgSlugify(title, "topic"),
+                    title,
+                    status: document.getElementById("topicStatus").value,
+                    videoUrl: document.getElementById("topicVideoUrl").value.trim(),
+                    content: document.getElementById("topicContent").value || `<h2>${escapeHtml(title)}</h2><p>Add lesson content here.</p>`,
+                    quizHtml: document.getElementById("topicQuizHtml").value || `<h2>${escapeHtml(title)} Quiz</h2><p>Add quiz content here.</p>`,
+                    order: existingTopic ? existingTopic.order : course.topics.length + 1
+                };
+
+                return {
+                    ...course,
+                    topics: editId
+                        ? course.topics.map((item) => item.id === editId ? topic : item)
+                        : [...course.topics, topic]
+                };
+            });
+
+            asgSaveCourses(nextCourses);
+            resetTopicForm();
+            refreshDashboard();
+        }
+
+        function editTopic(courseId, topicId) {
+            const course = adminCourses.find((item) => item.id === courseId);
+            const topic = course && course.topics.find((item) => item.id === topicId);
+            if (!course || !topic) return;
+            renderTopicCourseOptions(course.id);
+            document.getElementById("topicEditId").value = topic.id;
+            document.getElementById("topicTitle").value = topic.title;
+            document.getElementById("topicStatus").value = topic.status;
+            document.getElementById("topicVideoUrl").value = topic.videoUrl;
+            document.getElementById("topicContent").value = topic.content;
+            document.getElementById("topicQuizHtml").value = topic.quizHtml;
+        }
+
+        function deleteTopic(courseId, topicId) {
+            if (!confirm("Delete this topic?")) return;
+            const nextCourses = adminCourses.map((course) => (
+                course.id === courseId
+                    ? { ...course, topics: course.topics.filter((topic) => topic.id !== topicId) }
+                    : course
+            ));
+            asgSaveCourses(nextCourses);
+            refreshDashboard();
+        }
+
+        function renderCourses() {
+            renderTopicCourseOptions(document.getElementById("topicCourse").value);
+            document.getElementById("courseList").innerHTML = adminCourses.map((course, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${course.status} | ${course.topics.length} topics | ${escapeHtml(course.price)}</span>
+                        <h3>${index + 1}. ${escapeHtml(course.title)}</h3>
+                        <p>${escapeHtml(course.summary)}</p>
+                        <div class="asg-topic-admin-list">
+                            ${course.topics.map((topic) => `
+                                <span>
+                                    ${escapeHtml(topic.title)}
+                                    <button class="asg-link-button" type="button" onclick="editTopic('${course.id}', '${topic.id}')">Edit</button>
+                                    <button class="asg-link-button danger" type="button" onclick="deleteTopic('${course.id}', '${topic.id}')">Delete</button>
+                                </span>
+                            `).join("")}
+                        </div>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editCourse('${course.id}')">Edit</button>
+                        <a class="asg-link-button" href="course-detail.html?course=${course.id}">Preview</a>
+                        <button class="asg-link-button danger" type="button" onclick="deleteCourse('${course.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("");
+        }
+
         function loadAnnouncement() {
             const notice = asgGetStudentAnnouncement();
             document.getElementById("noticeTitle").value = notice.title || "";
@@ -734,11 +1108,12 @@
         function exportAdminData() {
             const data = {
                 users: getUsers(),
-                quizCatalog: adminQuizCatalog,
+                quizCatalog: asgGetQuizCatalog(),
                 quizQuestions: asgGetQuizQuestions(true),
                 quizAttempts: asgGetQuizAttempts(),
                 codingChallenges: asgGetCodingChallenges(true),
                 codingSubmissions: asgGetCodingSubmissions(),
+                courses: asgGetCourses(true),
                 studentQuestions: readJSON("studentQuestions", []),
                 forumTopics: readJSON("forumTopics", []),
                 certificates: readJSON("certificates", []),
@@ -754,14 +1129,19 @@
         }
 
         function refreshDashboard() {
+            adminQuizCatalog = asgGetQuizCatalog();
             quizQuestions = asgGetQuizQuestions(true);
             codingChallenges = asgGetCodingChallenges(true);
+            adminCourses = asgGetCourses(true);
+            renderQuizSetOptions(document.getElementById("quizSet").value);
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
             renderStats();
             renderStudentsTable();
+            renderQuizCatalog();
             renderQuizQuestions();
             renderCodingChallenges();
+            renderCourses();
             renderQuestions();
             renderRecentActivity();
         }
@@ -769,9 +1149,11 @@
         function handleAdminDataUpdate(event) {
             const watchedKeys = [
                 ASG_LEARNING_KEYS.quizQuestions,
+                ASG_LEARNING_KEYS.quizCatalog,
                 ASG_LEARNING_KEYS.quizAttempts,
                 ASG_LEARNING_KEYS.codingChallenges,
                 ASG_LEARNING_KEYS.codingSubmissions,
+                ASG_LEARNING_KEYS.courses,
                 ASG_LEARNING_KEYS.studentAnnouncement,
                 "users",
                 "studentQuestions"
@@ -783,10 +1165,13 @@
         window.addEventListener("asg:data-updated", handleAdminDataUpdate);
         window.addEventListener("storage", handleAdminDataUpdate);
 
-        resetQuizForm();
-        resetCodingForm();
         loadAnnouncement();
         refreshDashboard();
+        resetQuizForm();
+        resetCodingForm();
+        resetQuizCatalogForm();
+        resetCourseForm();
+        resetTopicForm();
     </script>
 </body>
 </html>
