@@ -122,7 +122,7 @@
                     <small>${escapeHtml(challenge.difficulty)}</small>
                 </div>
                 <h2>${escapeHtml(challenge.title)}</h2>
-                <p>${escapeHtml(challenge.prompt)}</p>
+                <pre class="asg-question-text">${escapeHtml(challenge.prompt)}</pre>
                 <div class="asg-test-preview">
                     <h3>Sample tests</h3>
                     ${challenge.tests.map((test, index) => `

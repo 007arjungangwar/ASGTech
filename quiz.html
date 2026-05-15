@@ -154,7 +154,7 @@
                                 <span>Question ${index + 1}</span>
                                 <small>${escapeHtml(question.topic)} | ${escapeHtml(question.difficulty)}</small>
                             </div>
-                            <h3>${escapeHtml(question.prompt)}</h3>
+                            <pre class="asg-question-text">${escapeHtml(question.prompt)}</pre>
                             <div class="asg-option-grid">
                                 ${question.options.map((option) => `
                                     <label class="asg-option-choice">
@@ -260,7 +260,7 @@
                                 <span>Question ${index + 1}</span>
                                 <small>${answer.isCorrect ? "Correct" : "Needs review"}</small>
                             </div>
-                            <h3>${escapeHtml(answer.prompt)}</h3>
+                            <pre class="asg-question-text">${escapeHtml(answer.prompt)}</pre>
                             <p><strong>Your answer:</strong> ${escapeHtml(answer.selectedText)}</p>
                             <p><strong>Correct answer:</strong> ${escapeHtml(answer.correctText)}</p>
                             ${answer.explanation ? `<p>${escapeHtml(answer.explanation)}</p>` : ""}

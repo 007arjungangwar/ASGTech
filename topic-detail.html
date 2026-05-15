@@ -65,20 +65,66 @@
             `;
         }
 
+        function shouldUseHtmlFrame(html, mode) {
+            const value = String(html || "");
+            return mode === "iframe" || /<script[\s>]/i.test(value) || /<!doctype html|<html[\s>]/i.test(value);
+        }
+
+        function renderHtmlFrame(html, title) {
+            return `
+                <iframe
+                    class="asg-content-frame"
+                    title="${escapeHtml(title)}"
+                    sandbox="allow-scripts allow-forms allow-popups allow-modals"
+                    srcdoc="${escapeHtml(html)}"
+                ></iframe>
+            `;
+        }
+
+        function renderTopicContent() {
+            if (topic.contentType === "pdf" && topic.contentDataUrl) {
+                return `
+                    <div class="asg-file-reader">
+                        <div class="asg-question-head">
+                            <span>${escapeHtml(topic.contentFileName || "Lesson PDF")}</span>
+                            <a href="${escapeHtml(topic.contentDataUrl)}" target="_blank" rel="noopener">Open PDF</a>
+                        </div>
+                        <object data="${escapeHtml(topic.contentDataUrl)}" type="application/pdf">
+                            <iframe src="${escapeHtml(topic.contentDataUrl)}" title="${escapeHtml(topic.title)} PDF"></iframe>
+                        </object>
+                    </div>
+                `;
+            }
+
+            if (shouldUseHtmlFrame(topic.content, "auto")) {
+                return renderHtmlFrame(topic.content, topic.title);
+            }
+
+            return topic.content;
+        }
+
+        function renderTopicQuiz() {
+            const quizHtml = topic.quizHtml || `<div class="asg-empty-state"><h2>No quiz content</h2><p>The admin can add topic quiz HTML from the dashboard.</p></div>`;
+            if (shouldUseHtmlFrame(quizHtml, topic.quizRenderMode)) {
+                return renderHtmlFrame(quizHtml, `${topic.title} quiz`);
+            }
+            return quizHtml;
+        }
+
         function selectTopicTab(tab, button) {
             document.querySelectorAll(".asg-topic-tabs button").forEach((item) => item.classList.remove("active"));
             button.classList.add("active");
 
             const panel = document.getElementById("topicPanel");
             if (tab === "quiz") {
-                panel.innerHTML = topic.quizHtml || `<div class="asg-empty-state"><h2>No quiz content</h2><p>The admin can add topic quiz HTML from the dashboard.</p></div>`;
+                panel.innerHTML = renderTopicQuiz();
                 return;
             }
             if (tab === "video") {
                 panel.innerHTML = renderVideo();
                 return;
             }
-            panel.innerHTML = topic.content;
+            panel.innerHTML = renderTopicContent();
         }
 
         function renderTopic() {
@@ -117,7 +163,7 @@
                     </a>
                 `).join("")}
             `;
-            document.getElementById("topicPanel").innerHTML = topic.content;
+            document.getElementById("topicPanel").innerHTML = renderTopicContent();
         }
 
         renderTopic();

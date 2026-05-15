@@ -1766,7 +1766,9 @@ body.has-asg-shell select {
 /* Login page */
 .asg-auth-page {
     min-height: 100vh;
-    background: var(--asg-bg);
+    background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(37, 99, 235, 0.08) 42%, rgba(245, 158, 11, 0.12)),
+        var(--asg-bg);
 }
 
 .asg-auth-page main {
@@ -1792,7 +1794,20 @@ body.has-asg-shell select {
 }
 
 .asg-auth-intro {
+    position: relative;
+    overflow: hidden;
     padding: clamp(28px, 5vw, 54px);
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(240, 253, 250, 0.92)),
+        white;
+}
+
+.asg-auth-intro::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 7px;
+    background: linear-gradient(90deg, var(--asg-primary), var(--asg-blue), var(--asg-accent));
 }
 
 .asg-auth-intro h1 {
@@ -1813,16 +1828,77 @@ body.has-asg-shell select {
 }
 
 .asg-auth-benefits div {
+    display: grid;
+    gap: 4px;
     padding: 14px;
     border: 1px solid var(--asg-border);
     border-radius: 8px;
     background: #fbfcfe;
 }
 
+.asg-auth-benefits strong {
+    color: var(--asg-ink);
+}
+
+.asg-auth-benefits span {
+    color: var(--asg-muted);
+}
+
+.asg-auth-scoreboard {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 28px;
+}
+
+.asg-auth-scoreboard div {
+    padding: 16px;
+    border-radius: 8px;
+    background: #172033;
+    color: #ffffff;
+}
+
+.asg-auth-scoreboard div:nth-child(2) {
+    background: #0f766e;
+}
+
+.asg-auth-scoreboard div:nth-child(3) {
+    background: #2563eb;
+}
+
+.asg-auth-scoreboard strong,
+.asg-auth-scoreboard span {
+    display: block;
+}
+
+.asg-auth-scoreboard strong {
+    font-size: 1.35rem;
+}
+
+.asg-auth-scoreboard span {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.82rem;
+    font-weight: 750;
+}
+
 .asg-auth-page .auth-container {
     max-width: none;
     margin: 0;
     overflow: hidden;
+}
+
+.asg-auth-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #172033;
+    color: #ffffff;
+}
+
+.asg-auth-card-top span {
+    color: rgba(255, 255, 255, 0.72);
+    font-weight: 750;
 }
 
 .asg-auth-page .auth-form {
@@ -1843,14 +1919,28 @@ body.has-asg-shell select {
     margin-top: 12px;
     padding: 0.78rem 0.9rem;
     font-size: 1rem;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: #fbfcfe;
+}
+
+.asg-auth-page .auth-input:focus {
+    outline: 3px solid rgba(15, 118, 110, 0.15);
+    border-color: var(--asg-primary);
+    background: #ffffff;
 }
 
 .asg-auth-page .auth-btn {
     width: 100%;
     min-height: 44px;
     margin-top: 14px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--asg-primary), var(--asg-blue));
+    color: #ffffff;
     cursor: pointer;
     font-size: 1rem;
+    font-weight: 850;
 }
 
 .asg-auth-page .error-msg,
@@ -1888,8 +1978,9 @@ body.has-asg-shell select {
 }
 
 .asg-auth-page .auth-tab.active {
+    background: #ffffff;
     color: var(--asg-primary-dark);
-    border-bottom-color: var(--asg-primary);
+    box-shadow: inset 0 -3px 0 var(--asg-primary);
 }
 
 .asg-auth-page .demo-credentials {
@@ -1921,6 +2012,10 @@ body.has-asg-shell select {
 
     .asg-home-hero,
     .asg-auth-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .asg-auth-scoreboard {
         grid-template-columns: 1fr;
     }
 
@@ -2594,6 +2689,12 @@ body.has-asg-shell select {
     font: inherit;
 }
 
+.asg-field-hint {
+    color: var(--asg-muted);
+    font-size: 0.82rem;
+    font-weight: 650;
+}
+
 .asg-builder-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     margin-bottom: 18px;
@@ -2870,6 +2971,24 @@ body.has-asg-shell select {
     line-height: 1.75;
 }
 
+.asg-question-text {
+    margin: 0.65rem 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.asg-question-text.compact {
+    max-height: 180px;
+    overflow: auto;
+    color: #334155;
+}
+
 .asg-topic-content pre {
     overflow: auto;
     background: #0f172a;
@@ -2889,6 +3008,21 @@ body.has-asg-shell select {
     width: 100%;
     height: 100%;
     border: 0;
+}
+
+.asg-content-frame,
+.asg-file-reader object,
+.asg-file-reader iframe {
+    width: 100%;
+    min-height: min(78vh, 760px);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.asg-file-reader {
+    display: grid;
+    gap: 0.8rem;
 }
 
 .asg-topic-admin-form {

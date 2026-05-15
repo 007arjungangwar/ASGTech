@@ -260,7 +260,7 @@
                 <div class="asg-section-header">
                     <div>
                         <h2>Course & Topic Builder</h2>
-                        <p>Create course pages, topic HTML content, topic quiz HTML, and video links for students.</p>
+                        <p>Create course pages, upload lesson PDFs or HTML, add topic quiz HTML, and video links for students.</p>
                     </div>
                     <button class="btn-secondary" type="button" onclick="resetCourseForm()">New Course</button>
                 </div>
@@ -326,11 +326,21 @@
                         <input id="topicVideoUrl" type="url" placeholder="https://youtu.be/...">
                     </label>
                     <label class="asg-full-field">
-                        <span>Content HTML</span>
+                        <span>Lesson file (PDF or HTML)</span>
+                        <input id="topicContentFile" type="file" accept=".pdf,.html,.htm,application/pdf,text/html">
+                        <small class="asg-field-hint">PDF opens in the student reader. HTML is shown in an isolated viewer so page scripts can run.</small>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Content HTML fallback</span>
                         <textarea id="topicContent" class="asg-mini-code" rows="7" placeholder="<h2>Lesson</h2><p>Content...</p>"></textarea>
                     </label>
                     <label class="asg-full-field">
-                        <span>Quiz HTML</span>
+                        <span>Quiz HTML file</span>
+                        <input id="topicQuizFile" type="file" accept=".html,.htm,text/html">
+                        <small class="asg-field-hint">Use this when your quiz page has its own CSS or JavaScript.</small>
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Quiz HTML fallback</span>
                         <textarea id="topicQuizHtml" class="asg-mini-code" rows="5" placeholder="<h2>Quiz</h2><p>Questions...</p>"></textarea>
                     </label>
                     <div class="asg-form-actions asg-full-field">
@@ -388,6 +398,66 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ""));
+                reader.onerror = () => reject(reader.error || new Error("Could not read file."));
+                reader.readAsText(file);
+            });
+        }
+
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || ""));
+                reader.onerror = () => reject(reader.error || new Error("Could not read file."));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function readTopicContentUpload(existingTopic = null) {
+            const file = document.getElementById("topicContentFile").files[0];
+            if (!file) {
+                return {
+                    contentType: existingTopic ? existingTopic.contentType || "html" : "html",
+                    contentFileName: existingTopic ? existingTopic.contentFileName || "" : "",
+                    contentDataUrl: existingTopic ? existingTopic.contentDataUrl || "" : ""
+                };
+            }
+
+            if (/pdf$/i.test(file.name) || file.type === "application/pdf") {
+                return {
+                    contentType: "pdf",
+                    contentFileName: file.name,
+                    contentDataUrl: await readFileAsDataUrl(file)
+                };
+            }
+
+            return {
+                contentType: "html",
+                contentFileName: file.name,
+                contentDataUrl: "",
+                content: await readFileAsText(file)
+            };
+        }
+
+        async function readTopicQuizUpload(existingTopic = null) {
+            const file = document.getElementById("topicQuizFile").files[0];
+            if (!file) {
+                return {
+                    quizFileName: existingTopic ? existingTopic.quizFileName || "" : "",
+                    quizRenderMode: existingTopic ? existingTopic.quizRenderMode || "auto" : "auto"
+                };
+            }
+
+            return {
+                quizHtml: await readFileAsText(file),
+                quizFileName: file.name,
+                quizRenderMode: "iframe"
+            };
         }
 
         function readJSON(key, fallback) {
@@ -733,7 +803,7 @@
                     <div>
                         <span class="asg-item-kicker">${question.status} | ${escapeHtml(asgGetQuizById(question.quizId).title)} | ${escapeHtml(question.topic)} | ${escapeHtml(question.difficulty)}</span>
                         <h3>${index + 1}. ${escapeHtml(question.title)}</h3>
-                        <p>${escapeHtml(question.prompt)}</p>
+                        <pre class="asg-question-text compact">${escapeHtml(question.prompt)}</pre>
                     </div>
                     <div class="asg-item-actions">
                         <button class="asg-link-button" type="button" onclick="editQuizQuestion('${question.id}')">Edit</button>
@@ -893,7 +963,7 @@
                 title: document.getElementById("codingTitle").value.trim(),
                 topic: document.getElementById("codingTopic").value.trim() || "Python",
                 difficulty: document.getElementById("codingDifficulty").value,
-                prompt: document.getElementById("codingPrompt").value.trim(),
+                prompt: document.getElementById("codingPrompt").value,
                 starterCode: document.getElementById("codingStarter").value,
                 tests,
                 status: document.getElementById("codingStatus").value,
@@ -952,7 +1022,7 @@
                     <div>
                         <span class="asg-item-kicker">${challenge.status} | ${escapeHtml(challenge.topic)} | ${escapeHtml(challenge.difficulty)}</span>
                         <h3>${index + 1}. ${escapeHtml(challenge.title)}</h3>
-                        <p>${escapeHtml(challenge.prompt)}</p>
+                        <pre class="asg-question-text compact">${escapeHtml(challenge.prompt)}</pre>
                         <small>${challenge.tests.length} tests</small>
                     </div>
                     <div class="asg-item-actions">
@@ -1041,11 +1111,13 @@
             document.getElementById("topicTitle").value = "";
             document.getElementById("topicStatus").value = "active";
             document.getElementById("topicVideoUrl").value = "";
+            document.getElementById("topicContentFile").value = "";
             document.getElementById("topicContent").value = "";
+            document.getElementById("topicQuizFile").value = "";
             document.getElementById("topicQuizHtml").value = "";
         }
 
-        function saveTopic() {
+        async function saveTopic() {
             const courseId = document.getElementById("topicCourse").value;
             const editId = document.getElementById("topicEditId").value;
             const title = document.getElementById("topicTitle").value.trim();
@@ -1054,16 +1126,39 @@
                 return;
             }
 
+            const selectedCourse = adminCourses.find((course) => course.id === courseId);
+            const selectedExistingTopic = selectedCourse && selectedCourse.topics.find((topic) => topic.id === editId);
+            let contentUpload = {};
+            let quizUpload = {};
+
+            try {
+                contentUpload = await readTopicContentUpload(selectedExistingTopic);
+                quizUpload = await readTopicQuizUpload(selectedExistingTopic);
+            } catch (error) {
+                alert(error.message || "Could not read the selected file.");
+                return;
+            }
+
             const nextCourses = adminCourses.map((course) => {
                 if (course.id !== courseId) return course;
                 const existingTopic = course.topics.find((topic) => topic.id === editId);
+                const typedContent = document.getElementById("topicContent").value;
+                const typedQuizHtml = document.getElementById("topicQuizHtml").value;
+                const hasNewContentFile = Boolean(document.getElementById("topicContentFile").files[0]);
+                const contentEditedManually = Boolean(typedContent) && (!existingTopic || typedContent !== existingTopic.content);
+                const resolvedContentType = !hasNewContentFile && contentEditedManually ? "html" : contentUpload.contentType || "html";
                 const topic = {
                     id: editId || asgSlugify(title, "topic"),
                     title,
                     status: document.getElementById("topicStatus").value,
                     videoUrl: document.getElementById("topicVideoUrl").value.trim(),
-                    content: document.getElementById("topicContent").value || `<h2>${escapeHtml(title)}</h2><p>Add lesson content here.</p>`,
-                    quizHtml: document.getElementById("topicQuizHtml").value || `<h2>${escapeHtml(title)} Quiz</h2><p>Add quiz content here.</p>`,
+                    content: contentUpload.content || typedContent || (existingTopic ? existingTopic.content : "") || `<h2>${escapeHtml(title)}</h2><p>Add lesson content here.</p>`,
+                    contentType: resolvedContentType,
+                    contentFileName: resolvedContentType === "pdf" ? contentUpload.contentFileName || "" : "",
+                    contentDataUrl: resolvedContentType === "pdf" ? contentUpload.contentDataUrl || "" : "",
+                    quizHtml: quizUpload.quizHtml || typedQuizHtml || (existingTopic ? existingTopic.quizHtml : "") || `<h2>${escapeHtml(title)} Quiz</h2><p>Add quiz content here.</p>`,
+                    quizFileName: quizUpload.quizFileName || "",
+                    quizRenderMode: quizUpload.quizRenderMode || "auto",
                     order: existingTopic ? existingTopic.order : course.topics.length + 1
                 };
 
@@ -1089,7 +1184,9 @@
             document.getElementById("topicTitle").value = topic.title;
             document.getElementById("topicStatus").value = topic.status;
             document.getElementById("topicVideoUrl").value = topic.videoUrl;
+            document.getElementById("topicContentFile").value = "";
             document.getElementById("topicContent").value = topic.content;
+            document.getElementById("topicQuizFile").value = "";
             document.getElementById("topicQuizHtml").value = topic.quizHtml;
         }
 
