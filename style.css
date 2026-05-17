@@ -1768,6 +1768,11 @@ body.asg-theme-dark select {
     color: var(--asg-ink);
 }
 
+body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
+    background: var(--asg-surface);
+    border-color: var(--asg-border);
+}
+
 .asg-account {
     position: relative;
     top: auto;
@@ -3268,20 +3273,18 @@ body.has-asg-shell.asg-course-focus footer {
 
 body.has-asg-shell.asg-lesson-focus main,
 body.has-asg-shell.asg-course-focus main {
-    padding-left: clamp(16px, 2.2vw, 32px);
-    padding-right: clamp(16px, 2.2vw, 32px);
+    padding-left: clamp(10px, 1.3vw, 20px);
+    padding-right: clamp(10px, 1.3vw, 20px);
 }
 
 body.asg-lesson-focus .asg-page-hero {
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 14px;
+    display: none;
 }
 
 body.asg-lesson-focus .asg-course-layout {
-    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
-    gap: 1rem;
-    min-height: calc(100vh - var(--asg-topbar-height) - 135px);
+    grid-template-columns: minmax(210px, 282px) minmax(0, 1fr);
+    gap: 0.7rem;
+    min-height: calc(100vh - var(--asg-topbar-height) - 64px);
 }
 
 body.asg-lesson-focus.asg-topic-rail-collapsed .asg-course-layout {
@@ -3298,8 +3301,8 @@ body.asg-lesson-focus.asg-topic-rail-collapsed .asg-topic-sidebar {
     border-radius: 8px;
     padding: 1rem;
     position: sticky;
-    top: 96px;
-    max-height: calc(100vh - 120px);
+    top: calc(var(--asg-topbar-height) + 10px);
+    max-height: calc(100vh - var(--asg-topbar-height) - 24px);
     overflow: auto;
 }
 
@@ -3332,7 +3335,7 @@ body.asg-lesson-focus.asg-topic-rail-collapsed .asg-topic-sidebar {
 .asg-topic-tabs {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     flex-wrap: wrap;
     align-items: center;
 }
@@ -3370,8 +3373,34 @@ body.asg-lesson-focus.asg-topic-rail-collapsed .asg-topic-sidebar {
 }
 
 body.asg-lesson-focus .asg-topic-workspace {
-    min-height: calc(100vh - var(--asg-topbar-height) - 170px);
-    padding: clamp(18px, 2vw, 28px);
+    min-height: calc(100vh - var(--asg-topbar-height) - 64px);
+    margin-bottom: 0;
+    padding: clamp(12px, 1.3vw, 18px);
+}
+
+body.asg-lesson-focus .asg-topic-content {
+    min-height: calc(100vh - var(--asg-topbar-height) - 132px);
+    padding: clamp(10px, 1.2vw, 18px);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+body.asg-lesson-focus .asg-topic-content > :first-child {
+    margin-top: 0;
+}
+
+body.asg-lesson-focus .asg-topic-content p,
+body.asg-lesson-focus .asg-topic-content li {
+    max-width: 92ch;
+    font-size: 1.02rem;
+    line-height: 1.82;
+}
+
+body.asg-lesson-focus .asg-topic-content h1,
+body.asg-lesson-focus .asg-topic-content h2,
+body.asg-lesson-focus .asg-topic-content h3 {
+    max-width: 92ch;
 }
 
 .asg-question-text {
@@ -3402,7 +3431,9 @@ body.asg-lesson-focus .asg-topic-workspace {
 
 .asg-video-frame {
     aspect-ratio: 16 / 9;
-    min-height: min(70vh, 720px);
+    width: min(100%, 1280px);
+    min-height: min(72vh, 720px);
+    margin: 0 auto;
     background: #0f172a;
     border-radius: 8px;
     overflow: hidden;
@@ -3418,7 +3449,7 @@ body.asg-lesson-focus .asg-topic-workspace {
 .asg-file-reader object,
 .asg-file-reader iframe {
     width: 100%;
-    min-height: calc(100vh - var(--asg-topbar-height) - 210px);
+    min-height: calc(100vh - var(--asg-topbar-height) - 138px);
     border: 1px solid rgba(15, 23, 42, 0.12);
     border-radius: 8px;
     background: #ffffff;
