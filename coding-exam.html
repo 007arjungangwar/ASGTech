@@ -155,13 +155,58 @@
             renderOutputIdle();
         }
 
-        editor.addEventListener("keydown", (event) => {
-            if (event.key === "Tab") {
-                event.preventDefault();
-                const start = editor.selectionStart;
-                editor.value = `${editor.value.slice(0, start)}    ${editor.value.slice(editor.selectionEnd)}`;
-                editor.selectionStart = editor.selectionEnd = start + 4;
+        function insertTextAtCursor(text) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            editor.value = `${editor.value.slice(0, start)}${text}${editor.value.slice(end)}`;
+            editor.selectionStart = editor.selectionEnd = start + text.length;
+        }
+
+        function handleTabKey(event) {
+            event.preventDefault();
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.slice(start, end);
+
+            if (!selectedText.includes("\n")) {
+                if (event.shiftKey) {
+                    const before = editor.value.slice(0, start);
+                    const lineStart = before.lastIndexOf("\n") + 1;
+                    const linePrefix = editor.value.slice(lineStart, lineStart + 4);
+                    if (linePrefix === "    ") {
+                        editor.value = editor.value.slice(0, lineStart) + editor.value.slice(lineStart + 4);
+                        editor.selectionStart = editor.selectionEnd = Math.max(lineStart, start - 4);
+                    }
+                    return;
+                }
+
+                insertTextAtCursor("    ");
+                return;
             }
+
+            const lines = selectedText.split("\n");
+            const updated = event.shiftKey
+                ? lines.map((line) => line.startsWith("    ") ? line.slice(4) : line).join("\n")
+                : lines.map((line) => `    ${line}`).join("\n");
+
+            editor.value = `${editor.value.slice(0, start)}${updated}${editor.value.slice(end)}`;
+            editor.selectionStart = start;
+            editor.selectionEnd = start + updated.length;
+        }
+
+        function handleEnterKey(event) {
+            event.preventDefault();
+            const start = editor.selectionStart;
+            const beforeCursor = editor.value.slice(0, start);
+            const currentLine = beforeCursor.slice(beforeCursor.lastIndexOf("\n") + 1);
+            const indentation = currentLine.match(/^\s*/)[0];
+            const extraIndent = currentLine.trim().endsWith(":") ? "    " : "";
+            insertTextAtCursor(`\n${indentation}${extraIndent}`);
+        }
+
+        editor.addEventListener("keydown", (event) => {
+            if (event.key === "Tab") handleTabKey(event);
+            if (event.key === "Enter") handleEnterKey(event);
         });
 
         editor.addEventListener("input", () => {

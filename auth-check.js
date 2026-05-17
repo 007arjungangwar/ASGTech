@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v12",
+    cacheName: "asg-tech-v13",
     publicPages: [
         "",
         "index.html",
@@ -158,6 +158,7 @@ function navigationGroups(user) {
     const groups = [
         {
             title: "Learn",
+            description: "Courses, roadmap, videos, and resources",
             items: [
                 studentLink("Courses", "courses.html"),
                 studentLink("Roadmap", "roadmap.html"),
@@ -167,19 +168,21 @@ function navigationGroups(user) {
         },
         {
             title: "Practice",
+            description: "Quiz, coding, exams, progress, and certificates",
             items: [
-                studentLink("Quiz", "quiz.html"),
+                studentLink("Quiz Exam", "quiz.html"),
                 studentLink("Coding Practice", "coding-practice.html"),
-                studentLink("Exam", "exam-center.html"),
+                studentLink("Exam Center", "exam-center.html"),
                 studentLink("Progress", "tracker.html"),
-                studentLink("Certificate", "certificate.html"),
-                studentLink("AI Assistant", "assistant.html")
+                studentLink("Certificates", "certificate.html"),
+                studentLink("AI Tutor", "assistant.html")
             ]
         },
         {
             title: "Community",
+            description: "Ask doubts, discuss, and chat live",
             items: [
-                studentLink("Q&A", "questions.html"),
+                studentLink("Ask Doubt", "questions.html"),
                 studentLink("Forum", "forum.html"),
                 studentLink("Live Chat", "chat.html")
             ]
@@ -189,6 +192,7 @@ function navigationGroups(user) {
     if (admin) {
         groups.push({
             title: "Admin",
+            description: "Manage content and students",
             items: [
                 adminLink("Dashboard", "admin.html")
             ]
@@ -201,31 +205,6 @@ function navigationGroups(user) {
             ? group.items.filter((item) => item.admin && admin)
             : group.items
     })).filter((group) => group.items.length);
-}
-
-function quickActions(user) {
-    if (user && user.role === "admin") {
-        return [
-            { label: "Dashboard", page: "admin.html" },
-            { label: "Practice", page: "coding-practice.html" },
-            { label: "Exam", page: "exam-center.html" },
-            { label: "Ask Doubt", page: "questions.html" }
-        ];
-    }
-
-    if (user) {
-        return [
-            { label: "Practice", page: "coding-practice.html" },
-            { label: "Exam", page: "exam-center.html" },
-            { label: "Ask Doubt", page: "questions.html" }
-        ];
-    }
-
-    return [
-        { label: "Programs", page: "courses.html", locked: true },
-        { label: "Register", page: "login.html" },
-        { label: "Practice", page: "coding-practice.html", locked: true }
-    ];
 }
 
 function itemHref(item, user) {
@@ -328,8 +307,8 @@ function renderSidebar(user) {
     const sidebar = document.createElement("aside");
     sidebar.className = "asg-sidebar";
 
-    const actions = quickActions(user);
     const groups = navigationGroups(user);
+    const hasActiveGroup = groups.some((group) => group.items.some((item) => isActive(item.page)));
 
     sidebar.innerHTML = `
         <div class="asg-sidebar-title">
@@ -337,27 +316,22 @@ function renderSidebar(user) {
             <small>${user ? (user.role === "admin" ? "Admin workspace" : "Student workspace") : "Sign in to unlock tools"}</small>
         </div>
 
-        <div class="asg-quick-actions" aria-label="Primary actions">
-            ${actions.map((action, index) => `
-                <a href="${itemHref(action, user)}" class="asg-quick-button asg-quick-button-${index + 1}">
-                    ${action.label}
-                    ${action.locked && !user ? `<span class="asg-lock">Login</span>` : ""}
-                </a>
-            `).join("")}
-        </div>
-
-        <div class="asg-menu-groups">
+        <div class="asg-menu-groups" aria-label="Student workspace menu">
             ${groups.map((group, index) => {
                 const activeGroup = group.items.some((item) => isActive(item.page));
+                const groupOpen = activeGroup || (!hasActiveGroup && index === 0);
                 return `
-                <section class="asg-menu-group collapsed">
+                <section class="asg-menu-group ${groupOpen ? "" : "collapsed"}">
                     <button
                         class="asg-menu-heading ${activeGroup ? "active" : ""}"
                         type="button"
-                        aria-expanded="false"
+                        aria-expanded="${String(groupOpen)}"
                         onclick="toggleSidebarGroup(this)"
                     >
-                        <span>${group.title}</span>
+                        <span>
+                            <strong>${group.title}</strong>
+                            <em>${group.description}</em>
+                        </span>
                         <small>${group.items.length}</small>
                     </button>
                     <div class="asg-menu-items">
