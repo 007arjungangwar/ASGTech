@@ -16,7 +16,7 @@
             <div>
                 <div class="asg-eyebrow">Admin workspace</div>
                 <h1>Admin Dashboard</h1>
-                <p>Manage students, publish quizzes, create Python practice questions, and monitor progress from one place.</p>
+                <p>Manage students, publish quizzes, edit Learn content, create practice questions, and monitor progress from one place.</p>
             </div>
             <div class="asg-admin-status">
                 <span>Signed in as</span>
@@ -362,6 +362,174 @@
                 <div class="asg-admin-list" id="courseList"></div>
             </article>
 
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Learn Content Studio</h2>
+                        <p>Manage the Roadmap, Videos, and Resources pages from one admin workspace.</p>
+                    </div>
+                    <div class="asg-item-actions">
+                        <a class="btn-secondary" href="roadmap.html">Preview Roadmap</a>
+                        <a class="btn-secondary" href="videos.html">Preview Videos</a>
+                        <a class="btn-secondary" href="resources.html">Preview Resources</a>
+                    </div>
+                </div>
+
+                <section class="asg-learn-admin-studio">
+                    <div class="asg-learn-admin-editor">
+                        <div class="asg-question-head">
+                            <div>
+                                <h3>Roadmap Builder</h3>
+                                <small>Publish milestone-based learning paths with outcomes and links.</small>
+                            </div>
+                            <button class="asg-link-button" type="button" onclick="resetRoadmapForm()">New Milestone</button>
+                        </div>
+                        <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveRoadmapItem();">
+                            <input id="roadmapEditId" type="hidden">
+                            <label>
+                                <span>Stage</span>
+                                <input id="roadmapStage" type="text" placeholder="Foundation">
+                            </label>
+                            <label>
+                                <span>Title</span>
+                                <input id="roadmapTitle" type="text" placeholder="Python Foundations">
+                            </label>
+                            <label>
+                                <span>Duration</span>
+                                <input id="roadmapDurationInput" type="text" placeholder="Weeks 1-4">
+                            </label>
+                            <label>
+                                <span>Status</span>
+                                <select id="roadmapStatus">
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                </select>
+                            </label>
+                            <label class="asg-full-field">
+                                <span>Focus</span>
+                                <textarea id="roadmapFocus" rows="2" placeholder="Describe what the student will learn in this stage."></textarea>
+                            </label>
+                            <label class="asg-full-field">
+                                <span>Outcomes</span>
+                                <textarea id="roadmapOutcomes" rows="4" placeholder="Write one outcome per line."></textarea>
+                            </label>
+                            <label>
+                                <span>Video link</span>
+                                <input id="roadmapVideoUrl" type="text" placeholder="videos.html or https://...">
+                            </label>
+                            <label>
+                                <span>Resource link</span>
+                                <input id="roadmapResourceUrl" type="text" placeholder="resources.html or https://...">
+                            </label>
+                            <div class="asg-form-actions asg-full-field">
+                                <button class="btn-primary" type="submit">Save Milestone</button>
+                                <button class="btn-secondary" type="button" onclick="resetRoadmapForm()">Clear</button>
+                            </div>
+                        </form>
+                        <div class="asg-admin-list compact" id="roadmapList"></div>
+                    </div>
+
+                    <div class="asg-learn-admin-editor">
+                        <div class="asg-question-head">
+                            <div>
+                                <h3>Video Library Builder</h3>
+                                <small>Add YouTube embeds, lesson links, or external learning videos.</small>
+                            </div>
+                            <button class="asg-link-button" type="button" onclick="resetVideoForm()">New Video</button>
+                        </div>
+                        <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveVideoItem();">
+                            <input id="videoEditId" type="hidden">
+                            <label>
+                                <span>Title</span>
+                                <input id="videoTitle" type="text" placeholder="Pandas Data Cleaning Workflow">
+                            </label>
+                            <label>
+                                <span>Category</span>
+                                <input id="videoCategory" type="text" placeholder="Data Analysis">
+                            </label>
+                            <label>
+                                <span>Level</span>
+                                <input id="videoLevel" type="text" placeholder="Beginner">
+                            </label>
+                            <label>
+                                <span>Duration</span>
+                                <input id="videoDuration" type="text" placeholder="34 min">
+                            </label>
+                            <label class="asg-full-field">
+                                <span>Video URL</span>
+                                <input id="videoUrl" type="text" placeholder="https://www.youtube.com/embed/...">
+                                <small class="asg-field-hint">YouTube watch, youtu.be, or embed links are supported.</small>
+                            </label>
+                            <label>
+                                <span>Status</span>
+                                <select id="videoStatus">
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                </select>
+                            </label>
+                            <label class="asg-full-field">
+                                <span>Description</span>
+                                <textarea id="videoDescription" rows="3" placeholder="Explain what the student will learn."></textarea>
+                            </label>
+                            <div class="asg-form-actions asg-full-field">
+                                <button class="btn-primary" type="submit">Save Video</button>
+                                <button class="btn-secondary" type="button" onclick="resetVideoForm()">Clear</button>
+                            </div>
+                        </form>
+                        <div class="asg-admin-list compact" id="videoLibraryList"></div>
+                    </div>
+
+                    <div class="asg-learn-admin-editor">
+                        <div class="asg-question-head">
+                            <div>
+                                <h3>Resource Library Builder</h3>
+                                <small>Create downloadable notes, practice links, templates, and reading guides.</small>
+                            </div>
+                            <button class="asg-link-button" type="button" onclick="resetResourceForm()">New Resource</button>
+                        </div>
+                        <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveResourceItem();">
+                            <input id="resourceEditId" type="hidden">
+                            <label>
+                                <span>Title</span>
+                                <input id="resourceTitle" type="text" placeholder="Python Syntax Cheat Sheet">
+                            </label>
+                            <label>
+                                <span>Category</span>
+                                <input id="resourceCategory" type="text" placeholder="Python">
+                            </label>
+                            <label>
+                                <span>Format</span>
+                                <input id="resourceFormat" type="text" placeholder="PDF / Notes">
+                            </label>
+                            <label>
+                                <span>Status</span>
+                                <select id="resourceStatus">
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>Button label</span>
+                                <input id="resourceActionLabel" type="text" placeholder="Open Resource">
+                            </label>
+                            <label>
+                                <span>Resource URL</span>
+                                <input id="resourceUrl" type="text" placeholder="courses.html or https://...">
+                            </label>
+                            <label class="asg-full-field">
+                                <span>Description</span>
+                                <textarea id="resourceDescription" rows="3" placeholder="Describe why this resource is useful."></textarea>
+                            </label>
+                            <div class="asg-form-actions asg-full-field">
+                                <button class="btn-primary" type="submit">Save Resource</button>
+                                <button class="btn-secondary" type="button" onclick="resetResourceForm()">Clear</button>
+                            </div>
+                        </form>
+                        <div class="asg-admin-list compact" id="resourceLibraryList"></div>
+                    </div>
+                </section>
+            </article>
+
             <article class="asg-live-panel">
                 <div class="asg-section-header">
                     <div>
@@ -400,6 +568,9 @@
         let codingChallenges = [];
         let adminQuizCatalog = [];
         let adminCourses = [];
+        let adminRoadmapItems = [];
+        let adminVideoLibrary = [];
+        let adminResourceLibrary = [];
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -489,6 +660,13 @@
             return `${Math.round(Number(value || 0))}%`;
         }
 
+        function linesFromTextarea(id) {
+            return document.getElementById(id).value
+                .split(/\n/)
+                .map((line) => line.trim())
+                .filter(Boolean);
+        }
+
         function getUsers() {
             return readJSON("users", []);
         }
@@ -505,6 +683,9 @@
             const examAttempts = asgGetExamAttempts();
             const activeQuiz = quizQuestions.filter((question) => question.status === "active").length;
             const activeCoding = codingChallenges.filter((challenge) => challenge.status === "active").length;
+            const activeRoadmap = adminRoadmapItems.filter((item) => item.status === "active").length;
+            const activeVideos = adminVideoLibrary.filter((item) => item.status === "active").length;
+            const activeResources = adminResourceLibrary.filter((item) => item.status === "active").length;
             const averageQuiz = attempts.length
                 ? attempts.reduce((sum, attempt) => sum + Number(attempt.percentage || 0), 0) / attempts.length
                 : 0;
@@ -518,6 +699,9 @@
                 { label: "Quiz sets", value: adminQuizCatalog.length },
                 { label: "Active quiz questions", value: activeQuiz },
                 { label: "Active coding challenges", value: activeCoding },
+                { label: "Roadmap milestones", value: activeRoadmap },
+                { label: "Videos", value: activeVideos },
+                { label: "Resources", value: activeResources },
                 { label: "Exam submissions", value: examAttempts.length },
                 { label: "Average quiz score", value: percentage(averageQuiz) },
                 { label: "Average coding score", value: percentage(averageCoding) }
@@ -1334,6 +1518,261 @@
             `).join("");
         }
 
+        function resetRoadmapForm() {
+            document.getElementById("roadmapEditId").value = "";
+            document.getElementById("roadmapStage").value = "";
+            document.getElementById("roadmapTitle").value = "";
+            document.getElementById("roadmapDurationInput").value = "";
+            document.getElementById("roadmapStatus").value = "active";
+            document.getElementById("roadmapFocus").value = "";
+            document.getElementById("roadmapOutcomes").value = "";
+            document.getElementById("roadmapVideoUrl").value = "";
+            document.getElementById("roadmapResourceUrl").value = "";
+        }
+
+        function saveRoadmapItem() {
+            const editId = document.getElementById("roadmapEditId").value;
+            const title = document.getElementById("roadmapTitle").value.trim();
+            if (!title) {
+                alert("Add a roadmap title.");
+                return;
+            }
+
+            const existing = adminRoadmapItems.find((item) => item.id === editId);
+            const item = {
+                id: editId || asgSlugify(title, "roadmap"),
+                stage: document.getElementById("roadmapStage").value.trim() || "Learning Stage",
+                title,
+                duration: document.getElementById("roadmapDurationInput").value.trim() || "Flexible",
+                focus: document.getElementById("roadmapFocus").value.trim(),
+                outcomes: linesFromTextarea("roadmapOutcomes"),
+                videoUrl: document.getElementById("roadmapVideoUrl").value.trim(),
+                resourceUrl: document.getElementById("roadmapResourceUrl").value.trim(),
+                status: document.getElementById("roadmapStatus").value,
+                order: existing ? existing.order : adminRoadmapItems.length + 1,
+                updatedAt: new Date().toISOString()
+            };
+
+            asgSaveRoadmapItems(editId
+                ? adminRoadmapItems.map((entry) => entry.id === editId ? item : entry)
+                : [...adminRoadmapItems, item]);
+            resetRoadmapForm();
+            refreshDashboard();
+        }
+
+        function editRoadmapItem(itemId) {
+            const item = adminRoadmapItems.find((entry) => entry.id === itemId);
+            if (!item) return;
+            document.getElementById("roadmapEditId").value = item.id;
+            document.getElementById("roadmapStage").value = item.stage;
+            document.getElementById("roadmapTitle").value = item.title;
+            document.getElementById("roadmapDurationInput").value = item.duration;
+            document.getElementById("roadmapStatus").value = item.status;
+            document.getElementById("roadmapFocus").value = item.focus;
+            document.getElementById("roadmapOutcomes").value = item.outcomes.join("\n");
+            document.getElementById("roadmapVideoUrl").value = item.videoUrl;
+            document.getElementById("roadmapResourceUrl").value = item.resourceUrl;
+        }
+
+        function toggleRoadmapStatus(itemId) {
+            asgSaveRoadmapItems(adminRoadmapItems.map((item) => (
+                item.id === itemId ? { ...item, status: item.status === "active" ? "draft" : "active", updatedAt: new Date().toISOString() } : item
+            )));
+            refreshDashboard();
+        }
+
+        function deleteRoadmapItem(itemId) {
+            if (!confirm("Delete this roadmap milestone?")) return;
+            asgSaveRoadmapItems(adminRoadmapItems.filter((item) => item.id !== itemId));
+            refreshDashboard();
+        }
+
+        function renderRoadmapItems() {
+            document.getElementById("roadmapList").innerHTML = adminRoadmapItems.map((item, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${item.status} | ${escapeHtml(item.stage)} | ${escapeHtml(item.duration)}</span>
+                        <h3>${index + 1}. ${escapeHtml(item.title)}</h3>
+                        <p>${escapeHtml(item.focus)}</p>
+                        <small>${item.outcomes.length} outcomes</small>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editRoadmapItem('${item.id}')">Edit</button>
+                        <button class="asg-link-button" type="button" onclick="toggleRoadmapStatus('${item.id}')">${item.status === "active" ? "Draft" : "Publish"}</button>
+                        <button class="asg-link-button danger" type="button" onclick="deleteRoadmapItem('${item.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No roadmap items</h2><p>Create the first milestone above.</p></div>`;
+        }
+
+        function resetVideoForm() {
+            document.getElementById("videoEditId").value = "";
+            document.getElementById("videoTitle").value = "";
+            document.getElementById("videoCategory").value = "";
+            document.getElementById("videoLevel").value = "Beginner";
+            document.getElementById("videoDuration").value = "";
+            document.getElementById("videoUrl").value = "";
+            document.getElementById("videoStatus").value = "active";
+            document.getElementById("videoDescription").value = "";
+        }
+
+        function saveVideoItem() {
+            const editId = document.getElementById("videoEditId").value;
+            const title = document.getElementById("videoTitle").value.trim();
+            if (!title) {
+                alert("Add a video title.");
+                return;
+            }
+
+            const existing = adminVideoLibrary.find((item) => item.id === editId);
+            const item = {
+                id: editId || asgSlugify(title, "video"),
+                title,
+                category: document.getElementById("videoCategory").value.trim() || "Learning",
+                level: document.getElementById("videoLevel").value.trim() || "Beginner",
+                duration: document.getElementById("videoDuration").value.trim() || "Self-paced",
+                description: document.getElementById("videoDescription").value.trim(),
+                url: document.getElementById("videoUrl").value.trim(),
+                status: document.getElementById("videoStatus").value,
+                order: existing ? existing.order : adminVideoLibrary.length + 1,
+                updatedAt: new Date().toISOString()
+            };
+
+            asgSaveVideoLibrary(editId
+                ? adminVideoLibrary.map((entry) => entry.id === editId ? item : entry)
+                : [...adminVideoLibrary, item]);
+            resetVideoForm();
+            refreshDashboard();
+        }
+
+        function editVideoItem(itemId) {
+            const item = adminVideoLibrary.find((entry) => entry.id === itemId);
+            if (!item) return;
+            document.getElementById("videoEditId").value = item.id;
+            document.getElementById("videoTitle").value = item.title;
+            document.getElementById("videoCategory").value = item.category;
+            document.getElementById("videoLevel").value = item.level;
+            document.getElementById("videoDuration").value = item.duration;
+            document.getElementById("videoUrl").value = item.url;
+            document.getElementById("videoStatus").value = item.status;
+            document.getElementById("videoDescription").value = item.description;
+        }
+
+        function toggleVideoStatus(itemId) {
+            asgSaveVideoLibrary(adminVideoLibrary.map((item) => (
+                item.id === itemId ? { ...item, status: item.status === "active" ? "draft" : "active", updatedAt: new Date().toISOString() } : item
+            )));
+            refreshDashboard();
+        }
+
+        function deleteVideoItem(itemId) {
+            if (!confirm("Delete this video?")) return;
+            asgSaveVideoLibrary(adminVideoLibrary.filter((item) => item.id !== itemId));
+            refreshDashboard();
+        }
+
+        function renderVideoLibrary() {
+            document.getElementById("videoLibraryList").innerHTML = adminVideoLibrary.map((item, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${item.status} | ${escapeHtml(item.category)} | ${escapeHtml(item.level)}</span>
+                        <h3>${index + 1}. ${escapeHtml(item.title)}</h3>
+                        <p>${escapeHtml(item.description)}</p>
+                        <small>${escapeHtml(item.duration)} | ${escapeHtml(item.url || "No link")}</small>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editVideoItem('${item.id}')">Edit</button>
+                        <button class="asg-link-button" type="button" onclick="toggleVideoStatus('${item.id}')">${item.status === "active" ? "Draft" : "Publish"}</button>
+                        <button class="asg-link-button danger" type="button" onclick="deleteVideoItem('${item.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No videos</h2><p>Create the first video above.</p></div>`;
+        }
+
+        function resetResourceForm() {
+            document.getElementById("resourceEditId").value = "";
+            document.getElementById("resourceTitle").value = "";
+            document.getElementById("resourceCategory").value = "";
+            document.getElementById("resourceFormat").value = "";
+            document.getElementById("resourceUrl").value = "";
+            document.getElementById("resourceActionLabel").value = "Open Resource";
+            document.getElementById("resourceStatus").value = "active";
+            document.getElementById("resourceDescription").value = "";
+        }
+
+        function saveResourceItem() {
+            const editId = document.getElementById("resourceEditId").value;
+            const title = document.getElementById("resourceTitle").value.trim();
+            if (!title) {
+                alert("Add a resource title.");
+                return;
+            }
+
+            const existing = adminResourceLibrary.find((item) => item.id === editId);
+            const item = {
+                id: editId || asgSlugify(title, "resource"),
+                title,
+                category: document.getElementById("resourceCategory").value.trim() || "Learning",
+                format: document.getElementById("resourceFormat").value.trim() || "Guide",
+                description: document.getElementById("resourceDescription").value.trim(),
+                url: document.getElementById("resourceUrl").value.trim(),
+                actionLabel: document.getElementById("resourceActionLabel").value.trim() || "Open Resource",
+                status: document.getElementById("resourceStatus").value,
+                order: existing ? existing.order : adminResourceLibrary.length + 1,
+                updatedAt: new Date().toISOString()
+            };
+
+            asgSaveResourceLibrary(editId
+                ? adminResourceLibrary.map((entry) => entry.id === editId ? item : entry)
+                : [...adminResourceLibrary, item]);
+            resetResourceForm();
+            refreshDashboard();
+        }
+
+        function editResourceItem(itemId) {
+            const item = adminResourceLibrary.find((entry) => entry.id === itemId);
+            if (!item) return;
+            document.getElementById("resourceEditId").value = item.id;
+            document.getElementById("resourceTitle").value = item.title;
+            document.getElementById("resourceCategory").value = item.category;
+            document.getElementById("resourceFormat").value = item.format;
+            document.getElementById("resourceUrl").value = item.url;
+            document.getElementById("resourceActionLabel").value = item.actionLabel;
+            document.getElementById("resourceStatus").value = item.status;
+            document.getElementById("resourceDescription").value = item.description;
+        }
+
+        function toggleResourceStatus(itemId) {
+            asgSaveResourceLibrary(adminResourceLibrary.map((item) => (
+                item.id === itemId ? { ...item, status: item.status === "active" ? "draft" : "active", updatedAt: new Date().toISOString() } : item
+            )));
+            refreshDashboard();
+        }
+
+        function deleteResourceItem(itemId) {
+            if (!confirm("Delete this resource?")) return;
+            asgSaveResourceLibrary(adminResourceLibrary.filter((item) => item.id !== itemId));
+            refreshDashboard();
+        }
+
+        function renderResourceLibrary() {
+            document.getElementById("resourceLibraryList").innerHTML = adminResourceLibrary.map((item, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${item.status} | ${escapeHtml(item.category)} | ${escapeHtml(item.format)}</span>
+                        <h3>${index + 1}. ${escapeHtml(item.title)}</h3>
+                        <p>${escapeHtml(item.description)}</p>
+                        <small>${escapeHtml(item.actionLabel)} | ${escapeHtml(item.url || "No link")}</small>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editResourceItem('${item.id}')">Edit</button>
+                        <button class="asg-link-button" type="button" onclick="toggleResourceStatus('${item.id}')">${item.status === "active" ? "Draft" : "Publish"}</button>
+                        <button class="asg-link-button danger" type="button" onclick="deleteResourceItem('${item.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No resources</h2><p>Create the first resource above.</p></div>`;
+        }
+
         function loadAnnouncement() {
             const notice = asgGetStudentAnnouncement();
             document.getElementById("noticeTitle").value = notice.title || "";
@@ -1404,6 +1843,9 @@
                 examAttempts: asgGetExamAttempts(),
                 examRetakePermissions: asgGetExamRetakePermissions(),
                 courses: asgGetCourses(true),
+                roadmapItems: asgGetRoadmapItems(true),
+                videoLibrary: asgGetVideoLibrary(true),
+                resourceLibrary: asgGetResourceLibrary(true),
                 certificatePermissions: asgGetCertificatePermissions(),
                 certificateRequests: readJSON("asgCertificateRequests", []),
                 studentQuestions: readJSON("studentQuestions", []),
@@ -1425,6 +1867,9 @@
             quizQuestions = asgGetQuizQuestions(true);
             codingChallenges = asgGetCodingChallenges(true);
             adminCourses = asgGetCourses(true);
+            adminRoadmapItems = asgGetRoadmapItems(true);
+            adminVideoLibrary = asgGetVideoLibrary(true);
+            adminResourceLibrary = asgGetResourceLibrary(true);
             renderQuizSetOptions(document.getElementById("quizSet").value);
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
@@ -1436,6 +1881,9 @@
             renderQuizQuestions();
             renderCodingChallenges();
             renderCourses();
+            renderRoadmapItems();
+            renderVideoLibrary();
+            renderResourceLibrary();
             renderQuestions();
             renderRecentActivity();
         }
@@ -1450,6 +1898,9 @@
                 ASG_LEARNING_KEYS.examAttempts,
                 ASG_LEARNING_KEYS.examRetakePermissions,
                 ASG_LEARNING_KEYS.courses,
+                ASG_LEARNING_KEYS.roadmapItems,
+                ASG_LEARNING_KEYS.videoLibrary,
+                ASG_LEARNING_KEYS.resourceLibrary,
                 ASG_LEARNING_KEYS.certificatePermissions,
                 ASG_LEARNING_KEYS.studentAnnouncement,
                 "users",
@@ -1470,6 +1921,9 @@
         resetQuizCatalogForm();
         resetCourseForm();
         resetTopicForm();
+        resetRoadmapForm();
+        resetVideoForm();
+        resetResourceForm();
     </script>
 </body>
 </html>

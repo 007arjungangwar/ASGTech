@@ -2,66 +2,124 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Tutorials | ASG Tech</title>
+    <title>Video Library | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="courses.html">Courses</a>
-                <a href="roadmap.html">Roadmap</a>
-                <a href="tracker.html">Progress</a>
-            </div>
-        </div>
-    </nav>
+    <nav></nav>
 
-    <main>
-        <section class="asg-section-header">
+    <main class="asg-learn-page">
+        <section class="asg-page-hero">
             <div>
-                <div class="asg-eyebrow">Student video library</div>
-                <h1>Video tutorials</h1>
-                <p>Organized video modules for students. Add your real YouTube embeds later from this page without changing the portal structure.</p>
+                <div class="asg-eyebrow">Video library</div>
+                <h1>Guided Video Lessons</h1>
+                <p>Watch structured modules for Python, data analysis, machine learning, and project building.</p>
+            </div>
+            <div class="asg-hero-metrics">
+                <div><strong id="videoCount">0</strong><span>Videos</span></div>
+                <div><strong id="videoCategoryCount">0</strong><span>Categories</span></div>
+                <div><strong>Wide</strong><span>Player</span></div>
             </div>
         </section>
 
-        <section class="asg-grid">
-            <article class="asg-workspace-card">
-                <div class="asg-card-kicker">Module 1</div>
-                <h3>Python Foundations</h3>
-                <p>Variables, loops, functions, data structures, and beginner problem solving.</p>
-                <a class="asg-card-link primary" href="courses.html">Open course</a>
-            </article>
-
-            <article class="asg-workspace-card">
-                <div class="asg-card-kicker">Module 2</div>
-                <h3>Data Analysis</h3>
-                <p>Pandas, cleaning, exploratory analysis, and readable charts for project reports.</p>
-                <a class="asg-card-link secondary" href="resources.html">Open resources</a>
-            </article>
-
-            <article class="asg-workspace-card">
-                <div class="asg-card-kicker">Module 3</div>
-                <h3>Machine Learning</h3>
-                <p>Core ML ideas, model evaluation, and practical workflows for student projects.</p>
-                <a class="asg-card-link secondary" href="roadmap.html">Open roadmap</a>
-            </article>
-
-            <article class="asg-workspace-card">
-                <div class="asg-card-kicker">Module 4</div>
-                <h3>Project Walkthroughs</h3>
-                <p>Guided walkthroughs that connect lessons to portfolio-ready project outcomes.</p>
-                <a class="asg-card-link secondary" href="projects.html">Preview projects</a>
-            </article>
+        <section class="asg-video-library">
+            <article class="asg-live-panel asg-video-player-panel" id="videoPlayer"></article>
+            <aside class="asg-video-playlist" id="videoPlaylist"></aside>
         </section>
     </main>
 
     <footer>
-        <p class="copyright">© 2026 ASG Tech Institute. Video learning for registered students.</p>
+        <p class="copyright">ASG Tech Institute. Watch, build, revise.</p>
     </footer>
+
+    <script>
+        let activeVideoId = "";
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function getEmbedUrl(url) {
+            const value = String(url || "").trim();
+            if (!value) return "";
+            if (value.includes("youtube.com/watch?v=")) return value.replace("watch?v=", "embed/");
+            if (value.includes("youtu.be/")) return `https://www.youtube.com/embed/${value.split("youtu.be/")[1].split(/[?&]/)[0]}`;
+            return value;
+        }
+
+        function isEmbeddable(url) {
+            return /^https?:\/\/.+/i.test(url) && (url.includes("youtube.com") || url.includes("youtu.be") || url.includes("embed"));
+        }
+
+        function selectVideo(videoId) {
+            activeVideoId = videoId;
+            renderVideos();
+        }
+
+        function renderVideos() {
+            const videos = asgGetVideoLibrary();
+            if (!videos.length) {
+                document.getElementById("videoPlayer").innerHTML = `<div class="asg-empty-state"><h2>No videos yet</h2><p>Your admin can add video lessons from the dashboard.</p></div>`;
+                document.getElementById("videoPlaylist").innerHTML = "";
+                return;
+            }
+
+            const categories = [...new Set(videos.map((video) => video.category))];
+            const active = videos.find((video) => video.id === activeVideoId) || videos[0];
+            activeVideoId = active.id;
+
+            document.getElementById("videoCount").textContent = videos.length;
+            document.getElementById("videoCategoryCount").textContent = categories.length;
+
+            document.getElementById("videoPlayer").innerHTML = `
+                ${isEmbeddable(active.url) ? `
+                    <div class="asg-video-frame">
+                        <iframe src="${escapeHtml(getEmbedUrl(active.url))}" title="${escapeHtml(active.title)}" allowfullscreen></iframe>
+                    </div>
+                ` : `
+                    <div class="asg-video-placeholder">
+                        <h2>${escapeHtml(active.title)}</h2>
+                        <p>This video opens as an external learning link.</p>
+                        <a class="btn-primary" href="${escapeHtml(active.url || "courses.html")}" target="_blank" rel="noopener">Open Lesson</a>
+                    </div>
+                `}
+                <div class="asg-section-header">
+                    <div>
+                        <div class="asg-eyebrow">${escapeHtml(active.category)} | ${escapeHtml(active.level)} | ${escapeHtml(active.duration)}</div>
+                        <h2>${escapeHtml(active.title)}</h2>
+                        <p>${escapeHtml(active.description)}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("videoPlaylist").innerHTML = videos.map((video) => {
+                const videoId = escapeHtml(JSON.stringify(video.id));
+                return `
+                    <button class="asg-video-item ${video.id === active.id ? "active" : ""}" type="button" onclick="selectVideo(${videoId})">
+                        <span>${escapeHtml(video.category)}</span>
+                        <strong>${escapeHtml(video.title)}</strong>
+                        <small>${escapeHtml(video.level)} | ${escapeHtml(video.duration)}</small>
+                    </button>
+                `;
+            }).join("");
+        }
+
+        window.addEventListener("asg:data-updated", (event) => {
+            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.videoLibrary) renderVideos();
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key === ASG_LEARNING_KEYS.videoLibrary) renderVideos();
+        });
+
+        renderVideos();
+    </script>
 </body>
 </html>

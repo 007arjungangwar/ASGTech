@@ -2,367 +2,98 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learning Roadmap | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+    <nav></nav>
+
+    <main class="asg-learn-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Learning roadmap</div>
+                <h1>Skill Pathway</h1>
+                <p>Follow a clear sequence from Python foundations to portfolio-ready machine learning projects.</p>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="🔍 Search tutorials, projects, resources... (Try: Python, ML, PINNs)">
-            <div class="search-results" style="display: none;"></div>
-        </div>
-        <h1>🗺️ Complete Data Science Roadmap</h1>
-        <p>Follow this path. Don't get overwhelmed. One step at a time.</p>
-
-        <div class="roadmap">
-            <!-- Phase 1 with Resources -->
-            <div class="roadmap-phase phase-1">
-                <div class="phase-number">1</div>
-                <h3>🌱 Month 1-2: Python Basics</h3>
-                <ul>
-                    <li>✅ Variables, loops, functions</li>
-                    <li>✅ Lists, dictionaries, tuples</li>
-                    <li>✅ File handling</li>
-                    <li>✅ NumPy basics</li>
-                </ul>
-                <span class="time-badge">4-6 hours/week</span>
-                
-                <!-- Resource Links -->
-                <div class="resource-links" style="margin-top: 1rem;">
-                    <a href="#" class="resource-link" onclick="showPDF('python-basics')">📄 Download Python Cheat Sheet</a>
-                    <a href="#" class="resource-link" onclick="playVideo('python-tutorial')">🎥 Watch Python Tutorial</a>
-                    <a href="#" class="resource-link" onclick="openResource('python-practice')">💻 Practice Problems</a>
-                </div>
+            <div class="asg-hero-metrics">
+                <div><strong id="roadmapCount">0</strong><span>Milestones</span></div>
+                <div><strong id="roadmapDuration">0</strong><span>Active phases</span></div>
+                <div><strong>Live</strong><span>Admin editable</span></div>
             </div>
+        </section>
 
-            <div class="roadmap-arrow">↓</div>
-
-            <div class="roadmap-phase phase-2">
-                <div class="phase-number">2</div>
-                <h3>📊 Month 3-4: Data Analysis</h3>
-                <ul>
-                    <li>✅ Pandas (DataFrames)</li>
-                    <li>✅ Matplotlib & Seaborn</li>
-                    <li>✅ Data cleaning</li>
-                    <li>✅ Exploratory Data Analysis</li>
-                </ul>
-                <span class="time-badge">5-7 hours/week</span>
-
-                <!-- Resource Links -->
-                <div class="resource-links" style="margin-top: 1rem;">
-                    <a href="#" class="resource-link" onclick="showPDF('python-basics')">📄 Download Python Cheat Sheet</a>
-                    <a href="#" class="resource-link" onclick="playVideo('python-tutorial')">🎥 Watch Python Tutorial</a>
-                    <a href="#" class="resource-link" onclick="openResource('python-practice')">💻 Practice Problems</a>
-                </div>
+        <section class="asg-learning-command">
+            <div>
+                <h2>Recommended sequence</h2>
+                <p>Each milestone contains a focus area, expected outcomes, and quick links into videos or resources.</p>
             </div>
-
-            <div class="roadmap-arrow">↓</div>
-
-            <div class="roadmap-phase phase-3">
-                <div class="phase-number">3</div>
-                <h3>🤖 Month 5-7: Machine Learning</h3>
-                <ul>
-                    <li>✅ Regression & Classification</li>
-                    <li>✅ Decision Trees, Random Forest</li>
-                    <li>✅ Clustering (K-Means, DBSCAN)</li>
-                    <li>✅ Model evaluation</li>
-                </ul>
-                <span class="time-badge">6-8 hours/week</span>
-
-                <!-- Resource Links -->
-                <div class="resource-links" style="margin-top: 1rem;">
-                    <a href="#" class="resource-link" onclick="showPDF('python-basics')">📄 Download Python Cheat Sheet</a>
-                    <a href="#" class="resource-link" onclick="playVideo('python-tutorial')">🎥 Watch Python Tutorial</a>
-                    <a href="#" class="resource-link" onclick="openResource('python-practice')">💻 Practice Problems</a>
-                </div>
+            <div class="asg-form-actions">
+                <a class="btn-secondary" href="videos.html">Open Videos</a>
+                <a class="btn-secondary" href="resources.html">Open Resources</a>
+                <a class="btn-primary" href="courses.html">Start Course</a>
             </div>
+        </section>
 
-            <div class="roadmap-arrow">↓</div>
-
-            <div class="roadmap-phase phase-4">
-                <div class="phase-number">4</div>
-                <h3>🧠 Month 8-10: Deep Learning</h3>
-                <ul>
-                    <li>✅ Neural Networks basics</li>
-                    <li>✅ CNNs for images</li>
-                    <li>✅ RNNs/LSTMs for sequences</li>
-                    <li>✅ Transfer Learning</li>
-                </ul>
-                <span class="time-badge">8-10 hours/week</span>
-
-                <!-- Resource Links -->
-                <div class="resource-links" style="margin-top: 1rem;">
-                    <a href="#" class="resource-link" onclick="showPDF('python-basics')">📄 Download Python Cheat Sheet</a>
-                    <a href="#" class="resource-link" onclick="playVideo('python-tutorial')">🎥 Watch Python Tutorial</a>
-                    <a href="#" class="resource-link" onclick="openResource('python-practice')">💻 Practice Problems</a>
-                </div>
-            </div>
-
-            <div class="roadmap-arrow">↓</div>
-
-            <div class="roadmap-phase phase-5">
-                <div class="phase-number">5</div>
-                <h3>🚀 Month 11-12: Projects & Deployment</h3>
-                <ul>
-                    <li>✅ Build 3 portfolio projects</li>
-                    <li>✅ Deploy on GitHub</li>
-                    <li>✅ Create Streamlit/Flask apps</li>
-                    <li>✅ Apply for internships</li>
-                </ul>
-                <span class="time-badge">10+ hours/week</span>
-
-                <!-- Resource Links -->
-                <div class="resource-links" style="margin-top: 1rem;">
-                    <a href="#" class="resource-link" onclick="showPDF('python-basics')">📄 Download Python Cheat Sheet</a>
-                    <a href="#" class="resource-link" onclick="playVideo('python-tutorial')">🎥 Watch Python Tutorial</a>
-                    <a href="#" class="resource-link" onclick="openResource('python-practice')">💻 Practice Problems</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="roadmap-tip">
-            <h3>💡 ASG Tech Tip</h3>
-            <p>Don't rush. Spend more time on projects than theory. Build something every week, even if it's small. Consistency > intensity.</p>
-        </div>
+        <section class="asg-roadmap-board" id="roadmapBoard"></section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">GitHub</a>
-                <a href="#">LinkedIn</a>
-                <a href="#">Twitter</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Free resources for students</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Learn with a clear path.</p>
     </footer>
-<script>
-// Simple search functionality
-const searchBox = document.querySelector('.search-box');
-const resultsDiv = document.querySelector('.search-results');
 
-const content = [
-    { title: "How to Start Learning Python", url: "posts/python-beginners-guide.html", category: "Blog" },
-    { title: "What is Machine Learning?", url: "posts/what-is-ml.html", category: "Blog" },
-    { title: "What are PINNs?", url: "posts/pinns-explained.html", category: "Blog" },
-    { title: "PINNs for Richards' Equation", url: "projects.html", category: "Project" },
-    { title: "Python Cheat Sheet", url: "resources.html", category: "Resource" },
-    { title: "ML Algorithms Mind Map", url: "resources.html", category: "Resource" },
-    { title: "Data Science Roadmap", url: "roadmap.html", category: "Guide" }
-];
+    <script>
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-searchBox.addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    if (query.length < 2) {
-        resultsDiv.style.display = 'none';
-        return;
-    }
-    
-    const matches = content.filter(item => 
-        item.title.toLowerCase().includes(query)
-    );
-    
-    if (matches.length > 0) {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = matches.map(match => `
-            <div class="search-result-item" onclick="window.location.href='${match.url}'">
-                <strong>${match.title}</strong><br>
-                <small style="color: #666;">${match.category}</small>
-            </div>
-        `).join('');
-    } else {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = '<div class="search-result-item">No results found</div>';
-    }
-});
+        function renderRoadmap() {
+            const items = asgGetRoadmapItems();
+            document.getElementById("roadmapCount").textContent = items.length;
+            document.getElementById("roadmapDuration").textContent = items.length;
 
-// Hide results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!searchBox.contains(e.target)) {
-        resultsDiv.style.display = 'none';
-    }
-});
-</script>
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+            document.getElementById("roadmapBoard").innerHTML = items.map((item, index) => `
+                <article class="asg-roadmap-card">
+                    <div class="asg-roadmap-index">${index + 1}</div>
+                    <div>
+                        <div class="asg-question-head">
+                            <span>${escapeHtml(item.stage)}</span>
+                            <small>${escapeHtml(item.duration)}</small>
+                        </div>
+                        <h2>${escapeHtml(item.title)}</h2>
+                        <p>${escapeHtml(item.focus)}</p>
+                        <ul class="asg-clean-list">
+                            ${item.outcomes.map((outcome) => `<li>${escapeHtml(outcome)}</li>`).join("")}
+                        </ul>
+                        <div class="asg-form-actions">
+                            ${item.videoUrl ? `<a class="btn-secondary" href="${escapeHtml(item.videoUrl)}">Watch</a>` : ""}
+                            ${item.resourceUrl ? `<a class="btn-secondary" href="${escapeHtml(item.resourceUrl)}">Resources</a>` : ""}
+                        </div>
+                    </div>
+                </article>
+            `).join("") || `
+                <div class="asg-empty-state">
+                    <h2>No roadmap milestones yet</h2>
+                    <p>Your admin can publish roadmap items from the dashboard.</p>
+                </div>
+            `;
+        }
 
-<script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (document.body.classList.contains('dark-mode')) {
-        btn.innerHTML = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        btn.innerHTML = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
+        window.addEventListener("asg:data-updated", (event) => {
+            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.roadmapItems) renderRoadmap();
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key === ASG_LEARNING_KEYS.roadmapItems) renderRoadmap();
+        });
 
-// Load dark mode preference
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    document.querySelector('.dark-mode-toggle').innerHTML = '☀️';
-}
-</script>
-<a href="questions.html" class="help-btn">💬</a>
-
-<div class="help-popup" id="helpPopup">
-    <h4>Need help? 🙋‍♂️</h4>
-    <p>Go to the <a href="questions.html">Q&A page</a> to ask your question. I reply within 24 hours!</p>
-    <button onclick="closeHelp()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem;">Close</button>
-</div>
-
-<script>
-const helpBtn = document.querySelector('.help-btn');
-const helpPopup = document.getElementById('helpPopup');
-
-helpBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    helpPopup.classList.toggle('active');
-    setTimeout(() => helpPopup.classList.remove('active'), 5000);
-});
-
-function closeHelp() {
-    helpPopup.classList.remove('active');
-}
-</script>
-
-<script>
-// Resource functions
-function showPDF(topic) {
-    // Create a simple text PDF
-    const content = `
-        ===== ${topic.toUpperCase()} CHEAT SHEET =====
-        
-        1. Variables: x = 5
-        2. Lists: my_list = [1,2,3]
-        3. Loops: for i in range(10):
-        4. Functions: def my_func():
-        
-        Download this cheat sheet for quick reference!
-    `;
-    
-    const blob = new Blob([content], {type: 'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${topic}_cheatsheet.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    alert('Cheat sheet downloaded! Check your Downloads folder.');
-}
-
-function playVideo(topic) {
-    window.location.href = 'videos.html';
-}
-
-function openResource(resource) {
-    const resources = {
-        'python-practice': 'https://www.hackerrank.com/domains/python',
-        'ml-practice': 'https://www.kaggle.com/learn',
-        'dl-practice': 'https://www.coursera.org/learn/neural-networks-deep-learning'
-    };
-    
-    const url = resources[resource] || 'https://www.google.com';
-    window.open(url, '_blank');
-}
-
-// Add internal video library section
-function addYouTubePlaylist() {
-    const roadmapDiv = document.querySelector('.roadmap');
-    const playlistSection = document.createElement('div');
-    playlistSection.className = 'youtube-playlist';
-    playlistSection.style.cssText = 'background: #eef7f5; padding: 1.5rem; border-radius: 8px; margin: 2rem 0; border: 1px solid #dde5ef;';
-    playlistSection.innerHTML = `
-        <h3>Video library</h3>
-        <p>Watch the student video modules in the ASG Tech portal.</p>
-        <a href="videos.html" class="btn-primary">Open videos</a>
-    `;
-    roadmapDiv.parentNode.insertBefore(playlistSection, roadmapDiv);
-}
-
-addYouTubePlaylist();
-</script>
-
+        renderRoadmap();
+    </script>
 </body>
 </html>

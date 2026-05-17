@@ -9,12 +9,15 @@ const ASG_LEARNING_KEYS = {
     examAttempts: "asgExamAttempts",
     examRetakePermissions: "asgExamRetakePermissions",
     courses: "asgCourses",
+    roadmapItems: "asgRoadmapItems",
+    videoLibrary: "asgVideoLibrary",
+    resourceLibrary: "asgResourceLibrary",
     certificatePermissions: "asgCertificatePermissions",
     studentAnnouncement: "studentAnnouncement",
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 5;
+const ASG_LEARNING_DATA_VERSION = 7;
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -58,6 +61,183 @@ const ASG_QUIZ_CATALOG = [
         topic: "SQL",
         description: "Queries, filters, joins, grouping, and database basics.",
         order: 6
+    }
+];
+
+const ASG_DEFAULT_ROADMAP_ITEMS = [
+    {
+        id: "roadmap-python-foundations",
+        stage: "Foundation",
+        title: "Python Foundations",
+        duration: "Weeks 1-4",
+        focus: "Build fluency with syntax, functions, data structures, files, and clean problem solving.",
+        outcomes: [
+            "Write reusable Python functions",
+            "Work confidently with lists, dictionaries, and files",
+            "Solve beginner coding challenges with clean indentation"
+        ],
+        videoUrl: "videos.html",
+        resourceUrl: "resources.html",
+        status: "active",
+        order: 1
+    },
+    {
+        id: "roadmap-data-analysis",
+        stage: "Analytics",
+        title: "Data Analysis with Pandas",
+        duration: "Weeks 5-8",
+        focus: "Turn raw datasets into readable insights using Pandas, NumPy, charts, and exploratory analysis.",
+        outcomes: [
+            "Clean messy tabular data",
+            "Create charts for patterns and comparisons",
+            "Prepare datasets for machine learning"
+        ],
+        videoUrl: "videos.html",
+        resourceUrl: "resources.html",
+        status: "active",
+        order: 2
+    },
+    {
+        id: "roadmap-machine-learning",
+        stage: "Modeling",
+        title: "Machine Learning Workflow",
+        duration: "Weeks 9-14",
+        focus: "Learn supervised learning, validation, feature thinking, and model evaluation through practical projects.",
+        outcomes: [
+            "Train classification and regression models",
+            "Compare models using meaningful metrics",
+            "Avoid common overfitting mistakes"
+        ],
+        videoUrl: "videos.html",
+        resourceUrl: "quiz.html",
+        status: "active",
+        order: 3
+    },
+    {
+        id: "roadmap-deep-learning",
+        stage: "Advanced",
+        title: "Deep Learning Foundations",
+        duration: "Weeks 15-20",
+        focus: "Understand neural networks, training loops, transfer learning, and how to reason about model behavior.",
+        outcomes: [
+            "Explain how neural networks learn",
+            "Use pretrained models responsibly",
+            "Connect deep learning concepts to portfolio projects"
+        ],
+        videoUrl: "videos.html",
+        resourceUrl: "resources.html",
+        status: "active",
+        order: 4
+    },
+    {
+        id: "roadmap-portfolio",
+        stage: "Career",
+        title: "Portfolio and Interview Readiness",
+        duration: "Weeks 21-24",
+        focus: "Package projects, practice interviews, publish work, and prepare a credible student portfolio.",
+        outcomes: [
+            "Build and document portfolio projects",
+            "Prepare for technical interviews",
+            "Publish a professional learning record"
+        ],
+        videoUrl: "videos.html",
+        resourceUrl: "certificate.html",
+        status: "active",
+        order: 5
+    }
+];
+
+const ASG_DEFAULT_VIDEO_LIBRARY = [
+    {
+        id: "video-python-start",
+        title: "Python Starter Session",
+        category: "Python",
+        level: "Beginner",
+        duration: "28 min",
+        description: "A practical orientation for variables, functions, loops, and how to study coding consistently.",
+        url: "https://www.youtube.com/embed/kqtD5dpn9C8",
+        status: "active",
+        order: 1
+    },
+    {
+        id: "video-pandas-workflow",
+        title: "Pandas Data Cleaning Workflow",
+        category: "Data Analysis",
+        level: "Beginner",
+        duration: "34 min",
+        description: "A guided workflow for reading data, checking quality, cleaning columns, and summarizing insights.",
+        url: "https://www.youtube.com/embed/vmEHCJofslg",
+        status: "active",
+        order: 2
+    },
+    {
+        id: "video-ml-models",
+        title: "Machine Learning Model Mindset",
+        category: "Machine Learning",
+        level: "Intermediate",
+        duration: "42 min",
+        description: "How to think about features, training data, validation, and model evaluation without getting lost.",
+        url: "https://www.youtube.com/embed/GwIo3gDZCVQ",
+        status: "active",
+        order: 3
+    },
+    {
+        id: "video-project-build",
+        title: "Portfolio Project Walkthrough",
+        category: "Projects",
+        level: "Intermediate",
+        duration: "45 min",
+        description: "How to turn a lesson into a portfolio project with a clean README, screenshots, and next steps.",
+        url: "projects.html",
+        status: "active",
+        order: 4
+    }
+];
+
+const ASG_DEFAULT_RESOURCE_LIBRARY = [
+    {
+        id: "resource-python-cheatsheet",
+        title: "Python Syntax Cheat Sheet",
+        category: "Python",
+        format: "PDF / Notes",
+        description: "A compact reference for syntax, functions, loops, collections, and common beginner mistakes.",
+        url: "course-detail.html?course=python-for-beginners",
+        actionLabel: "Open Python Course",
+        status: "active",
+        order: 1
+    },
+    {
+        id: "resource-pandas-guide",
+        title: "Pandas Cleaning Checklist",
+        category: "Data Analysis",
+        format: "Checklist",
+        description: "A student-friendly checklist for missing values, data types, duplicates, and feature preparation.",
+        url: "course-detail.html?course=data-analysis-with-pandas",
+        actionLabel: "View Checklist",
+        status: "active",
+        order: 2
+    },
+    {
+        id: "resource-ml-interview",
+        title: "Machine Learning Interview Q&A",
+        category: "Machine Learning",
+        format: "Interview Prep",
+        description: "Core questions on supervised learning, metrics, overfitting, validation, and model selection.",
+        url: "quiz.html",
+        actionLabel: "Practice Quiz",
+        status: "active",
+        order: 3
+    },
+    {
+        id: "resource-project-template",
+        title: "Portfolio Project Template",
+        category: "Career",
+        format: "Template",
+        description: "A structure for project README files, problem statements, result summaries, and screenshots.",
+        url: "projects.html",
+        actionLabel: "Open Projects",
+        status: "active",
+        order: 4
     }
 ];
 
@@ -943,6 +1123,36 @@ function asgEnsureLearningData() {
         }
     }
 
+    const roadmapItems = asgReadJSON(ASG_LEARNING_KEYS.roadmapItems, null);
+    if (!Array.isArray(roadmapItems) || (roadmapItems.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.roadmapItems, asgClone(ASG_DEFAULT_ROADMAP_ITEMS));
+    } else if (shouldUpgradeDefaults) {
+        const mergedRoadmap = asgMergeDefaultItems(roadmapItems, ASG_DEFAULT_ROADMAP_ITEMS, asgNormalizeRoadmapItem);
+        if (mergedRoadmap.length !== roadmapItems.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.roadmapItems, asgSortByOrder(mergedRoadmap));
+        }
+    }
+
+    const videoLibrary = asgReadJSON(ASG_LEARNING_KEYS.videoLibrary, null);
+    if (!Array.isArray(videoLibrary) || (videoLibrary.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.videoLibrary, asgClone(ASG_DEFAULT_VIDEO_LIBRARY));
+    } else if (shouldUpgradeDefaults) {
+        const mergedVideos = asgMergeDefaultItems(videoLibrary, ASG_DEFAULT_VIDEO_LIBRARY, asgNormalizeVideoItem);
+        if (mergedVideos.length !== videoLibrary.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.videoLibrary, asgSortByOrder(mergedVideos));
+        }
+    }
+
+    const resourceLibrary = asgReadJSON(ASG_LEARNING_KEYS.resourceLibrary, null);
+    if (!Array.isArray(resourceLibrary) || (resourceLibrary.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.resourceLibrary, asgClone(ASG_DEFAULT_RESOURCE_LIBRARY));
+    } else if (shouldUpgradeDefaults) {
+        const mergedResources = asgMergeDefaultItems(resourceLibrary, ASG_DEFAULT_RESOURCE_LIBRARY, asgNormalizeResourceItem);
+        if (mergedResources.length !== resourceLibrary.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.resourceLibrary, asgSortByOrder(mergedResources));
+        }
+    }
+
     const announcement = asgReadJSON(ASG_LEARNING_KEYS.studentAnnouncement, null);
     if (!announcement) {
         asgWriteJSON(ASG_LEARNING_KEYS.studentAnnouncement, {
@@ -1532,6 +1742,101 @@ function asgGetCourses(includeDrafts = false) {
 function asgSaveCourses(courses) {
     const normalized = courses.map(asgNormalizeCourse);
     asgWriteJSON(ASG_LEARNING_KEYS.courses, asgSortByOrder(normalized));
+}
+
+function asgNormalizeList(value) {
+    if (Array.isArray(value)) {
+        return value.map((item) => String(item || "").trim()).filter(Boolean);
+    }
+    return String(value || "")
+        .split(/\n|,/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
+function asgNormalizeRoadmapItem(item, index) {
+    const title = String(item.title || `Roadmap Step ${index + 1}`).trim();
+    return {
+        id: asgSlugify(item.id || title, "roadmap"),
+        stage: String(item.stage || "Learning Stage").trim(),
+        title,
+        duration: String(item.duration || "Flexible").trim(),
+        focus: String(item.focus || item.description || "Add the learning focus from admin.").trim(),
+        outcomes: asgNormalizeList(item.outcomes || item.skills),
+        videoUrl: String(item.videoUrl || "").trim(),
+        resourceUrl: String(item.resourceUrl || "").trim(),
+        status: item.status === "draft" ? "draft" : "active",
+        order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+        updatedAt: item.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgGetRoadmapItems(includeDrafts = false) {
+    asgEnsureLearningData();
+    const items = asgReadJSON(ASG_LEARNING_KEYS.roadmapItems, []);
+    const normalized = items.map(asgNormalizeRoadmapItem);
+    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((item) => item.status === "active"));
+}
+
+function asgSaveRoadmapItems(items) {
+    const normalized = items.map(asgNormalizeRoadmapItem);
+    asgWriteJSON(ASG_LEARNING_KEYS.roadmapItems, asgSortByOrder(normalized));
+}
+
+function asgNormalizeVideoItem(item, index) {
+    const title = String(item.title || `Video ${index + 1}`).trim();
+    return {
+        id: asgSlugify(item.id || title, "video"),
+        title,
+        category: String(item.category || "Learning").trim(),
+        level: String(item.level || "Beginner").trim(),
+        duration: String(item.duration || "Self-paced").trim(),
+        description: String(item.description || "Add the video description from admin.").trim(),
+        url: String(item.url || "").trim(),
+        status: item.status === "draft" ? "draft" : "active",
+        order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+        updatedAt: item.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgGetVideoLibrary(includeDrafts = false) {
+    asgEnsureLearningData();
+    const items = asgReadJSON(ASG_LEARNING_KEYS.videoLibrary, []);
+    const normalized = items.map(asgNormalizeVideoItem);
+    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((item) => item.status === "active"));
+}
+
+function asgSaveVideoLibrary(items) {
+    const normalized = items.map(asgNormalizeVideoItem);
+    asgWriteJSON(ASG_LEARNING_KEYS.videoLibrary, asgSortByOrder(normalized));
+}
+
+function asgNormalizeResourceItem(item, index) {
+    const title = String(item.title || `Resource ${index + 1}`).trim();
+    return {
+        id: asgSlugify(item.id || title, "resource"),
+        title,
+        category: String(item.category || "Learning").trim(),
+        format: String(item.format || "Guide").trim(),
+        description: String(item.description || "Add the resource description from admin.").trim(),
+        url: String(item.url || "").trim(),
+        actionLabel: String(item.actionLabel || "Open Resource").trim(),
+        status: item.status === "draft" ? "draft" : "active",
+        order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+        updatedAt: item.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgGetResourceLibrary(includeDrafts = false) {
+    asgEnsureLearningData();
+    const items = asgReadJSON(ASG_LEARNING_KEYS.resourceLibrary, []);
+    const normalized = items.map(asgNormalizeResourceItem);
+    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((item) => item.status === "active"));
+}
+
+function asgSaveResourceLibrary(items) {
+    const normalized = items.map(asgNormalizeResourceItem);
+    asgWriteJSON(ASG_LEARNING_KEYS.resourceLibrary, asgSortByOrder(normalized));
 }
 
 function asgGetCourseById(courseId, includeDrafts = false) {

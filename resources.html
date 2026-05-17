@@ -2,246 +2,101 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Resources | ASG Tech</title>
+    <title>Resources | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+    <nav></nav>
+
+    <main class="asg-learn-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Resource hub</div>
+                <h1>Study Resources</h1>
+                <p>Curated notes, checklists, templates, and practice links organized for fast student revision.</p>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="🔍 Search tutorials, projects, resources... (Try: Python, ML, PINNs)">
-            <div class="search-results" style="display: none;"></div>
-        </div>
-        <h1>🎁 Free Resources for Students</h1>
-        <p>No email required. No payment. Just click and learn.</p>
-
-        <div class="resources-grid">
-            <div class="resource-card">
-                <span class="resource-icon">📘</span>
-                <h3>Python Cheat Sheet</h3>
-                <p>All Python syntax in one page. Perfect for beginners.</p>
-                <a href="#" class="btn-download">Download PDF →</a>
+            <div class="asg-hero-metrics">
+                <div><strong id="resourceCount">0</strong><span>Resources</span></div>
+                <div><strong id="resourceCategoryCount">0</strong><span>Categories</span></div>
+                <div><strong>Live</strong><span>Admin editable</span></div>
             </div>
+        </section>
 
-            <div class="resource-card">
-                <span class="resource-icon">🧠</span>
-                <h3>ML Algorithms Mind Map</h3>
-                <p>Visual guide to when to use which algorithm.</p>
-                <a href="#" class="btn-download">Download PDF →</a>
+        <section class="asg-learning-command">
+            <div>
+                <h2>Find the right material</h2>
+                <p>Use category filters to quickly move between Python, data analysis, machine learning, and career material.</p>
             </div>
+            <div class="asg-resource-filters" id="resourceFilters"></div>
+        </section>
 
-            <div class="resource-card">
-                <span class="resource-icon">📊</span>
-                <h3>Data Science Interview Q&A</h3>
-                <p>50 most asked questions with answers.</p>
-                <a href="#" class="btn-download">Download PDF →</a>
-            </div>
-
-            <div class="resource-card">
-                <span class="resource-icon">🐍</span>
-                <h3>Python Practice Problems</h3>
-                <p>20 problems with solutions. Beginner to intermediate.</p>
-                <a href="#" class="btn-download">Download PDF →</a>
-            </div>
-
-            <div class="resource-card">
-                <span class="resource-icon">🤖</span>
-                <h3>Deep Learning Roadmap</h3>
-                <p>Step-by-step path to learn DL in 3 months.</p>
-                <a href="#" class="btn-download">Download PDF →</a>
-            </div>
-
-            <div class="resource-card">
-                <span class="resource-icon">📝</span>
-                <h3>Research Paper Template</h3>
-                <p>LaTeX template for ML research papers.</p>
-                <a href="#" class="btn-download">Download →</a>
-            </div>
-        </div>
-
-        <div class="coming-soon">
-            <p>🔥 More resources added every week. Bookmark this page!</p>
-        </div>
+        <section class="asg-resource-grid" id="resourceGrid"></section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">GitHub</a>
-                <a href="#">LinkedIn</a>
-                <a href="#">Twitter</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Free resources for students</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Practical resources for registered learners.</p>
     </footer>
-<script>
-// Simple search functionality
-const searchBox = document.querySelector('.search-box');
-const resultsDiv = document.querySelector('.search-results');
 
-const content = [
-    { title: "How to Start Learning Python", url: "posts/python-beginners-guide.html", category: "Blog" },
-    { title: "What is Machine Learning?", url: "posts/what-is-ml.html", category: "Blog" },
-    { title: "What are PINNs?", url: "posts/pinns-explained.html", category: "Blog" },
-    { title: "PINNs for Richards' Equation", url: "projects.html", category: "Project" },
-    { title: "Python Cheat Sheet", url: "resources.html", category: "Resource" },
-    { title: "ML Algorithms Mind Map", url: "resources.html", category: "Resource" },
-    { title: "Data Science Roadmap", url: "roadmap.html", category: "Guide" }
-];
+    <script>
+        let activeCategory = "All";
 
-searchBox.addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    if (query.length < 2) {
-        resultsDiv.style.display = 'none';
-        return;
-    }
-    
-    const matches = content.filter(item => 
-        item.title.toLowerCase().includes(query)
-    );
-    
-    if (matches.length > 0) {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = matches.map(match => `
-            <div class="search-result-item" onclick="window.location.href='${match.url}'">
-                <strong>${match.title}</strong><br>
-                <small style="color: #666;">${match.category}</small>
-            </div>
-        `).join('');
-    } else {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = '<div class="search-result-item">No results found</div>';
-    }
-});
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-// Hide results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!searchBox.contains(e.target)) {
-        resultsDiv.style.display = 'none';
-    }
-});
-</script>
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+        function setResourceCategory(category) {
+            activeCategory = category;
+            renderResources();
+        }
 
-<script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (document.body.classList.contains('dark-mode')) {
-        btn.innerHTML = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        btn.innerHTML = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
+        function renderResources() {
+            const resources = asgGetResourceLibrary();
+            const categories = ["All", ...new Set(resources.map((resource) => resource.category))];
+            const visible = activeCategory === "All"
+                ? resources
+                : resources.filter((resource) => resource.category === activeCategory);
 
-// Load dark mode preference
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    document.querySelector('.dark-mode-toggle').innerHTML = '☀️';
-}
-</script>
-<a href="questions.html" class="help-btn">💬</a>
+            document.getElementById("resourceCount").textContent = resources.length;
+            document.getElementById("resourceCategoryCount").textContent = Math.max(categories.length - 1, 0);
+            document.getElementById("resourceFilters").innerHTML = categories.map((category) => {
+                const categoryValue = escapeHtml(JSON.stringify(category));
+                return `<button class="${category === activeCategory ? "active" : ""}" type="button" onclick="setResourceCategory(${categoryValue})">${escapeHtml(category)}</button>`;
+            }).join("");
 
-<div class="help-popup" id="helpPopup">
-    <h4>Need help? 🙋‍♂️</h4>
-    <p>Go to the <a href="questions.html">Q&A page</a> to ask your question. I reply within 24 hours!</p>
-    <button onclick="closeHelp()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem;">Close</button>
-</div>
+            document.getElementById("resourceGrid").innerHTML = visible.map((resource) => `
+                <article class="asg-resource-card">
+                    <div class="asg-question-head">
+                        <span>${escapeHtml(resource.category)}</span>
+                        <small>${escapeHtml(resource.format)}</small>
+                    </div>
+                    <h2>${escapeHtml(resource.title)}</h2>
+                    <p>${escapeHtml(resource.description)}</p>
+                    <a class="btn-secondary" href="${escapeHtml(resource.url || "courses.html")}" target="${/^https?:/i.test(resource.url) ? "_blank" : "_self"}" rel="noopener">${escapeHtml(resource.actionLabel)}</a>
+                </article>
+            `).join("") || `
+                <div class="asg-empty-state">
+                    <h2>No resources found</h2>
+                    <p>Your admin can publish resources from the dashboard.</p>
+                </div>
+            `;
+        }
 
-<script>
-const helpBtn = document.querySelector('.help-btn');
-const helpPopup = document.getElementById('helpPopup');
+        window.addEventListener("asg:data-updated", (event) => {
+            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.resourceLibrary) renderResources();
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key === ASG_LEARNING_KEYS.resourceLibrary) renderResources();
+        });
 
-helpBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    helpPopup.classList.toggle('active');
-    setTimeout(() => helpPopup.classList.remove('active'), 5000);
-});
-
-function closeHelp() {
-    helpPopup.classList.remove('active');
-}
-</script>
-
+        renderResources();
+    </script>
 </body>
 </html>
