@@ -8,7 +8,7 @@
     <title>Topic | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="asg-lesson-focus">
     <nav></nav>
 
     <main class="asg-topic-page">
@@ -17,6 +17,7 @@
             <aside class="asg-topic-sidebar" id="topicList"></aside>
             <section class="asg-live-panel asg-topic-workspace">
                 <div class="asg-topic-tabs" role="tablist">
+                    <button class="asg-topic-toggle" type="button" onclick="toggleTopicRail()">Topics</button>
                     <button class="active" type="button" onclick="selectTopicTab('content', this)">Content</button>
                     <button type="button" onclick="selectTopicTab('quiz', this)">Quiz</button>
                     <button type="button" onclick="selectTopicTab('video', this)">Video</button>
@@ -111,6 +112,16 @@
             return quizHtml;
         }
 
+        function toggleTopicRail() {
+            document.body.classList.toggle("asg-topic-rail-collapsed");
+            const button = document.querySelector(".asg-topic-toggle");
+            if (button) {
+                const isCollapsed = document.body.classList.contains("asg-topic-rail-collapsed");
+                button.textContent = isCollapsed ? "Show Topics" : "Topics";
+                button.setAttribute("aria-expanded", String(!isCollapsed));
+            }
+        }
+
         function selectTopicTab(tab, button) {
             document.querySelectorAll(".asg-topic-tabs button").forEach((item) => item.classList.remove("active"));
             button.classList.add("active");
@@ -144,18 +155,18 @@
                 <div>
                     <div class="asg-eyebrow">${escapeHtml(course.title)}</div>
                     <h1>${escapeHtml(topic.title)}</h1>
-                    <p>Use the left topic list to move through the course. This page keeps content, quiz, and video together for one topic.</p>
+                    <p>Lesson content uses a focused course reader. Use Topics to show or hide the course outline.</p>
                 </div>
                 <div class="asg-hero-metrics">
-                    <div><strong>3</strong><span>Views</span></div>
+                    <div><strong>${course.topics.length}</strong><span>Topics</span></div>
                     <div><strong>${escapeHtml(topic.status)}</strong><span>Status</span></div>
                     <div><strong>${escapeHtml(course.icon)}</strong><span>Course</span></div>
                 </div>
             `;
             document.getElementById("topicList").innerHTML = `
                 <div class="asg-challenge-list-head">
-                    <h2>${escapeHtml(course.title)}</h2>
-                    <a href="course-detail.html?course=${encodeURIComponent(course.id)}">Course Home</a>
+                    <h2>Topics</h2>
+                    <a href="courses.html">Courses</a>
                 </div>
                 ${course.topics.map((item) => `
                     <a class="asg-topic-link ${item.id === topic.id ? "active" : ""}" href="topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(item.id)}">

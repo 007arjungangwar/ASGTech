@@ -75,7 +75,10 @@
         function openCourse(courseId) {
             const course = asgGetCourseById(courseId);
             if (course) saveEnrollment(course);
-            window.location.href = `course-detail.html?course=${encodeURIComponent(courseId)}`;
+            const firstTopic = course && course.topics.length ? course.topics[0] : null;
+            window.location.href = firstTopic
+                ? `topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(firstTopic.id)}`
+                : `course-detail.html?course=${encodeURIComponent(courseId)}`;
         }
 
         function renderCourses() {
