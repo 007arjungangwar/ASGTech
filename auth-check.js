@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v13",
+    cacheName: "asg-tech-v14",
     publicPages: [
         "",
         "index.html",
@@ -207,6 +207,140 @@ function navigationGroups(user) {
     })).filter((group) => group.items.length);
 }
 
+function getWorkspaceItems(user) {
+    const publicItems = [
+        { label: "Home", page: "index.html", section: "Public", public: true },
+        { label: "Blog", page: "blog.html", section: "Public", public: true },
+        { label: "Projects", page: "projects.html", section: "Public", public: true },
+        { label: "About", page: "about.html", section: "Public", public: true }
+    ];
+
+    const workspaceItems = navigationGroups(user).flatMap((group) => (
+        group.items.map((item) => ({
+            ...item,
+            section: group.title,
+            sectionPage: group.items[0] ? group.items[0].page : item.page
+        }))
+    ));
+
+    return [...publicItems, ...workspaceItems];
+}
+
+function findWorkspaceItem(page, user = getCurrentUser()) {
+    const current = String(page || getCurrentPage()).toLowerCase();
+    const direct = getWorkspaceItems(user).find((item) => item.page.toLowerCase() === current);
+    if (direct) return direct;
+
+    const fallback = {
+        "course-detail.html": { label: "Course Workspace", page: "course-detail.html", section: "Learn", sectionPage: "courses.html" },
+        "topic-detail.html": { label: "Lesson Viewer", page: "topic-detail.html", section: "Learn", sectionPage: "courses.html" },
+        "coding-exam.html": { label: "Coding Exam", page: "coding-exam.html", section: "Practice", sectionPage: "exam-center.html" },
+        "exam.html": { label: "Exam", page: "exam.html", section: "Practice", sectionPage: "exam-center.html" },
+        "exam-result.html": { label: "Exam Result", page: "exam-result.html", section: "Practice", sectionPage: "exam-center.html" },
+        "profile.html": { label: "Profile", page: "profile.html", section: "Account", sectionPage: "profile.html" },
+        "admin.html": { label: "Dashboard", page: "admin.html", section: "Admin", sectionPage: "admin.html" }
+    };
+
+    return fallback[current] || null;
+}
+
+function runGlobalSearch(form) {
+    const input = form ? form.querySelector("input[name='query']") : null;
+    const query = input ? input.value.trim().toLowerCase() : "";
+    if (!query) {
+        if (input) input.focus();
+        return;
+    }
+
+    const items = getWorkspaceItems(getCurrentUser());
+    const match = items.find((item) => (
+        item.label.toLowerCase() === query ||
+        item.page.toLowerCase() === query ||
+        `${item.section} ${item.label}`.toLowerCase().includes(query)
+    )) || items.find((item) => item.label.toLowerCase().includes(query));
+
+    if (match) {
+        window.location.href = itemHref(match, getCurrentUser());
+        return;
+    }
+
+    const smartRoutes = [
+        { keywords: ["quiz", "test", "mcq"], page: "quiz.html" },
+        { keywords: ["coding", "practice", "python"], page: "coding-practice.html" },
+        { keywords: ["exam"], page: "exam-center.html" },
+        { keywords: ["course", "lesson", "content", "pdf"], page: "courses.html" },
+        { keywords: ["roadmap"], page: "roadmap.html" },
+        { keywords: ["video"], page: "videos.html" },
+        { keywords: ["certificate"], page: "certificate.html" },
+        { keywords: ["doubt", "question", "qa"], page: "questions.html" },
+        { keywords: ["chat"], page: "chat.html" }
+    ];
+    const route = smartRoutes.find((item) => item.keywords.some((keyword) => query.includes(keyword)));
+    window.location.href = route ? asgUrl(route.page) : asgUrl("courses.html");
+}
+
+function applyThemePreference() {
+    const theme = localStorage.getItem("asgTheme") || "light";
+    document.body.classList.toggle("asg-theme-dark", theme === "dark");
+    document.body.dataset.theme = theme;
+}
+
+function toggleThemeMode() {
+    const nextTheme = document.body.classList.contains("asg-theme-dark") ? "light" : "dark";
+    localStorage.setItem("asgTheme", nextTheme);
+    applyThemePreference();
+}
+
+function applySidebarPreference() {
+    const saved = localStorage.getItem("asgSidebarCollapsed");
+    const collapsed = saved === null && window.innerWidth <= 820
+        ? true
+        : saved === "true";
+    document.body.classList.toggle("asg-sidebar-collapsed", collapsed);
+}
+
+function toggleSidebarCollapsed() {
+    const collapsed = !document.body.classList.contains("asg-sidebar-collapsed");
+    localStorage.setItem("asgSidebarCollapsed", String(collapsed));
+    applySidebarPreference();
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById("asgNotificationPanel");
+    if (!panel) return;
+    panel.classList.toggle("show");
+}
+
+function renderBreadcrumbs(user) {
+    const main = document.querySelector("main");
+    if (!main) return;
+
+    const existing = main.querySelector(".asg-breadcrumbs");
+    if (existing) existing.remove();
+
+    const page = getCurrentPage();
+    if (["index.html", "login.html"].includes(page)) return;
+
+    const item = findWorkspaceItem(page, user);
+    if (!item) return;
+
+    const sectionLink = item.sectionPage && item.section !== "Public"
+        ? `<a href="${asgUrl(item.sectionPage)}">${asgEscapeHtml(item.section)}</a>`
+        : `<span>${asgEscapeHtml(item.section)}</span>`;
+
+    const breadcrumbs = document.createElement("nav");
+    breadcrumbs.className = "asg-breadcrumbs";
+    breadcrumbs.setAttribute("aria-label", "Breadcrumb");
+    breadcrumbs.innerHTML = `
+        <a href="${asgUrl("index.html")}">Home</a>
+        <span>/</span>
+        ${sectionLink}
+        <span>/</span>
+        <strong>${asgEscapeHtml(item.label)}</strong>
+    `;
+    main.insertBefore(breadcrumbs, main.firstChild);
+}
+
 function itemHref(item, user) {
     if (item.public || user) return asgUrl(item.page);
     return buildLoginUrl(item.page);
@@ -227,24 +361,59 @@ function renderTopNavigation(user) {
         { label: "Projects", page: "projects.html", public: true },
         { label: "About", page: "about.html", public: true }
     ];
+    const searchItems = getWorkspaceItems(user);
+    const notice = loggedIn ? getStudentAnnouncement() : null;
+    const hasNotice = Boolean(notice && user.role !== "admin");
 
     nav.className = "asg-navbar";
     nav.innerHTML = `
         <div class="asg-topbar">
-            <a href="${asgUrl("index.html")}" class="logo asg-logo" aria-label="ASG Tech home">
-                <span class="asg-logo-mark">ASG</span>
-                <span class="asg-logo-copy">
-                    <strong>ASG Tech</strong>
-                    <small>Institute</small>
-                </span>
-            </a>
+            <div class="asg-topbar-left">
+                <button class="asg-shell-toggle" type="button" onclick="toggleSidebarCollapsed()" aria-label="Toggle workspace menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <a href="${asgUrl("index.html")}" class="logo asg-logo" aria-label="ASG Tech home">
+                    <span class="asg-logo-mark">ASG</span>
+                    <span class="asg-logo-copy">
+                        <strong>ASG Tech</strong>
+                        <small>Institute</small>
+                    </span>
+                </a>
+            </div>
 
-            <div class="nav-links asg-top-links" aria-label="Main navigation">
-                ${publicTopLinks.map((item) => `
-                    <a href="${asgUrl(item.page)}" class="${isActive(item.page) ? "active" : ""}">
-                        ${item.label}
-                    </a>
-                `).join("")}
+            <form class="asg-global-search" role="search" onsubmit="event.preventDefault(); runGlobalSearch(this);">
+                <input name="query" type="search" list="asgSearchOptions" placeholder="Search courses, exams, doubts..." autocomplete="off">
+                <datalist id="asgSearchOptions">
+                    ${searchItems.map((item) => `<option value="${asgEscapeHtml(item.label)}">${asgEscapeHtml(item.section)}</option>`).join("")}
+                </datalist>
+                <button type="submit">Search</button>
+            </form>
+
+            <div class="asg-topbar-right">
+                <div class="nav-links asg-top-links" aria-label="Main navigation">
+                    ${publicTopLinks.map((item) => `
+                        <a href="${asgUrl(item.page)}" class="${isActive(item.page) ? "active" : ""}">
+                            ${item.label}
+                        </a>
+                    `).join("")}
+                </div>
+
+                <div class="asg-utility-bar">
+                    <div class="asg-notification-wrap">
+                        <button class="asg-icon-button ${hasNotice ? "has-alert" : ""}" type="button" onclick="toggleNotifications()" aria-label="Open notifications">
+                            <span>Alerts</span>
+                        </button>
+                        <div class="asg-notification-panel" id="asgNotificationPanel">
+                            <strong>${hasNotice ? asgEscapeHtml(notice.title || "Institute update") : "No new alerts"}</strong>
+                            <p>${hasNotice ? asgEscapeHtml(notice.body || "") : "You are all caught up."}</p>
+                        </div>
+                    </div>
+                    <button class="asg-icon-button" type="button" onclick="toggleThemeMode()" aria-label="Toggle dark or light theme">
+                        <span>Theme</span>
+                    </button>
+                </div>
             </div>
 
             <div class="asg-auth-area">
@@ -325,6 +494,7 @@ function renderSidebar(user) {
                     <button
                         class="asg-menu-heading ${activeGroup ? "active" : ""}"
                         type="button"
+                        data-short="${asgEscapeHtml(group.title.slice(0, 1))}"
                         aria-expanded="${String(groupOpen)}"
                         onclick="toggleSidebarGroup(this)"
                     >
@@ -445,7 +615,12 @@ function renderStudentAnnouncement(user) {
         <strong>${asgEscapeHtml(notice.title || "Institute update")}</strong>
         <span>${asgEscapeHtml(notice.body || "")}</span>
     `;
-    main.insertBefore(noticeBox, main.firstChild);
+    const breadcrumbs = main.querySelector(".asg-breadcrumbs");
+    if (breadcrumbs && breadcrumbs.nextSibling) {
+        main.insertBefore(noticeBox, breadcrumbs.nextSibling);
+    } else {
+        main.insertBefore(noticeBox, main.firstChild);
+    }
 }
 
 function showAuthNotice() {
@@ -507,9 +682,12 @@ function updateUIForUser() {
     const user = getCurrentUser();
     body.classList.add("has-asg-shell");
     body.dataset.userRole = user ? user.role : "guest";
+    applyThemePreference();
+    applySidebarPreference();
 
     renderTopNavigation(user);
     renderSidebar(user);
+    renderBreadcrumbs(user);
     updateWelcomeMessage(user);
     updateHomeDashboard(user);
     renderStudentAnnouncement(user);
@@ -525,10 +703,20 @@ document.addEventListener("click", function(event) {
 
     const navGroup = event.target.closest ? event.target.closest(".asg-nav-group") : null;
     if (!navGroup) closeNavGroups();
+
+    const notificationWrap = event.target.closest ? event.target.closest(".asg-notification-wrap") : null;
+    if (!notificationWrap) {
+        const panel = document.getElementById("asgNotificationPanel");
+        if (panel) panel.classList.remove("show");
+    }
 });
 
 document.addEventListener("keydown", function(event) {
-    if (event.key === "Escape") closeNavGroups();
+    if (event.key === "Escape") {
+        closeNavGroups();
+        const panel = document.getElementById("asgNotificationPanel");
+        if (panel) panel.classList.remove("show");
+    }
 });
 
 window.addEventListener("storage", function(event) {
