@@ -185,11 +185,25 @@
             gap: 4mm;
         }
 
-        .certificate-logo {
+        .certificate-logo-frame {
             width: 15mm;
             height: 15mm;
+            display: grid;
+            place-items: center;
             border-radius: 4mm;
+            overflow: hidden;
+            background: #0f766e;
             box-shadow: 0 8px 20px rgba(20, 63, 113, 0.16);
+            flex: 0 0 15mm;
+        }
+
+        .certificate-logo {
+            display: block;
+            width: 13mm;
+            height: 13mm;
+            object-fit: contain;
+            object-position: center;
+            transform: translateY(0.35mm);
         }
 
         .certificate-brand-copy,
@@ -352,6 +366,26 @@
             display: none;
         }
 
+        .certificate-export-host {
+            position: fixed;
+            left: -200vw;
+            top: 0;
+            width: 297mm;
+            height: 210mm;
+            overflow: hidden;
+            background: #fffdf7;
+            pointer-events: none;
+        }
+
+        .certificate-export-host .certificate-sheet {
+            width: 297mm;
+            height: 210mm;
+            min-width: 0;
+            margin: 0;
+            box-shadow: none;
+            transform: none;
+        }
+
         @media (max-width: 900px) {
             .certificate-sheet {
                 min-width: 720px;
@@ -457,7 +491,9 @@
                 <div class="certificate-inner">
                     <div class="certificate-topline">
                         <div class="certificate-brand">
-                            <img class="certificate-logo" src="icon.svg" alt="ASG Tech logo">
+                            <span class="certificate-logo-frame">
+                                <img class="certificate-logo" src="icon.svg" alt="ASG Tech logo">
+                            </span>
                             <div class="certificate-brand-copy">
                                 <strong>ASG Tech Online</strong>
                                 <span>Learning Without Limit</span>
@@ -630,6 +666,47 @@
             alert("Your certificate download request has been saved for admin review.");
         }
 
+        function waitForCertificateAssets(target) {
+            const images = Array.from(target.querySelectorAll("img"));
+            return Promise.all(images.map((image) => {
+                if (image.complete && image.naturalWidth) return Promise.resolve();
+                if (typeof image.decode === "function") {
+                    return image.decode().catch(() => undefined);
+                }
+                return new Promise((resolve) => {
+                    image.onload = resolve;
+                    image.onerror = resolve;
+                });
+            }));
+        }
+
+        async function renderCertificateCanvas() {
+            const source = document.getElementById("certificate");
+            const host = document.createElement("div");
+            host.className = "certificate-export-host";
+            const clone = source.cloneNode(true);
+            clone.id = "certificate-export";
+            host.appendChild(clone);
+            document.body.appendChild(host);
+
+            try {
+                await waitForCertificateAssets(clone);
+                return await html2canvas(clone, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: "#fffdf7",
+                    width: clone.offsetWidth,
+                    height: clone.offsetHeight,
+                    windowWidth: host.offsetWidth,
+                    windowHeight: host.offsetHeight,
+                    scrollX: 0,
+                    scrollY: 0
+                });
+            } finally {
+                host.remove();
+            }
+        }
+
         function generateCertificate() {
             const name = document.getElementById("studentName").value.trim();
             if (!name) {
@@ -645,12 +722,11 @@
             }
 
             updateCertificateName();
-            const element = document.getElementById("certificate");
-            html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: "#fffdf7"
-            }).then((canvas) => {
+            const button = document.getElementById("downloadCertificateButton");
+            button.disabled = true;
+            button.textContent = "Preparing...";
+
+            renderCertificateCanvas().then((canvas) => {
                 const link = document.createElement("a");
                 link.download = `${name.replace(/\s+/g, "_")}_ASG_Tech_certificate.png`;
                 link.href = canvas.toDataURL("image/png");
@@ -663,6 +739,11 @@
                     course: "Data Science & Machine Learning",
                     downloadAllowed: true
                 });
+            }).catch((error) => {
+                alert(error.message || "Could not prepare certificate download.");
+            }).finally(() => {
+                button.textContent = "Download Certificate";
+                refreshCertificateAccess();
             });
         }
 
