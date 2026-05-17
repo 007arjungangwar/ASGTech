@@ -558,6 +558,7 @@
         const certificateUser = getCurrentUser();
         const certificateIdKey = certificateUser ? `certificateId_${certificateUser.id}` : "certificateId_guest";
         let certificateId = localStorage.getItem(certificateIdKey);
+        let certificateLogoCanvasSource = null;
         if (!certificateId) {
             certificateId = `${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
             localStorage.setItem(certificateIdKey, certificateId);
@@ -680,6 +681,59 @@
             }));
         }
 
+        function loadCertificateImage(src) {
+            return new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = reject;
+                image.src = src;
+            });
+        }
+
+        function cloneCertificateLogoCanvas(sourceCanvas) {
+            const canvas = document.createElement("canvas");
+            canvas.width = sourceCanvas.width;
+            canvas.height = sourceCanvas.height;
+            canvas.getContext("2d").drawImage(sourceCanvas, 0, 0);
+            return canvas;
+        }
+
+        async function createCertificateLogoCanvas() {
+            if (certificateLogoCanvasSource) {
+                return cloneCertificateLogoCanvas(certificateLogoCanvasSource);
+            }
+
+            const response = await fetch("icon.svg", { cache: "reload" });
+            const svgText = await response.text();
+            const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+            const objectUrl = URL.createObjectURL(svgBlob);
+
+            try {
+                const image = await loadCertificateImage(objectUrl);
+                const canvas = document.createElement("canvas");
+                canvas.width = 1024;
+                canvas.height = 1024;
+                const context = canvas.getContext("2d");
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                certificateLogoCanvasSource = canvas;
+                return cloneCertificateLogoCanvas(canvas);
+            } finally {
+                URL.revokeObjectURL(objectUrl);
+            }
+        }
+
+        async function prepareCertificateExportClone(clone) {
+            const logo = clone.querySelector(".certificate-logo");
+            if (!logo) return;
+
+            const logoCanvas = await createCertificateLogoCanvas();
+            logoCanvas.className = logo.className;
+            logoCanvas.setAttribute("role", "img");
+            logoCanvas.setAttribute("aria-label", "ASG Tech logo");
+            logo.replaceWith(logoCanvas);
+        }
+
         async function renderCertificateCanvas() {
             const source = document.getElementById("certificate");
             const host = document.createElement("div");
@@ -690,6 +744,7 @@
             document.body.appendChild(host);
 
             try {
+                await prepareCertificateExportClone(clone);
                 await waitForCertificateAssets(clone);
                 return await html2canvas(clone, {
                     scale: 2,
