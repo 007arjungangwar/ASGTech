@@ -2555,7 +2555,7 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 
 .asg-quiz-picker {
     display: grid;
-    grid-template-columns: repeat(5, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 12px;
     margin-bottom: 22px;
 }
@@ -2563,8 +2563,8 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 .asg-quiz-card {
     display: grid;
     gap: 5px;
-    min-height: 118px;
-    padding: 16px;
+    min-height: 132px;
+    padding: 18px;
     border: 1px solid var(--asg-border);
     border-radius: 8px;
     background: white;
@@ -2662,15 +2662,27 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 .asg-quiz-page #quizResult,
 .asg-exam-center #examList,
 .asg-exam-center > .asg-live-panel {
-    min-height: min(640px, calc(100vh - var(--asg-topbar-height) - 190px));
+    min-height: calc(100vh - var(--asg-topbar-height) - 176px);
 }
 
-.asg-quiz-page .asg-question-block {
+.asg-quiz-page #quizMount,
+.asg-quiz-page #quizResult {
     padding: clamp(18px, 2vw, 28px);
 }
 
+.asg-quiz-page .asg-question-block {
+    padding: clamp(22px, 2.4vw, 36px);
+    background: #ffffff;
+}
+
 .asg-quiz-page .asg-option-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+}
+
+.asg-quiz-page .asg-question-text {
+    font-size: 1.08rem;
+    line-height: 1.8;
 }
 
 .asg-empty-state {
@@ -3183,6 +3195,10 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
         grid-template-columns: 1fr;
     }
 
+    .asg-quiz-page .asg-option-grid {
+        grid-template-columns: 1fr;
+    }
+
     .asg-admin-list-item {
         align-items: stretch;
     }
@@ -3260,21 +3276,53 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 }
 
 body.has-asg-shell.asg-lesson-focus .asg-sidebar,
-body.has-asg-shell.asg-course-focus .asg-sidebar {
+body.has-asg-shell.asg-course-focus .asg-sidebar,
+body.has-asg-shell.asg-assessment-focus .asg-sidebar {
     display: none;
 }
 
 body.has-asg-shell.asg-lesson-focus main,
 body.has-asg-shell.asg-lesson-focus footer,
 body.has-asg-shell.asg-course-focus main,
-body.has-asg-shell.asg-course-focus footer {
+body.has-asg-shell.asg-course-focus footer,
+body.has-asg-shell.asg-assessment-focus main,
+body.has-asg-shell.asg-assessment-focus footer {
     margin-left: 0;
 }
 
 body.has-asg-shell.asg-lesson-focus main,
-body.has-asg-shell.asg-course-focus main {
-    padding-left: clamp(10px, 1.3vw, 20px);
-    padding-right: clamp(10px, 1.3vw, 20px);
+body.has-asg-shell.asg-course-focus main,
+body.has-asg-shell.asg-assessment-focus main {
+    padding-left: clamp(6px, 0.8vw, 14px);
+    padding-right: clamp(6px, 0.8vw, 14px);
+}
+
+body.has-asg-shell.asg-assessment-focus main {
+    padding-top: clamp(14px, 1.4vw, 22px);
+    padding-bottom: clamp(24px, 2.5vw, 44px);
+}
+
+body.asg-assessment-focus .asg-page-hero {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+}
+
+body.asg-assessment-focus .asg-live-panel {
+    padding: clamp(18px, 1.8vw, 30px);
+}
+
+body.asg-assessment-focus .asg-practice-shell {
+    grid-template-columns: minmax(210px, 280px) minmax(0, 1fr);
+    gap: clamp(10px, 1vw, 18px);
+    min-height: calc(100vh - var(--asg-topbar-height) - 116px);
+}
+
+body.asg-assessment-focus .asg-code-workspace {
+    min-height: calc(100vh - var(--asg-topbar-height) - 116px);
+}
+
+body.asg-assessment-focus .asg-python-editor {
+    min-height: clamp(560px, 66vh, 900px);
 }
 
 body.asg-lesson-focus .asg-page-hero {
@@ -3282,9 +3330,9 @@ body.asg-lesson-focus .asg-page-hero {
 }
 
 body.asg-lesson-focus .asg-course-layout {
-    grid-template-columns: minmax(210px, 282px) minmax(0, 1fr);
-    gap: 0.7rem;
-    min-height: calc(100vh - var(--asg-topbar-height) - 64px);
+    grid-template-columns: minmax(196px, 260px) minmax(0, 1fr);
+    gap: 0.55rem;
+    min-height: calc(100vh - var(--asg-topbar-height) - 54px);
 }
 
 body.asg-lesson-focus.asg-topic-rail-collapsed .asg-course-layout {
@@ -3373,14 +3421,14 @@ body.asg-lesson-focus.asg-topic-rail-collapsed .asg-topic-sidebar {
 }
 
 body.asg-lesson-focus .asg-topic-workspace {
-    min-height: calc(100vh - var(--asg-topbar-height) - 64px);
+    min-height: calc(100vh - var(--asg-topbar-height) - 54px);
     margin-bottom: 0;
-    padding: clamp(12px, 1.3vw, 18px);
+    padding: clamp(8px, 0.9vw, 14px);
 }
 
 body.asg-lesson-focus .asg-topic-content {
-    min-height: calc(100vh - var(--asg-topbar-height) - 132px);
-    padding: clamp(10px, 1.2vw, 18px);
+    min-height: calc(100vh - var(--asg-topbar-height) - 108px);
+    padding: clamp(14px, 1.6vw, 26px);
     border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: 8px;
     background: #ffffff;
@@ -3392,15 +3440,15 @@ body.asg-lesson-focus .asg-topic-content > :first-child {
 
 body.asg-lesson-focus .asg-topic-content p,
 body.asg-lesson-focus .asg-topic-content li {
-    max-width: 92ch;
-    font-size: 1.02rem;
-    line-height: 1.82;
+    max-width: none;
+    font-size: 1.06rem;
+    line-height: 1.86;
 }
 
 body.asg-lesson-focus .asg-topic-content h1,
 body.asg-lesson-focus .asg-topic-content h2,
 body.asg-lesson-focus .asg-topic-content h3 {
-    max-width: 92ch;
+    max-width: none;
 }
 
 .asg-question-text {
@@ -3431,9 +3479,9 @@ body.asg-lesson-focus .asg-topic-content h3 {
 
 .asg-video-frame {
     aspect-ratio: 16 / 9;
-    width: min(100%, 1280px);
-    min-height: min(72vh, 720px);
-    margin: 0 auto;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
     background: #0f172a;
     border-radius: 8px;
     overflow: hidden;
@@ -3449,7 +3497,7 @@ body.asg-lesson-focus .asg-topic-content h3 {
 .asg-file-reader object,
 .asg-file-reader iframe {
     width: 100%;
-    min-height: calc(100vh - var(--asg-topbar-height) - 138px);
+    min-height: calc(100vh - var(--asg-topbar-height) - 114px);
     border: 1px solid rgba(15, 23, 42, 0.12);
     border-radius: 8px;
     background: #ffffff;
@@ -3725,11 +3773,14 @@ body.has-asg-shell .btn-secondary:disabled {
 }
 
 @media (max-width: 900px) {
-    .asg-course-layout {
+    .asg-course-layout,
+    body.asg-lesson-focus .asg-course-layout,
+    body.asg-assessment-focus .asg-practice-shell {
         grid-template-columns: 1fr;
     }
 
-    .asg-topic-sidebar {
+    .asg-topic-sidebar,
+    body.asg-assessment-focus .asg-challenge-list {
         position: static;
         max-height: none;
     }
