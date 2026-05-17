@@ -15,19 +15,20 @@
 
         .asg-certificate-page {
             display: grid;
-            gap: 1.25rem;
+            gap: 1.15rem;
         }
 
         .certificate-command-bar {
             display: flex;
-            align-items: center;
+            align-items: end;
             justify-content: space-between;
             gap: 1rem;
             flex-wrap: wrap;
             padding: 1rem;
             border: 1px solid var(--asg-border);
             border-radius: 8px;
-            background: #ffffff;
+            background: var(--asg-surface);
+            box-shadow: 0 12px 34px rgba(23, 32, 51, 0.06);
         }
 
         .certificate-command-bar label {
@@ -44,6 +45,8 @@
             padding: 0 0.9rem;
             border: 1px solid var(--asg-border);
             border-radius: 8px;
+            background: var(--asg-surface);
+            color: var(--asg-ink);
             font: inherit;
         }
 
@@ -80,62 +83,100 @@
 
         .certificate-sheet {
             width: min(100%, 297mm);
+            min-width: 780px;
             aspect-ratio: 297 / 210;
-            min-width: 760px;
-            margin: 0 auto;
             position: relative;
+            margin: 0 auto;
             overflow: hidden;
-            background:
-                linear-gradient(135deg, rgba(15, 118, 110, 0.05), transparent 34%),
-                linear-gradient(315deg, rgba(197, 138, 38, 0.12), transparent 34%),
-                #fffdf7;
-            border: 1px solid #d4af37;
             color: #172033;
-            box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16);
+            background:
+                linear-gradient(90deg, rgba(20, 63, 113, 0.07), transparent 38%, rgba(199, 164, 76, 0.08)),
+                linear-gradient(180deg, #ffffff, #fffdf7);
+            border: 1px solid #c7a44c;
+            box-shadow: 0 30px 80px rgba(15, 23, 42, 0.16);
         }
 
-        .certificate-sheet::before {
-            content: "";
-            position: absolute;
-            inset: 12mm;
-            border: 2px solid #c58a26;
-            pointer-events: none;
-        }
-
+        .certificate-sheet::before,
         .certificate-sheet::after {
             content: "";
             position: absolute;
-            inset: 16mm;
-            border: 1px solid rgba(15, 118, 110, 0.38);
             pointer-events: none;
+        }
+
+        .certificate-sheet::before {
+            inset: 8mm;
+            border: 1.2mm solid #143f71;
+        }
+
+        .certificate-sheet::after {
+            inset: 12mm;
+            border: 0.45mm solid #c7a44c;
+            box-shadow: inset 0 0 0 0.7mm rgba(199, 164, 76, 0.18);
+        }
+
+        .certificate-corner {
+            position: absolute;
+            width: 34mm;
+            height: 34mm;
+            border-color: #c7a44c;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .certificate-corner.top-left {
+            top: 10mm;
+            left: 10mm;
+            border-top: 1.2mm solid;
+            border-left: 1.2mm solid;
+        }
+
+        .certificate-corner.top-right {
+            top: 10mm;
+            right: 10mm;
+            border-top: 1.2mm solid;
+            border-right: 1.2mm solid;
+        }
+
+        .certificate-corner.bottom-left {
+            bottom: 10mm;
+            left: 10mm;
+            border-bottom: 1.2mm solid;
+            border-left: 1.2mm solid;
+        }
+
+        .certificate-corner.bottom-right {
+            right: 10mm;
+            bottom: 10mm;
+            border-right: 1.2mm solid;
+            border-bottom: 1.2mm solid;
         }
 
         .certificate-watermark {
             position: absolute;
-            inset: auto -30mm -44mm auto;
-            color: rgba(15, 118, 110, 0.05);
-            font-size: 44mm;
+            inset: auto -18mm -28mm auto;
+            color: rgba(20, 63, 113, 0.045);
+            font-size: 48mm;
             font-weight: 950;
             line-height: 1;
-            transform: rotate(-12deg);
+            transform: rotate(-9deg);
             pointer-events: none;
         }
 
         .certificate-inner {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             height: 100%;
             display: grid;
             grid-template-rows: auto 1fr auto;
-            padding: 20mm 24mm 18mm;
+            padding: 19mm 24mm 17mm;
         }
 
         .certificate-topline,
         .certificate-footer {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            justify-content: space-between;
-            gap: 14mm;
+            gap: 12mm;
         }
 
         .certificate-brand {
@@ -144,42 +185,47 @@
             gap: 4mm;
         }
 
-        .certificate-brand-mark {
-            width: 14mm;
-            height: 14mm;
-            display: grid;
-            place-items: center;
+        .certificate-logo {
+            width: 15mm;
+            height: 15mm;
             border-radius: 4mm;
-            background: #0f766e;
-            color: #ffffff;
-            font-weight: 950;
-            font-size: 4.2mm;
+            box-shadow: 0 8px 20px rgba(20, 63, 113, 0.16);
         }
 
-        .certificate-brand strong,
+        .certificate-brand-copy,
+        .certificate-meta,
+        .certificate-signature,
+        .certificate-verification {
+            display: grid;
+            gap: 1.4mm;
+        }
+
+        .certificate-brand-copy strong,
         .certificate-meta strong,
-        .certificate-issued strong,
-        .certificate-signature strong {
+        .certificate-signature strong,
+        .certificate-verification strong {
             display: block;
             color: #172033;
             font-size: 3.9mm;
+            line-height: 1.2;
         }
 
-        .certificate-brand span,
+        .certificate-brand-copy span,
         .certificate-meta span,
-        .certificate-issued span,
-        .certificate-signature span {
+        .certificate-signature span,
+        .certificate-verification span {
             display: block;
             color: #64748b;
-            font-size: 2.7mm;
-            font-weight: 800;
-            text-transform: uppercase;
+            font-size: 2.65mm;
+            font-weight: 850;
             letter-spacing: 0;
+            text-transform: uppercase;
         }
 
         .certificate-meta {
-            display: flex;
-            gap: 10mm;
+            justify-self: end;
+            grid-auto-flow: column;
+            gap: 8mm;
             text-align: right;
         }
 
@@ -188,144 +234,118 @@
             align-content: center;
             justify-items: center;
             text-align: center;
-            padding: 8mm 10mm 5mm;
+            padding: 5mm 10mm 6mm;
         }
 
         .certificate-kicker {
-            color: #0f766e;
-            font-size: 3.2mm;
+            color: #143f71;
+            font-size: 3.1mm;
             font-weight: 950;
-            text-transform: uppercase;
             letter-spacing: 0;
+            text-transform: uppercase;
         }
 
         .certificate-title {
             margin: 3mm 0 4mm;
             color: #172033;
             font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(42px, 13mm, 64px);
+            font-size: clamp(42px, 13mm, 66px);
+            font-weight: 700;
             line-height: 1;
         }
 
         .certificate-copy {
-            max-width: 178mm;
+            max-width: 180mm;
             margin: 0;
             color: #475569;
-            font-size: 4.4mm;
-            line-height: 1.55;
+            font-size: 4.15mm;
+            line-height: 1.52;
         }
 
         .certificate-name {
-            width: min(166mm, 100%);
+            width: min(168mm, 100%);
             margin: 6mm 0 4mm;
             padding: 0 8mm 3mm;
-            border-bottom: 1.5px solid #c58a26;
-            color: #0f172a;
+            border-bottom: 1.5px solid #c7a44c;
+            color: #143f71;
             font-family: Georgia, "Times New Roman", serif;
-            font-size: clamp(30px, 9.5mm, 48px);
+            font-size: clamp(32px, 9.8mm, 50px);
             line-height: 1.05;
             overflow-wrap: anywhere;
         }
 
         .certificate-course {
             margin: 4mm 0 2mm;
-            color: #0f766e;
+            color: #143f71;
             font-size: 6mm;
             line-height: 1.2;
         }
 
-        .certificate-signature,
-        .certificate-issued {
-            width: 56mm;
+        .certificate-signature {
+            width: 58mm;
         }
 
         .signature-script {
-            height: 18mm;
+            height: 17mm;
             display: flex;
             align-items: end;
             color: #172033;
             font-family: "Brush Script MT", "Segoe Script", cursive;
-            font-size: 9mm;
+            font-size: 8.5mm;
             line-height: 1;
         }
 
         .signature-line {
-            margin: 1.8mm 0 2mm;
+            margin: 1.6mm 0 1.8mm;
             border-top: 1px solid #172033;
         }
 
-        .certificate-issued {
-            text-align: right;
-        }
-
-        .certificate-stamp-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 4mm;
-            background-color: transparent;
-        }
-
-        .cert-stamp {
-            width: 38mm;
-            aspect-ratio: 1;
-            position: relative;
+        .certificate-stamp {
+            justify-self: center;
             display: grid;
             place-items: center;
-            border-radius: 50%;
-            color: #7c4a03;
-            background:
-                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.86) 0 28%, transparent 29%),
-                repeating-conic-gradient(from 0deg, #b7791f 0 8deg, #f8d775 8deg 16deg),
-                radial-gradient(circle, #ffe8a3 0 56%, #d59a2f 57% 68%, #8f5f13 69% 100%);
-            filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.14));
-            mix-blend-mode: multiply;
-            transform: rotate(-8deg);
         }
 
-        .cert-stamp::before,
-        .cert-stamp::after {
-            content: "";
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
+        .certificate-stamp img {
+            width: 42mm;
+            height: 42mm;
+            object-fit: contain;
+            opacity: 0.88;
+            filter: drop-shadow(0 8px 14px rgba(20, 63, 113, 0.14));
+            transform: rotate(-7deg);
         }
 
-        .cert-stamp::before {
-            inset: 3mm;
-            border: 1.2mm double rgba(124, 74, 3, 0.9);
+        .certificate-verification {
+            justify-self: end;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 3.5mm;
+            width: 72mm;
+            padding: 3mm;
+            border: 1px solid rgba(20, 63, 113, 0.16);
+            background: rgba(255, 255, 255, 0.72);
         }
 
-        .cert-stamp::after {
-            inset: 8mm;
-            border: 0.7mm solid rgba(124, 74, 3, 0.78);
+        .certificate-qr {
+            width: 19mm;
+            height: 19mm;
+            background: #ffffff;
+            border: 1px solid #dbe3ef;
         }
 
-        .stamp-text {
-            position: absolute;
-            z-index: 1;
-            width: 72%;
-            text-align: center;
-            text-transform: uppercase;
-            font-weight: 950;
-            letter-spacing: 0;
-            line-height: 1.08;
+        .certificate-verification-copy {
+            min-width: 0;
         }
 
-        .stamp-text.top {
-            top: 5.2mm;
-            font-size: 2.4mm;
+        .certificate-verification-copy strong {
+            font-size: 3.2mm;
         }
 
-        .stamp-text.center {
-            color: #6b3d02;
-            font-family: Georgia, "Times New Roman", serif;
-            font-size: 5.4mm;
-        }
-
-        .stamp-text.bottom {
-            bottom: 5.2mm;
-            font-size: 2.25mm;
+        .certificate-verification-copy span {
+            margin-top: 1mm;
+            font-size: 2.3mm;
+            line-height: 1.35;
+            text-transform: none;
         }
 
         .certificate-sheet.is-locked .certificate-download-only {
@@ -334,7 +354,21 @@
 
         @media (max-width: 900px) {
             .certificate-sheet {
-                min-width: 680px;
+                min-width: 720px;
+            }
+
+            .certificate-actions {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .certificate-command-bar {
+                align-items: stretch;
+            }
+
+            .certificate-actions > * {
+                flex: 1 1 100%;
             }
         }
 
@@ -346,6 +380,7 @@
             body > nav,
             body > footer,
             .asg-sidebar,
+            .asg-breadcrumbs,
             .asg-page-hero,
             .certificate-command-bar,
             .certificate-access-note {
@@ -367,7 +402,6 @@
                 height: 210mm;
                 min-width: 0;
                 box-shadow: none;
-                border-radius: 0;
             }
         }
     </style>
@@ -380,7 +414,7 @@
             <div>
                 <div class="asg-eyebrow">Credential center</div>
                 <h1>Certificate Preview</h1>
-                <p>Your certificate is visible here. Download unlocks only after admin approval from the dashboard.</p>
+                <p>Premium A4 landscape certificate with verified student progress, credential ID, QR block, and LinkedIn sharing.</p>
             </div>
             <div class="asg-hero-metrics">
                 <div>
@@ -406,7 +440,7 @@
             <div class="certificate-actions">
                 <button class="btn-primary" id="downloadCertificateButton" type="button" onclick="generateCertificate()">Download Certificate</button>
                 <button class="btn-secondary" type="button" onclick="requestCertificateApproval()">Request Approval</button>
-                <button class="btn-secondary" type="button" onclick="shareCertificate()">Share</button>
+                <button class="btn-secondary" type="button" onclick="shareLinkedIn()">Share on LinkedIn</button>
             </div>
         </section>
 
@@ -414,19 +448,27 @@
 
         <section class="certificate-stage">
             <article class="certificate-sheet is-locked" id="certificate" aria-label="A4 landscape certificate preview">
+                <span class="certificate-corner top-left"></span>
+                <span class="certificate-corner top-right"></span>
+                <span class="certificate-corner bottom-left"></span>
+                <span class="certificate-corner bottom-right"></span>
                 <div class="certificate-watermark">ASG</div>
+
                 <div class="certificate-inner">
                     <div class="certificate-topline">
                         <div class="certificate-brand">
-                            <span class="certificate-brand-mark">ASG</span>
-                            <div>
+                            <img class="certificate-logo" src="icon.svg" alt="ASG Tech logo">
+                            <div class="certificate-brand-copy">
                                 <strong>ASG Tech Online</strong>
                                 <span>Learning Without Limit</span>
                             </div>
                         </div>
+
+                        <div></div>
+
                         <div class="certificate-meta">
                             <div>
-                                <span>Certificate ID</span>
+                                <span>Credential ID</span>
                                 <strong>ASG-<span id="certNumber">0001</span></strong>
                             </div>
                             <div>
@@ -437,12 +479,12 @@
                     </div>
 
                     <div class="certificate-main">
-                        <div class="certificate-kicker">Verified achievement</div>
+                        <div class="certificate-kicker">Verified professional achievement</div>
                         <h2 class="certificate-title">Certificate of Completion</h2>
                         <p class="certificate-copy">This certificate is proudly presented to</p>
                         <div class="certificate-name" id="certName">Student Name</div>
                         <p class="certificate-copy">for successfully completing the professional learning path</p>
-                        <h1 class="certificate-course">Data Science & Machine Learning</h1>
+                        <h1 class="certificate-course">Data Science &amp; Machine Learning</h1>
                         <p class="certificate-copy">with dedication, consistency, and practical progress through the ASG Tech learning workspace.</p>
                     </div>
 
@@ -451,20 +493,19 @@
                             <div class="signature-script">Arjun Gangwar</div>
                             <div class="signature-line"></div>
                             <strong>Arjun Gangwar</strong>
-                            <span>Founder & Instructor</span>
+                            <span>Founder &amp; Instructor</span>
                         </div>
 
-                        <div class="certificate-stamp-container">
-                            <div class="cert-stamp" aria-label="ASG Tech Online gold stamp">
-                                <span class="stamp-text top">Learning Without Limit</span>
-                                <span class="stamp-text center">ASG<br>TECH<br>ONLINE</span>
-                                <span class="stamp-text bottom">Specialisation Certificate</span>
+                        <div class="certificate-stamp">
+                            <img src="ASG%20Tech%20Stamp%20without%20background.png" alt="ASG Tech specialisation certificate stamp">
+                        </div>
+
+                        <div class="certificate-verification">
+                            <svg class="certificate-qr" id="credentialQr" viewBox="0 0 29 29" role="img" aria-label="Credential verification QR"></svg>
+                            <div class="certificate-verification-copy">
+                                <strong>Verified Credential</strong>
+                                <span id="verificationText">Scan-ready credential record</span>
                             </div>
-                        </div>
-
-                        <div class="certificate-issued">
-                            <strong>Issued by ASG Tech Online</strong>
-                            <span>Verified by admin approval and student progress records</span>
                         </div>
                     </div>
                 </div>
@@ -492,6 +533,7 @@
             day: "numeric"
         });
         document.getElementById("certNumber").textContent = certificateId;
+        document.getElementById("verificationText").textContent = `ASG-${certificateId}`;
 
         if (certificateUser && certificateUser.name) {
             document.getElementById("studentName").value = certificateUser.name;
@@ -505,6 +547,40 @@
         function getCertificateProgress() {
             if (!certificateUser) return 0;
             return asgGetStudentProgress(certificateUser).progressPercent;
+        }
+
+        function renderCredentialQr() {
+            const svg = document.getElementById("credentialQr");
+            const value = `ASG-${certificateId}-${window.location.origin}${window.location.pathname}`;
+            let hash = 0;
+            for (let index = 0; index < value.length; index += 1) {
+                hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
+            }
+
+            const size = 29;
+            const finderCells = [
+                [1, 1], [21, 1], [1, 21]
+            ];
+            let cells = `<rect width="${size}" height="${size}" fill="#ffffff"/>`;
+
+            finderCells.forEach(([x, y]) => {
+                cells += `<rect x="${x}" y="${y}" width="7" height="7" fill="#143f71"/>`;
+                cells += `<rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#ffffff"/>`;
+                cells += `<rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="#143f71"/>`;
+            });
+
+            for (let y = 0; y < size; y += 1) {
+                for (let x = 0; x < size; x += 1) {
+                    const inFinder = finderCells.some(([fx, fy]) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7);
+                    if (inFinder) continue;
+                    const bit = (hash + x * 17 + y * 31 + x * y * 7) % 5;
+                    if (bit === 0 || bit === 2) {
+                        cells += `<rect x="${x}" y="${y}" width="1" height="1" fill="#172033"/>`;
+                    }
+                }
+            }
+
+            svg.innerHTML = cells;
         }
 
         function refreshCertificateAccess() {
@@ -590,10 +666,11 @@
             });
         }
 
-        function shareCertificate() {
-            const name = document.getElementById("studentName").value.trim() || "I";
-            const text = `${name} completed the Data Science & Machine Learning learning path at ASG Tech Online. Certificate preview: ${window.location.href}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+        function shareLinkedIn() {
+            const name = document.getElementById("studentName").value.trim() || "Student";
+            const shareUrl = `${window.location.origin}${window.location.pathname}?credential=ASG-${encodeURIComponent(certificateId)}`;
+            const text = `${name} completed the Data Science & Machine Learning learning path at ASG Tech Online.`;
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
         }
 
         window.addEventListener("asg:data-updated", (event) => {
@@ -605,6 +682,7 @@
             if (event.key === ASG_LEARNING_KEYS.certificatePermissions) refreshCertificateAccess();
         });
 
+        renderCredentialQr();
         refreshCertificateAccess();
     </script>
 </body>
