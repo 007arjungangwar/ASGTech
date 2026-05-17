@@ -3,6 +3,7 @@
 <head>
     <script src="auth-check.js"></script>
     <script src="learning-data.js"></script>
+    <script src="exam-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Topic | ASG Tech</title>
@@ -21,6 +22,7 @@
                     <button class="active" type="button" onclick="selectTopicTab('content', this)">Content</button>
                     <button type="button" onclick="selectTopicTab('quiz', this)">Quiz</button>
                     <button type="button" onclick="selectTopicTab('video', this)">Video</button>
+                    <button type="button" onclick="requestCourseFullscreen()">Fullscreen</button>
                 </div>
                 <article class="asg-topic-content" id="topicPanel"></article>
             </section>
@@ -122,6 +124,11 @@
             }
         }
 
+        function requestCourseFullscreen() {
+            sessionStorage.setItem("asgCourseFullscreen", "1");
+            ASGExamGuard.requestFullscreen();
+        }
+
         function selectTopicTab(tab, button) {
             document.querySelectorAll(".asg-topic-tabs button").forEach((item) => item.classList.remove("active"));
             button.classList.add("active");
@@ -178,6 +185,10 @@
         }
 
         renderTopic();
+        if (sessionStorage.getItem("asgCourseFullscreen") === "1") {
+            ASGExamGuard.requestFullscreen();
+            window.addEventListener("pointerdown", requestCourseFullscreen, { once: true });
+        }
     </script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 <head>
     <script src="auth-check.js"></script>
     <script src="learning-data.js"></script>
+    <script src="exam-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skill Assessment Quiz | ASG Tech</title>
@@ -49,6 +50,8 @@
         let quizQuestions = [];
         let activeQuizId = getInitialQuizId();
         let quizSubmitted = false;
+        let quizExamStarted = false;
+        let quizGuard = null;
 
         function getInitialQuizId() {
             const params = new URLSearchParams(window.location.search);
@@ -60,6 +63,10 @@
             return asgGetQuizById(activeQuizId);
         }
 
+        function getQuizExamId(quizId = activeQuizId) {
+            return asgNormalizeExamId(quizId, "quiz");
+        }
+
         function escapeHtml(value) {
             return String(value ?? "")
                 .replace(/&/g, "&amp;")
@@ -67,6 +74,15 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function getQuizAttemptCount(quizId = activeQuizId) {
+            return asgGetQuizAttempts(quizUser, quizId).length + asgGetExamAttempts(quizUser, "quiz", getQuizExamId(quizId)).length;
+        }
+
+        function canStartQuizExam(quizId = activeQuizId) {
+            if (!quizUser || quizUser.role === "admin") return true;
+            return getQuizAttemptCount(quizId) === 0 || asgHasExamRetakeAccess(quizUser, "quiz", getQuizExamId(quizId));
         }
 
         function updateQuizStats() {
@@ -90,24 +106,31 @@
                 const best = attempts.length
                     ? Math.round(Math.max(...attempts.map((attempt) => Number(attempt.percentage || 0))))
                     : 0;
+                const locked = questionCount > 0 && !canStartQuizExam(quiz.id);
 
                 return `
                     <button
-                        class="asg-quiz-card ${quiz.id === activeQuizId ? "active" : ""}"
+                        class="asg-quiz-card ${quiz.id === activeQuizId ? "active" : ""} ${locked ? "locked" : ""}"
                         type="button"
                         onclick="selectQuiz('${quiz.id}')"
                     >
                         <span>${escapeHtml(quiz.title)}</span>
                         <strong>${questionCount} questions</strong>
-                        <small>${attempts.length} attempts | Best ${best}%</small>
+                        <small>${attempts.length} attempts | Best ${best}% ${locked ? "| Retake locked" : ""}</small>
                     </button>
                 `;
             }).join("");
         }
 
         function selectQuiz(quizId) {
+            if (quizExamStarted && !quizSubmitted) {
+                alert("Submit the current fullscreen exam before switching quiz sets.");
+                return;
+            }
+
             activeQuizId = asgGetQuizById(quizId).id;
             quizSubmitted = false;
+            quizExamStarted = false;
             localStorage.setItem("asgSelectedQuizId", activeQuizId);
 
             const url = new URL(window.location.href);
@@ -138,11 +161,77 @@
                 return;
             }
 
+            if (!canStartQuizExam()) {
+                mount.innerHTML = `
+                    <div class="asg-proctor-card">
+                        <span class="asg-proctor-pill">Retake locked</span>
+                        <h2>${escapeHtml(activeQuiz.title)}</h2>
+                        <p>You have already submitted this exam. Ask your admin to allow one more attempt from the Admin Dashboard.</p>
+                        <div class="asg-form-actions">
+                            <a class="btn-secondary" href="tracker.html">View Progress</a>
+                            <a class="btn-secondary" href="exam-center.html">Back to Exam Center</a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (!quizExamStarted) {
+                mount.innerHTML = `
+                    <div class="asg-proctor-card">
+                        <span class="asg-proctor-pill">Fullscreen exam mode</span>
+                        <h2>${escapeHtml(activeQuiz.title)}</h2>
+                        <p>Start opens the quiz in fullscreen. If you switch tabs, minimize the browser, or exit fullscreen, your current answers will submit automatically.</p>
+                        <div class="asg-form-actions">
+                            <button class="btn-primary" type="button" onclick="startQuizExam()">Start Quiz Exam</button>
+                            <a class="btn-secondary" href="exam-center.html">Back to Exam Center</a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            renderQuizForm();
+        }
+
+        async function startQuizExam() {
+            if (!canStartQuizExam()) {
+                renderQuiz();
+                return;
+            }
+
+            quizGuard = ASGExamGuard.create({
+                requireFullscreen: true,
+                onViolation: (reason) => submitSkillQuiz({ reason, force: true, auto: true })
+            });
+
+            const started = await quizGuard.start();
+            if (!started) {
+                document.getElementById("quizMount").innerHTML = `
+                    <div class="asg-proctor-card">
+                        <span class="asg-proctor-pill danger">Fullscreen required</span>
+                        <h2>Fullscreen permission was not granted</h2>
+                        <p>Please click Start again and allow fullscreen to begin this exam.</p>
+                        <button class="btn-primary" type="button" onclick="startQuizExam()">Start Quiz Exam</button>
+                    </div>
+                `;
+                return;
+            }
+
+            quizExamStarted = true;
+            quizSubmitted = false;
+            renderQuizForm();
+        }
+
+        function renderQuizForm() {
+            const activeQuiz = getActiveQuiz();
+            const mount = document.getElementById("quizMount");
+            mount.hidden = false;
             mount.innerHTML = `
                 <div class="asg-section-header">
                     <div>
                         <h2>${escapeHtml(activeQuiz.title)}</h2>
-                        <p>${escapeHtml(activeQuiz.description)}</p>
+                        <p>${escapeHtml(activeQuiz.description)} This attempt is protected by fullscreen exam mode.</p>
                     </div>
                     <button class="btn-secondary" type="button" onclick="clearQuizSelection()">Clear answers</button>
                 </div>
@@ -168,7 +257,6 @@
 
                     <div class="asg-form-actions">
                         <button class="btn-primary" type="button" onclick="submitSkillQuiz()">Submit Quiz</button>
-                        <a class="btn-secondary" href="coding-practice.html">Open Coding Practice</a>
                     </div>
                 </form>
             `;
@@ -180,10 +268,8 @@
             });
         }
 
-        function submitSkillQuiz() {
-            if (!quizQuestions.length) return;
-
-            const answers = quizQuestions.map((question) => {
+        function collectQuizAnswers() {
+            return quizQuestions.map((question) => {
                 const selected = Array.from(document.querySelectorAll("#skillQuizForm input[type='radio']"))
                     .find((input) => input.name === `question_${question.id}` && input.checked);
                 const selectedOption = selected
@@ -203,12 +289,20 @@
                     isCorrect
                 };
             });
+        }
 
+        function submitSkillQuiz(options = {}) {
+            if (!quizQuestions.length || quizSubmitted) return;
+            const reason = options.reason || "manual-submit";
+            const answers = collectQuizAnswers();
             const unanswered = answers.filter((answer) => !answer.selectedOption).length;
-            if (unanswered > 0) {
+
+            if (!options.force && unanswered > 0) {
                 const confirmed = confirm(`${unanswered} question(s) are unanswered. Submit anyway?`);
                 if (!confirmed) return;
             }
+
+            if (quizGuard) quizGuard.stop();
 
             const score = answers.filter((answer) => answer.isCorrect).length;
             const total = quizQuestions.length;
@@ -223,7 +317,23 @@
                 answers
             });
 
+            asgSaveExamAttempt({
+                examType: "quiz",
+                examId: getQuizExamId(activeQuiz.id),
+                examTitle: activeQuiz.title,
+                score,
+                total,
+                percentage,
+                status: options.auto ? "auto-submitted" : "submitted",
+                reason,
+                details: { answers }
+            });
+
+            savedAttempt.proctorReason = reason;
+            savedAttempt.autoSubmitted = Boolean(options.auto);
             quizSubmitted = true;
+            quizExamStarted = false;
+            if (!options.auto) ASGExamGuard.exitFullscreen();
             renderResult(savedAttempt);
             updateQuizStats();
             renderQuizSelector();
@@ -232,11 +342,14 @@
         function renderResult(attempt) {
             const mount = document.getElementById("quizMount");
             const result = document.getElementById("quizResult");
-            const message = attempt.percentage >= 80
+            const baseMessage = attempt.percentage >= 80
                 ? "Strong work. You are ready for the next level."
                 : attempt.percentage >= 60
                     ? "Good base. Review the missed questions and try again."
                     : "Keep practicing. Start with the explanations below and rebuild momentum.";
+            const message = attempt.autoSubmitted
+                ? `Auto-submitted because exam focus was lost (${attempt.proctorReason}).`
+                : baseMessage;
 
             mount.hidden = true;
             result.hidden = false;
@@ -269,21 +382,27 @@
                 </div>
 
                 <div class="asg-form-actions">
-                    <button class="btn-primary" type="button" onclick="retakeQuiz()">Retake Quiz</button>
+                    <button class="btn-secondary" type="button" onclick="retakeQuiz()">Retake Quiz</button>
                     <a class="btn-secondary" href="tracker.html">View Progress</a>
                 </div>
             `;
         }
 
         function retakeQuiz() {
+            if (!canStartQuizExam()) {
+                alert("Retake is locked. Admin must allow another attempt first.");
+                renderQuiz();
+                return;
+            }
             quizSubmitted = false;
+            quizExamStarted = false;
             renderQuiz();
         }
 
         function handleQuizDataUpdate(event) {
             const key = event.detail ? event.detail.key : event.key;
-            if (key !== ASG_LEARNING_KEYS.quizQuestions) return;
-            if (quizSubmitted) return;
+            if (![ASG_LEARNING_KEYS.quizQuestions, ASG_LEARNING_KEYS.examRetakePermissions].includes(key)) return;
+            if (quizExamStarted && !quizSubmitted) return;
             renderQuiz();
         }
 

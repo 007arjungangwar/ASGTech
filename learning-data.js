@@ -6,13 +6,15 @@ const ASG_LEARNING_KEYS = {
     quizAttempts: "asgQuizAttempts",
     codingChallenges: "asgCodingChallenges",
     codingSubmissions: "asgCodingSubmissions",
+    examAttempts: "asgExamAttempts",
+    examRetakePermissions: "asgExamRetakePermissions",
     courses: "asgCourses",
     certificatePermissions: "asgCertificatePermissions",
     studentAnnouncement: "studentAnnouncement",
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 4;
+const ASG_LEARNING_DATA_VERSION = 5;
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -916,6 +918,16 @@ function asgEnsureLearningData() {
         asgWriteJSON(ASG_LEARNING_KEYS.codingSubmissions, []);
     }
 
+    const examAttempts = asgReadJSON(ASG_LEARNING_KEYS.examAttempts, null);
+    if (!Array.isArray(examAttempts)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.examAttempts, []);
+    }
+
+    const examRetakePermissions = asgReadJSON(ASG_LEARNING_KEYS.examRetakePermissions, null);
+    if (!examRetakePermissions || typeof examRetakePermissions !== "object" || Array.isArray(examRetakePermissions)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.examRetakePermissions, {});
+    }
+
     const certificatePermissions = asgReadJSON(ASG_LEARNING_KEYS.certificatePermissions, null);
     if (!certificatePermissions || typeof certificatePermissions !== "object" || Array.isArray(certificatePermissions)) {
         asgWriteJSON(ASG_LEARNING_KEYS.certificatePermissions, {});
@@ -1113,6 +1125,10 @@ function asgSaveCodingSubmission(submission) {
         code: String(submission.code || ""),
         results: submission.results || [],
         stdout: String(submission.stdout || ""),
+        examType: String(submission.examType || ""),
+        examId: String(submission.examId || ""),
+        sessionId: String(submission.sessionId || ""),
+        submissionReason: String(submission.submissionReason || "manual-run"),
         submittedAt: submission.submittedAt || new Date().toISOString()
     };
 
@@ -1129,6 +1145,139 @@ function asgGetCodingSubmissions(user = null) {
         String(submission.userId || "") === String(user.id || "") ||
         String(submission.email || "").toLowerCase() === String(user.email || "").toLowerCase()
     ));
+}
+
+function asgGetLearningUserKey(user) {
+    if (!user) return "guest";
+    return String(user.id || user.email || user.name || "guest").toLowerCase();
+}
+
+function asgNormalizeExamType(examType) {
+    const value = String(examType || "").toLowerCase().trim();
+    if (value.includes("coding")) return "coding-exam";
+    return "quiz";
+}
+
+function asgNormalizeExamId(examId, fallback = "exam") {
+    return asgSlugify(examId || fallback, fallback);
+}
+
+function asgGetExamAccessKey(user, examType, examId) {
+    return [
+        asgGetLearningUserKey(user),
+        asgNormalizeExamType(examType),
+        asgNormalizeExamId(examId, "exam")
+    ].join("::").toLowerCase();
+}
+
+function asgGetExamAttempts(user = null, examType = "", examId = "") {
+    asgEnsureLearningData();
+    const attempts = asgReadJSON(ASG_LEARNING_KEYS.examAttempts, []);
+    const normalizedType = examType ? asgNormalizeExamType(examType) : "";
+    const normalizedId = examId ? asgNormalizeExamId(examId, "exam") : "";
+
+    return attempts.filter((attempt) => {
+        const matchesUser = !user || (
+            String(attempt.userId || "") === String(user.id || "") ||
+            String(attempt.email || "").toLowerCase() === String(user.email || "").toLowerCase()
+        );
+        const matchesType = !normalizedType || attempt.examType === normalizedType;
+        const matchesExam = !normalizedId || attempt.examId === normalizedId;
+        return matchesUser && matchesType && matchesExam;
+    });
+}
+
+function asgGetExamRetakePermissions() {
+    asgEnsureLearningData();
+    return asgReadJSON(ASG_LEARNING_KEYS.examRetakePermissions, {});
+}
+
+function asgGetExamRetakePermission(user, examType, examId) {
+    const permissions = asgGetExamRetakePermissions();
+    const key = asgGetExamAccessKey(user, examType, examId);
+    return permissions[key] || null;
+}
+
+function asgHasExamRetakeAccess(user, examType, examId) {
+    const permission = asgGetExamRetakePermission(user, examType, examId);
+    return Boolean(permission && permission.allowed && !permission.usedAt);
+}
+
+function asgCanStartExam(user, examType, examId) {
+    if (!user || user.role === "admin") return true;
+    return !asgGetExamAttempts(user, examType, examId).length || asgHasExamRetakeAccess(user, examType, examId);
+}
+
+function asgSaveExamRetakePermission(user, examType, examId, examTitle, allowed, note = "", admin = null) {
+    asgEnsureLearningData();
+    const permissions = asgReadJSON(ASG_LEARNING_KEYS.examRetakePermissions, {});
+    const normalizedType = asgNormalizeExamType(examType);
+    const normalizedId = asgNormalizeExamId(examId, "exam");
+    const key = asgGetExamAccessKey(user, normalizedType, normalizedId);
+
+    permissions[key] = {
+        userId: user ? user.id || "" : "",
+        email: user ? user.email || "" : "",
+        name: user ? user.name || "" : "",
+        examType: normalizedType,
+        examId: normalizedId,
+        examTitle: String(examTitle || normalizedId).trim(),
+        allowed: Boolean(allowed),
+        note: String(note || "").trim(),
+        allowedAt: Boolean(allowed) ? new Date().toISOString() : "",
+        usedAt: "",
+        updatedAt: new Date().toISOString(),
+        updatedBy: admin ? admin.email || admin.name || "Admin" : "Admin"
+    };
+
+    asgWriteJSON(ASG_LEARNING_KEYS.examRetakePermissions, permissions);
+    return permissions[key];
+}
+
+function asgConsumeExamRetakePermission(user, examType, examId) {
+    const permission = asgGetExamRetakePermission(user, examType, examId);
+    if (!permission || !permission.allowed || permission.usedAt) return null;
+
+    const permissions = asgReadJSON(ASG_LEARNING_KEYS.examRetakePermissions, {});
+    const key = asgGetExamAccessKey(user, examType, examId);
+    permissions[key] = {
+        ...permission,
+        allowed: false,
+        usedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+    asgWriteJSON(ASG_LEARNING_KEYS.examRetakePermissions, permissions);
+    return permissions[key];
+}
+
+function asgSaveExamAttempt(attempt) {
+    asgEnsureLearningData();
+    const user = asgGetCurrentLearningUser();
+    const normalizedType = asgNormalizeExamType(attempt.examType);
+    const normalizedId = asgNormalizeExamId(attempt.examId, normalizedType);
+    const attempts = asgReadJSON(ASG_LEARNING_KEYS.examAttempts, []);
+    const savedAttempt = {
+        id: asgCreateId("exam_attempt"),
+        examType: normalizedType,
+        examId: normalizedId,
+        examTitle: String(attempt.examTitle || normalizedId).trim(),
+        userId: user ? user.id : attempt.userId || null,
+        studentName: user ? user.name : attempt.studentName || "Guest Student",
+        email: user ? user.email : attempt.email || "",
+        score: Number(attempt.score || 0),
+        total: Number(attempt.total || 0),
+        percentage: Number(attempt.percentage || 0),
+        status: String(attempt.status || "submitted"),
+        reason: String(attempt.reason || "manual-submit"),
+        sessionId: String(attempt.sessionId || ""),
+        details: attempt.details || {},
+        submittedAt: attempt.submittedAt || new Date().toISOString()
+    };
+
+    attempts.push(savedAttempt);
+    asgWriteJSON(ASG_LEARNING_KEYS.examAttempts, attempts);
+    asgConsumeExamRetakePermission(user || attempt, normalizedType, normalizedId);
+    return savedAttempt;
 }
 
 function asgGetTrackerProgressPercent(user) {
@@ -1283,6 +1432,7 @@ function asgUniqueLearningRecords(records) {
 function asgGetStudentProgress(user) {
     const quizAttempts = asgGetQuizAttempts(user);
     const codingSubmissions = asgGetCodingSubmissions(user);
+    const examAttempts = asgGetExamAttempts(user);
     const completedChallengeIds = new Set(
         codingSubmissions
             .filter((submission) => submission.total > 0 && submission.passed === submission.total)
@@ -1290,9 +1440,11 @@ function asgGetStudentProgress(user) {
     );
     const latestQuiz = asgGetLatestRecord(quizAttempts, "submittedAt");
     const latestCoding = asgGetLatestRecord(codingSubmissions, "submittedAt");
+    const latestExam = asgGetLatestRecord(examAttempts, "submittedAt");
     const dates = [
         latestQuiz && latestQuiz.submittedAt,
         latestCoding && latestCoding.submittedAt,
+        latestExam && latestExam.submittedAt,
         user && user.joinDate
     ].filter(Boolean);
 
@@ -1305,6 +1457,9 @@ function asgGetStudentProgress(user) {
         codingSolved: completedChallengeIds.size,
         latestCoding,
         bestCoding: asgGetBestPercentage(codingSubmissions),
+        examAttempts: examAttempts.length,
+        latestExam,
+        bestExam: asgGetBestPercentage(examAttempts),
         certificates: asgGetStudentCertificates(user).length,
         enrollments: asgGetStudentEnrollments(user).length,
         lastActivity: dates.length ? asgGetLatestRecord(dates.map((date) => ({ date })), "date").date : ""

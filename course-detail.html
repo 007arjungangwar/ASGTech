@@ -3,6 +3,7 @@
 <head>
     <script src="auth-check.js"></script>
     <script src="learning-data.js"></script>
+    <script src="exam-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course | ASG Tech</title>
@@ -21,6 +22,7 @@
                         <h2>Cheat Sheet</h2>
                         <p>Quick reference before you open the lessons.</p>
                     </div>
+                    <button class="btn-secondary" type="button" onclick="requestCourseFullscreen()">Fullscreen</button>
                 </div>
                 <div class="asg-cheat-sheet" id="courseCheatSheet"></div>
             </section>
@@ -42,6 +44,11 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function requestCourseFullscreen() {
+            sessionStorage.setItem("asgCourseFullscreen", "1");
+            ASGExamGuard.requestFullscreen();
         }
 
         function renderCourse() {
@@ -85,6 +92,10 @@
         }
 
         renderCourse();
+        if (sessionStorage.getItem("asgCourseFullscreen") === "1") {
+            ASGExamGuard.requestFullscreen();
+            window.addEventListener("pointerdown", requestCourseFullscreen, { once: true });
+        }
     </script>
 </body>
 </html>

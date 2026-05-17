@@ -59,6 +59,16 @@
                 <div class="asg-table-wrap" id="certificatePermissions"></div>
             </article>
 
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Exam Retake Access</h2>
+                        <p>After a quiz or coding exam is submitted, students can retake it only when you allow access here.</p>
+                    </div>
+                </div>
+                <div class="asg-table-wrap" id="examRetakePermissions"></div>
+            </article>
+
             <article class="asg-live-panel">
                 <div class="asg-section-header">
                     <div>
@@ -492,6 +502,7 @@
             const students = getStudents();
             const attempts = asgGetQuizAttempts();
             const codingSubmissions = asgGetCodingSubmissions();
+            const examAttempts = asgGetExamAttempts();
             const activeQuiz = quizQuestions.filter((question) => question.status === "active").length;
             const activeCoding = codingChallenges.filter((challenge) => challenge.status === "active").length;
             const averageQuiz = attempts.length
@@ -507,6 +518,7 @@
                 { label: "Quiz sets", value: adminQuizCatalog.length },
                 { label: "Active quiz questions", value: activeQuiz },
                 { label: "Active coding challenges", value: activeCoding },
+                { label: "Exam submissions", value: examAttempts.length },
                 { label: "Average quiz score", value: percentage(averageQuiz) },
                 { label: "Average coding score", value: percentage(averageCoding) }
             ];
@@ -667,6 +679,100 @@
                                     <td>
                                         <button class="asg-link-button" type="button" onclick="setCertificateDownloadAccess('${student.id}', true)">Allow</button>
                                         <button class="asg-link-button danger" type="button" onclick="setCertificateDownloadAccess('${student.id}', false)">Revoke</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join("")}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function getCodingExamTopics() {
+            const topics = [...new Set(codingChallenges.map((challenge) => challenge.topic).filter(Boolean))];
+            return topics.length ? topics : ["Python", "Machine Learning", "Pandas"];
+        }
+
+        function getSelectedRetakeExam(studentId, type) {
+            const element = document.getElementById(`retake_${type}_${studentId}`);
+            return element ? element.value : "";
+        }
+
+        function setExamRetakeAccess(studentId, type, allowed) {
+            const student = getStudents().find((item) => String(item.id) === String(studentId));
+            if (!student) return;
+
+            const selected = getSelectedRetakeExam(studentId, type);
+            const exam = type === "quiz"
+                ? asgGetQuizById(selected)
+                : { id: asgNormalizeExamId(selected, "coding-exam"), title: `${selected} Coding Exam` };
+
+            asgSaveExamRetakePermission(
+                student,
+                type === "quiz" ? "quiz" : "coding-exam",
+                exam.id,
+                exam.title,
+                allowed,
+                allowed ? "Admin allowed another exam attempt." : "Admin revoked exam retake access.",
+                adminUser
+            );
+            refreshDashboard();
+        }
+
+        function renderExamRetakePermissions() {
+            const students = getStudents();
+            const target = document.getElementById("examRetakePermissions");
+            const codingTopics = getCodingExamTopics();
+            if (!students.length) {
+                target.innerHTML = `<div class="asg-empty-state"><h2>No students found</h2><p>Exam retake controls will appear here.</p></div>`;
+                return;
+            }
+
+            target.innerHTML = `
+                <table class="asg-admin-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Exam History</th>
+                            <th>Quiz Retake</th>
+                            <th>Coding Retake</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${students.map((student) => {
+                            const examAttempts = asgGetExamAttempts(student);
+                            const latestExam = asgGetLatestRecord(examAttempts, "submittedAt");
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>${escapeHtml(student.name)}</strong>
+                                        <small>${escapeHtml(student.email)}</small>
+                                    </td>
+                                    <td>
+                                        ${examAttempts.length} exam submissions
+                                        <small>${latestExam ? `${escapeHtml(latestExam.examTitle)} | ${percentage(latestExam.percentage)} | ${formatDate(latestExam.submittedAt)}` : "No exam submitted yet"}</small>
+                                    </td>
+                                    <td>
+                                        <select id="retake_quiz_${escapeHtml(student.id)}" class="asg-admin-search">
+                                            ${adminQuizCatalog.map((quiz) => `
+                                                <option value="${escapeHtml(quiz.id)}">${escapeHtml(quiz.title)}</option>
+                                            `).join("")}
+                                        </select>
+                                        <div class="asg-form-actions">
+                                            <button class="asg-link-button" type="button" onclick="setExamRetakeAccess('${student.id}', 'quiz', true)">Allow</button>
+                                            <button class="asg-link-button danger" type="button" onclick="setExamRetakeAccess('${student.id}', 'quiz', false)">Revoke</button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <select id="retake_coding_${escapeHtml(student.id)}" class="asg-admin-search">
+                                            ${codingTopics.map((topic) => `
+                                                <option value="${escapeHtml(topic)}">${escapeHtml(topic)} Coding Exam</option>
+                                            `).join("")}
+                                        </select>
+                                        <div class="asg-form-actions">
+                                            <button class="asg-link-button" type="button" onclick="setExamRetakeAccess('${student.id}', 'coding', true)">Allow</button>
+                                            <button class="asg-link-button danger" type="button" onclick="setExamRetakeAccess('${student.id}', 'coding', false)">Revoke</button>
+                                        </div>
                                     </td>
                                 </tr>
                             `;
@@ -1269,7 +1375,13 @@
                 score: `${submission.passed}/${submission.total}`,
                 date: submission.submittedAt
             }));
-            const activity = [...quizActivity, ...codingActivity]
+            const examActivity = asgGetExamAttempts().map((attempt) => ({
+                type: attempt.examTitle || "Exam",
+                name: attempt.studentName,
+                score: `${percentage(attempt.percentage)} ${attempt.status === "auto-submitted" ? "(auto)" : ""}`,
+                date: attempt.submittedAt
+            }));
+            const activity = [...quizActivity, ...codingActivity, ...examActivity]
                 .sort((left, right) => new Date(right.date || 0) - new Date(left.date || 0))
                 .slice(0, 8);
 
@@ -1289,6 +1401,8 @@
                 quizAttempts: asgGetQuizAttempts(),
                 codingChallenges: asgGetCodingChallenges(true),
                 codingSubmissions: asgGetCodingSubmissions(),
+                examAttempts: asgGetExamAttempts(),
+                examRetakePermissions: asgGetExamRetakePermissions(),
                 courses: asgGetCourses(true),
                 certificatePermissions: asgGetCertificatePermissions(),
                 certificateRequests: readJSON("asgCertificateRequests", []),
@@ -1317,6 +1431,7 @@
             renderStats();
             renderStudentsTable();
             renderCertificatePermissions();
+            renderExamRetakePermissions();
             renderQuizCatalog();
             renderQuizQuestions();
             renderCodingChallenges();
@@ -1332,6 +1447,8 @@
                 ASG_LEARNING_KEYS.quizAttempts,
                 ASG_LEARNING_KEYS.codingChallenges,
                 ASG_LEARNING_KEYS.codingSubmissions,
+                ASG_LEARNING_KEYS.examAttempts,
+                ASG_LEARNING_KEYS.examRetakePermissions,
                 ASG_LEARNING_KEYS.courses,
                 ASG_LEARNING_KEYS.certificatePermissions,
                 ASG_LEARNING_KEYS.studentAnnouncement,

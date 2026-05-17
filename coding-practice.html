@@ -3,6 +3,7 @@
 <head>
     <script src="auth-check.js"></script>
     <script src="learning-data.js"></script>
+    <script src="exam-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Python Coding Practice | ASG Tech</title>
@@ -44,6 +45,7 @@
                     <span id="engineStatus">Python engine loads when you run code.</span>
                     <div>
                         <button class="btn-secondary" type="button" onclick="resetStarterCode()">Reset</button>
+                        <button class="btn-secondary" type="button" onclick="enterPracticeFocus()">Focus Mode</button>
                         <button class="btn-primary" type="button" onclick="runPracticeCode()">Run Code</button>
                     </div>
                 </div>
@@ -190,6 +192,10 @@
                 <h3>Run output</h3>
                 <p>Run your code to see stdout and test results.</p>
             `;
+        }
+
+        function enterPracticeFocus() {
+            ASGExamGuard.requestFullscreen();
         }
 
         function resetStarterCode() {
@@ -398,6 +404,7 @@ json.dumps(payload, default=str)
         async function runPracticeCode() {
             const challenge = codingChallenges[currentChallengeIndex];
             if (!challenge) return;
+            ASGExamGuard.requestFullscreen();
 
             const runButton = document.querySelector(".asg-editor-toolbar .btn-primary");
             runButton.disabled = true;
