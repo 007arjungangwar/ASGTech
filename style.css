@@ -4121,6 +4121,15 @@ body.has-asg-shell footer {
     body.has-asg-shell footer {
         width: calc(100% - var(--asg-sidebar-width));
     }
+
+    body.has-asg-shell.asg-lesson-focus main,
+    body.has-asg-shell.asg-lesson-focus footer,
+    body.has-asg-shell.asg-course-focus main,
+    body.has-asg-shell.asg-course-focus footer,
+    body.has-asg-shell.asg-assessment-focus main,
+    body.has-asg-shell.asg-assessment-focus footer {
+        width: 100%;
+    }
 }
 
 body.has-asg-shell h1 {
