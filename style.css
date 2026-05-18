@@ -4110,9 +4110,17 @@ body.asg-theme-dark {
     --asg-card-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
 }
 
-body.has-asg-shell main {
-    width: min(1260px, calc(100% - 40px));
+body.has-asg-shell main,
+body.has-asg-shell footer {
+    width: auto;
     max-width: none;
+}
+
+@media (min-width: 821px) {
+    body.has-asg-shell main,
+    body.has-asg-shell footer {
+        width: calc(100% - var(--asg-sidebar-width));
+    }
 }
 
 body.has-asg-shell h1 {
@@ -4275,6 +4283,14 @@ body.asg-theme-dark .asg-sidebar {
     background: rgba(255, 255, 255, 0.18);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+body.asg-sidebar-collapsed .asg-menu-heading::before {
+    display: none;
+}
+
+body.asg-sidebar-collapsed .asg-menu-heading > .asg-menu-icon {
+    display: inline-grid;
 }
 
 .asg-menu-heading > span:not(.asg-menu-icon) {
