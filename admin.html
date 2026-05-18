@@ -277,13 +277,10 @@
 
                 <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveCourse();">
                     <input id="courseEditId" type="hidden">
+                    <input id="courseIcon" type="hidden">
                     <label>
                         <span>Course title</span>
                         <input id="courseTitle" type="text" placeholder="Python for Data Science">
-                    </label>
-                    <label>
-                        <span>Icon text</span>
-                        <input id="courseIcon" type="text" maxlength="4" placeholder="PY">
                     </label>
                     <label>
                         <span>Price label</span>
@@ -1357,7 +1354,7 @@
             const course = {
                 id: editId || asgSlugify(title, "course"),
                 title,
-                icon: document.getElementById("courseIcon").value.trim() || title.slice(0, 2).toUpperCase(),
+                icon: document.getElementById("courseIcon").value.trim() || title,
                 price: document.getElementById("coursePrice").value.trim() || "FREE",
                 status: document.getElementById("courseStatus").value,
                 summary: document.getElementById("courseSummary").value.trim(),

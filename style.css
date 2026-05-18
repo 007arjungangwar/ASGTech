@@ -1332,10 +1332,11 @@ button {
 }
 
 body.asg-sidebar-collapsed {
-    --asg-sidebar-width: 88px;
+    --asg-sidebar-width: 0px;
 }
 
 body.asg-sidebar-collapsed .asg-sidebar {
+    transform: translateX(-110%);
     padding-left: 12px;
     padding-right: 12px;
 }
@@ -1367,18 +1368,6 @@ body.asg-sidebar-collapsed .asg-menu-heading {
     min-height: 48px;
     justify-content: center;
     padding: 0;
-}
-
-body.asg-sidebar-collapsed .asg-menu-heading::before {
-    content: attr(data-short);
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    font-weight: 900;
 }
 
 body.asg-sidebar-collapsed .asg-menu-heading::after {
@@ -3526,17 +3515,6 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     gap: 1rem;
 }
 
-.asg-course-mark {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    background: #0f766e;
-    color: #ffffff;
-    font-weight: 800;
-}
-
 .asg-course-card h2,
 .asg-exam-choice-grid h3,
 .asg-exam-card strong {
@@ -3958,17 +3936,6 @@ body.asg-lesson-focus .asg-topic-content h3 {
     padding: 1rem;
 }
 
-.asg-home-course-card > span {
-    width: 44px;
-    height: 44px;
-    display: grid;
-    place-items: center;
-    border-radius: 8px;
-    background: #eef7f5;
-    color: var(--asg-primary-dark);
-    font-weight: 900;
-}
-
 .asg-progress-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -4208,10 +4175,6 @@ body.asg-theme-dark.has-asg-shell nav.asg-navbar {
     gap: 9px;
 }
 
-.asg-link-icon,
-.asg-button-icon,
-.asg-menu-icon,
-.asg-course-mark,
 .resource-icon {
     display: inline-grid;
     place-items: center;
@@ -4224,12 +4187,6 @@ body.asg-theme-dark.has-asg-shell nav.asg-navbar {
     font-size: 0.68rem;
     font-weight: 950;
     text-transform: uppercase;
-}
-
-.asg-button-icon {
-    width: 26px;
-    height: 26px;
-    font-size: 0.62rem;
 }
 
 .asg-icon-button {
@@ -4287,22 +4244,7 @@ body.asg-theme-dark .asg-sidebar {
     background: linear-gradient(135deg, #111827, #475569);
 }
 
-.asg-menu-heading > .asg-menu-icon {
-    display: inline-grid;
-    background: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-body.asg-sidebar-collapsed .asg-menu-heading::before {
-    display: none;
-}
-
-body.asg-sidebar-collapsed .asg-menu-heading > .asg-menu-icon {
-    display: inline-grid;
-}
-
-.asg-menu-heading > span:not(.asg-menu-icon) {
+.asg-menu-heading > span {
     flex: 1;
 }
 
@@ -4438,18 +4380,6 @@ body.asg-sidebar-collapsed .asg-menu-heading > .asg-menu-icon {
     box-shadow: var(--asg-card-shadow);
 }
 
-.asg-pattern-card span {
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    border-radius: 8px;
-    background: linear-gradient(135deg, var(--asg-primary), var(--asg-blue));
-    color: #ffffff;
-    font-size: 0.72rem;
-    font-weight: 950;
-}
-
 .asg-pattern-card h3 {
     margin: 0;
     font-size: 1rem;
@@ -4491,8 +4421,7 @@ body.asg-sidebar-collapsed .asg-menu-heading > .asg-menu-icon {
         grid-template-columns: 1fr;
     }
 
-    .asg-search-submit strong,
-    .asg-icon-button > span:not(.asg-button-icon) {
+    .asg-search-submit strong {
         display: none;
     }
 }
