@@ -207,6 +207,41 @@ function navigationGroups(user) {
     })).filter((group) => group.items.length);
 }
 
+function getNavIcon(label) {
+    const icons = {
+        "Home": "HM",
+        "Blog": "BG",
+        "Projects": "PR",
+        "About": "AB",
+        "Courses": "CR",
+        "Roadmap": "RM",
+        "Videos": "VD",
+        "Resources": "RS",
+        "Quiz Exam": "QZ",
+        "Coding Practice": "CP",
+        "Exam Center": "EX",
+        "Progress": "PG",
+        "Certificates": "CT",
+        "AI Tutor": "AI",
+        "Ask Doubt": "QA",
+        "Forum": "FM",
+        "Live Chat": "LC",
+        "Dashboard": "DB",
+        "My Profile": "ME"
+    };
+    return icons[label] || String(label || "AS").slice(0, 2).toUpperCase();
+}
+
+function getGroupIcon(title) {
+    const icons = {
+        "Learn": "L",
+        "Practice": "P",
+        "Community": "C",
+        "Admin": "A"
+    };
+    return icons[title] || String(title || "A").slice(0, 1).toUpperCase();
+}
+
 function getWorkspaceItems(user) {
     const publicItems = [
         { label: "Home", page: "index.html", section: "Public", public: true },
@@ -375,7 +410,7 @@ function renderTopNavigation(user) {
                     <span></span>
                 </button>
                 <a href="${asgUrl("index.html")}" class="logo asg-logo" aria-label="ASG Tech home">
-                    <span class="asg-logo-mark">ASG</span>
+                    <span class="asg-logo-mark"><span>ASG</span></span>
                     <span class="asg-logo-copy">
                         <strong>ASG Tech</strong>
                         <small>Institute</small>
@@ -388,14 +423,18 @@ function renderTopNavigation(user) {
                 <datalist id="asgSearchOptions">
                     ${searchItems.map((item) => `<option value="${asgEscapeHtml(item.label)}">${asgEscapeHtml(item.section)}</option>`).join("")}
                 </datalist>
-                <button type="submit">Search</button>
+                <button class="asg-search-submit" type="submit" aria-label="Search site">
+                    <span aria-hidden="true"></span>
+                    <strong>Search</strong>
+                </button>
             </form>
 
             <div class="asg-topbar-right">
                 <div class="nav-links asg-top-links" aria-label="Main navigation">
                     ${publicTopLinks.map((item) => `
                         <a href="${asgUrl(item.page)}" class="${isActive(item.page) ? "active" : ""}">
-                            ${item.label}
+                            <span class="asg-link-icon" aria-hidden="true">${getNavIcon(item.label)}</span>
+                            <span>${item.label}</span>
                         </a>
                     `).join("")}
                 </div>
@@ -403,6 +442,7 @@ function renderTopNavigation(user) {
                 <div class="asg-utility-bar">
                     <div class="asg-notification-wrap">
                         <button class="asg-icon-button ${hasNotice ? "has-alert" : ""}" type="button" onclick="toggleNotifications()" aria-label="Open notifications">
+                            <span class="asg-button-icon" aria-hidden="true">AL</span>
                             <span>Alerts</span>
                         </button>
                         <div class="asg-notification-panel" id="asgNotificationPanel">
@@ -411,6 +451,7 @@ function renderTopNavigation(user) {
                         </div>
                     </div>
                     <button class="asg-icon-button" type="button" onclick="toggleThemeMode()" aria-label="Toggle dark or light theme">
+                        <span class="asg-button-icon" aria-hidden="true">TH</span>
                         <span>Theme</span>
                     </button>
                 </div>
@@ -498,6 +539,7 @@ function renderSidebar(user) {
                         aria-expanded="${String(groupOpen)}"
                         onclick="toggleSidebarGroup(this)"
                     >
+                        <span class="asg-menu-icon" aria-hidden="true">${getGroupIcon(group.title)}</span>
                         <span>
                             <strong>${group.title}</strong>
                             <em>${group.description}</em>
@@ -507,6 +549,7 @@ function renderSidebar(user) {
                     <div class="asg-menu-items">
                         ${group.items.map((item) => `
                             <a href="${itemHref(item, user)}" class="${isActive(item.page) ? "active" : ""}">
+                                <span class="asg-link-icon" aria-hidden="true">${getNavIcon(item.label)}</span>
                                 <span>${item.label}</span>
                                 ${!item.public && !user ? `<span class="asg-lock">Login</span>` : ""}
                             </a>

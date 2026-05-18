@@ -1,7 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ASG Tech">
-  <rect width="512" height="512" rx="112" fill="#0f766e"/>
+  <defs>
+    <linearGradient id="asgIconBg" x1="72" y1="64" x2="440" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0d9488"/>
+      <stop offset="0.58" stop-color="#3157d5"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#asgIconBg)"/>
   <path d="M96 356 220 116h72l124 240h-70l-22-48H188l-22 48H96Z" fill="#fffdf7"/>
-  <path d="M214 252h84l-42-92-42 92Z" fill="#0f766e"/>
-  <path d="M168 390h176" stroke="#f4c96b" stroke-width="28" stroke-linecap="round"/>
+  <path d="M214 252h84l-42-92-42 92Z" fill="#3157d5"/>
+  <path d="M168 390h176" stroke="#f8d66d" stroke-width="28" stroke-linecap="round"/>
   <text x="256" y="444" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="800" fill="#fffdf7">ASG</text>
 </svg>
