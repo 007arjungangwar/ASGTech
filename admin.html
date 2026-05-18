@@ -35,6 +35,16 @@
 
         <section class="asg-admin-stat-grid" id="adminStats"></section>
 
+        <section class="asg-live-panel asg-admin-wide">
+            <div class="asg-section-header">
+                <div>
+                    <h2>Learning Analytics</h2>
+                    <p>Track active students, quiz averages, weak topics, and certificate readiness from submitted work.</p>
+                </div>
+            </div>
+            <div id="adminAnalytics"></div>
+        </section>
+
         <section class="asg-admin-layout">
             <article class="asg-live-panel asg-admin-wide">
                 <div class="asg-section-header">
@@ -710,6 +720,144 @@
                     <span>${escapeHtml(stat.label)}</span>
                 </article>
             `).join("");
+        }
+
+        function averagePercentage(records) {
+            return records.length
+                ? records.reduce((sum, record) => sum + Number(record.percentage || 0), 0) / records.length
+                : 0;
+        }
+
+        function getRecentStudents(students) {
+            const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            return students.filter((student) => {
+                const progress = asgGetStudentProgress(student);
+                const activityDate = new Date(progress.lastActivity || student.joinDate || 0);
+                return !Number.isNaN(activityDate.getTime()) && activityDate.getTime() >= cutoff;
+            });
+        }
+
+        function getWeakTopicInsights() {
+            const questionById = new Map(quizQuestions.map((question) => [question.id, question]));
+            const challengeById = new Map(codingChallenges.map((challenge) => [challenge.id, challenge]));
+            const topics = new Map();
+
+            function addWeakTopic(topic, reason) {
+                const key = String(topic || "General").trim() || "General";
+                const record = topics.get(key) || { topic: key, misses: 0, reasons: new Set() };
+                record.misses += 1;
+                if (reason) record.reasons.add(reason);
+                topics.set(key, record);
+            }
+
+            asgGetQuizAttempts().forEach((attempt) => {
+                (attempt.answers || []).forEach((answer) => {
+                    if (answer.isCorrect) return;
+                    const question = questionById.get(answer.questionId) || {};
+                    addWeakTopic(question.topic || attempt.quizTitle || "Quiz", "quiz misses");
+                });
+            });
+
+            asgGetCodingSubmissions().forEach((submission) => {
+                if (Number(submission.percentage || 0) >= 70) return;
+                const challenge = challengeById.get(submission.challengeId) || {};
+                addWeakTopic(challenge.topic || submission.examId || "Coding", "coding runs below 70%");
+            });
+
+            return Array.from(topics.values())
+                .sort((left, right) => right.misses - left.misses)
+                .slice(0, 5)
+                .map((item) => ({
+                    ...item,
+                    reasons: Array.from(item.reasons)
+                }));
+        }
+
+        function renderAnalytics() {
+            const students = getStudents();
+            const activeStudents = getRecentStudents(students);
+            const quizAttempts = asgGetQuizAttempts();
+            const codingSubmissions = asgGetCodingSubmissions();
+            const certificateReady = students.filter((student) => {
+                const progress = asgGetStudentProgress(student);
+                return progress.progressPercent >= 50 && asgCanDownloadCertificate(student);
+            });
+            const certificatePending = students.filter((student) => {
+                const progress = asgGetStudentProgress(student);
+                return progress.progressPercent >= 50 && !asgCanDownloadCertificate(student);
+            });
+            const weakTopics = getWeakTopicInsights();
+
+            document.getElementById("adminAnalytics").innerHTML = `
+                <div class="asg-analytics-grid">
+                    <article class="asg-analytics-card">
+                        <span>Active students</span>
+                        <strong>${activeStudents.length}/${students.length}</strong>
+                        <p>Students with activity in the last 30 days.</p>
+                    </article>
+                    <article class="asg-analytics-card">
+                        <span>Quiz average</span>
+                        <strong>${percentage(averagePercentage(quizAttempts))}</strong>
+                        <p>${quizAttempts.length} quiz attempts submitted.</p>
+                    </article>
+                    <article class="asg-analytics-card">
+                        <span>Coding average</span>
+                        <strong>${percentage(averagePercentage(codingSubmissions))}</strong>
+                        <p>${codingSubmissions.length} coding runs submitted.</p>
+                    </article>
+                    <article class="asg-analytics-card">
+                        <span>Certificate readiness</span>
+                        <strong>${certificateReady.length} ready</strong>
+                        <p>${certificatePending.length} need admin approval.</p>
+                    </article>
+                </div>
+
+                <div class="asg-analytics-columns">
+                    <article>
+                        <h3>Quiz Averages</h3>
+                        <div class="asg-insight-list">
+                            ${adminQuizCatalog.map((quiz) => {
+                                const attempts = quizAttempts.filter((attempt) => (attempt.quizId || "python") === quiz.id);
+                                return `
+                                    <div class="asg-insight-row">
+                                        <span>${escapeHtml(quiz.title)}</span>
+                                        <strong>${attempts.length ? percentage(averagePercentage(attempts)) : "No attempts"}</strong>
+                                    </div>
+                                `;
+                            }).join("")}
+                        </div>
+                    </article>
+                    <article>
+                        <h3>Weak Topics</h3>
+                        <div class="asg-insight-list">
+                            ${weakTopics.length ? weakTopics.map((item) => `
+                                <div class="asg-insight-row">
+                                    <span>${escapeHtml(item.topic)}<small>${escapeHtml(item.reasons.join(", "))}</small></span>
+                                    <strong>${item.misses} signals</strong>
+                                </div>
+                            `).join("") : `<div class="asg-empty-state"><h2>No weak topics yet</h2><p>Missed quiz answers and low coding runs will appear here.</p></div>`}
+                        </div>
+                    </article>
+                    <article>
+                        <h3>Certificate Readiness</h3>
+                        <div class="asg-insight-list">
+                            ${students.map((student) => {
+                                const progress = asgGetStudentProgress(student);
+                                const allowed = asgCanDownloadCertificate(student);
+                                const status = progress.progressPercent >= 50
+                                    ? (allowed ? "Ready" : "Needs approval")
+                                    : "Still learning";
+                                return `
+                                    <div class="asg-insight-row">
+                                        <span>${escapeHtml(student.name)}<small>${escapeHtml(student.email)}</small></span>
+                                        <strong>${percentage(progress.progressPercent)} | ${status}</strong>
+                                    </div>
+                                `;
+                            }).join("") || `<div class="asg-empty-state"><h2>No students yet</h2><p>Registered students will appear here.</p></div>`}
+                        </div>
+                    </article>
+                </div>
+            `;
         }
 
         function renderQuizSetOptions(selectedId = "") {
@@ -1840,6 +1988,7 @@
                 examAttempts: asgGetExamAttempts(),
                 examRetakePermissions: asgGetExamRetakePermissions(),
                 courses: asgGetCourses(true),
+                courseProgress: asgGetCourseProgress(),
                 roadmapItems: asgGetRoadmapItems(true),
                 videoLibrary: asgGetVideoLibrary(true),
                 resourceLibrary: asgGetResourceLibrary(true),
@@ -1871,6 +2020,7 @@
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
             renderStats();
+            renderAnalytics();
             renderStudentsTable();
             renderCertificatePermissions();
             renderExamRetakePermissions();
@@ -1898,6 +2048,7 @@
                 ASG_LEARNING_KEYS.roadmapItems,
                 ASG_LEARNING_KEYS.videoLibrary,
                 ASG_LEARNING_KEYS.resourceLibrary,
+                ASG_LEARNING_KEYS.courseProgress,
                 ASG_LEARNING_KEYS.certificatePermissions,
                 ASG_LEARNING_KEYS.studentAnnouncement,
                 "users",

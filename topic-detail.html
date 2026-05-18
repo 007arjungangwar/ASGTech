@@ -23,6 +23,7 @@
                     <button type="button" onclick="selectTopicTab('quiz', this)">Quiz</button>
                     <button type="button" onclick="selectTopicTab('video', this)">Video</button>
                     <button type="button" onclick="requestCourseFullscreen()">Fullscreen</button>
+                    <span class="asg-progress-note" id="lessonProgressState">Saving progress</span>
                 </div>
                 <article class="asg-topic-content" id="topicPanel"></article>
             </section>
@@ -35,8 +36,10 @@
 
     <script>
         const params = new URLSearchParams(window.location.search);
+        const topicUser = getCurrentUser();
         const course = asgGetCourseById(params.get("course"));
         const topic = course ? asgGetTopicById(course.id, params.get("topic")) : null;
+        let activeTopicTab = "content";
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -130,19 +133,31 @@
         }
 
         function selectTopicTab(tab, button) {
+            activeTopicTab = tab;
             document.querySelectorAll(".asg-topic-tabs button").forEach((item) => item.classList.remove("active"));
             button.classList.add("active");
 
             const panel = document.getElementById("topicPanel");
             if (tab === "quiz") {
                 panel.innerHTML = renderTopicQuiz();
+                saveLessonProgress();
                 return;
             }
             if (tab === "video") {
                 panel.innerHTML = renderVideo();
+                saveLessonProgress();
                 return;
             }
             panel.innerHTML = renderTopicContent();
+            saveLessonProgress();
+        }
+
+        function saveLessonProgress() {
+            const progress = asgSaveCourseProgress(topicUser, course, topic, activeTopicTab);
+            const status = document.getElementById("lessonProgressState");
+            if (status && progress) {
+                status.textContent = `Saved: ${progress.topicIndex}/${progress.totalTopics}`;
+            }
         }
 
         function renderTopic() {
@@ -182,6 +197,7 @@
                 `).join("")}
             `;
             document.getElementById("topicPanel").innerHTML = renderTopicContent();
+            saveLessonProgress();
         }
 
         renderTopic();

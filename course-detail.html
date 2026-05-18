@@ -35,6 +35,7 @@
 
     <script>
         const params = new URLSearchParams(window.location.search);
+        const courseUser = getCurrentUser();
         const course = asgGetCourseById(params.get("course"));
 
         function escapeHtml(value) {
@@ -51,6 +52,19 @@
             ASGExamGuard.requestFullscreen();
         }
 
+        async function continueCourse() {
+            if (!course) return;
+            const progress = asgGetCourseProgress(courseUser, course.id);
+            const savedTopic = progress
+                ? course.topics.find((topic) => topic.id === progress.topicId)
+                : null;
+            const targetTopic = savedTopic || course.topics[0];
+            if (!targetTopic) return;
+            sessionStorage.setItem("asgCourseFullscreen", "1");
+            await ASGExamGuard.requestFullscreen();
+            window.location.href = `topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(targetTopic.id)}`;
+        }
+
         function renderCourse() {
             if (!course) {
                 document.querySelector("main").innerHTML = `
@@ -63,17 +77,22 @@
                 return;
             }
 
+            const progress = asgGetCourseProgress(courseUser, course.id);
+            const progressTopic = progress && progress.topicTitle ? progress.topicTitle : "";
             document.title = `${course.title} | ASG Tech`;
             document.getElementById("courseHero").innerHTML = `
                 <div>
                     <div class="asg-eyebrow">Course workspace</div>
                     <h1>${escapeHtml(course.title)}</h1>
                     <p>${escapeHtml(course.welcome)}</p>
+                    <div class="asg-form-actions">
+                        <button class="btn-primary" type="button" onclick="continueCourse()">${progressTopic ? "Continue Learning" : "Start First Lesson"}</button>
+                    </div>
                 </div>
                 <div class="asg-hero-metrics">
                     <div><strong>${course.topics.length}</strong><span>Topics</span></div>
                     <div><strong>${escapeHtml(course.price)}</strong><span>Access</span></div>
-                    <div><strong>Active</strong><span>Course</span></div>
+                    <div><strong>${progress ? `${progress.progressPercent}%` : "New"}</strong><span>${progressTopic ? "Saved" : "Course"}</span></div>
                 </div>
             `;
 
@@ -84,8 +103,9 @@
                     <span>${course.topics.length} active</span>
                 </div>
                 ${course.topics.map((topic) => `
-                    <a class="asg-topic-link" href="topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(topic.id)}">
+                    <a class="asg-topic-link ${progress && progress.topicId === topic.id ? "active" : ""}" href="topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(topic.id)}">
                         <span>${escapeHtml(topic.title)}</span>
+                        ${progress && progress.topicId === topic.id ? "<small>Last opened</small>" : ""}
                     </a>
                 `).join("")}
             `;

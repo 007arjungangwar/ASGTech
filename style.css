@@ -4390,6 +4390,140 @@ body.asg-theme-dark .asg-sidebar {
     font-size: 0.92rem;
 }
 
+.asg-progress-note {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin: 0.2rem 0 0;
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(13, 148, 136, 0.1);
+    color: var(--asg-primary-dark);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.asg-certificate-verify-form {
+    grid-template-columns: minmax(260px, 1fr) auto;
+    align-items: end;
+}
+
+.asg-certificate-result {
+    margin-top: 1rem;
+}
+
+.asg-certificate-result-card,
+.asg-analytics-card,
+.asg-analytics-columns > article {
+    padding: 1.1rem;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: var(--asg-surface);
+    box-shadow: var(--asg-card-shadow);
+}
+
+.asg-certificate-result-card.verified {
+    border-color: rgba(22, 163, 74, 0.28);
+}
+
+.asg-certificate-result-card.locked {
+    border-color: rgba(220, 38, 38, 0.18);
+}
+
+.asg-verification-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.asg-verification-grid div,
+.asg-insight-row {
+    padding: 0.8rem;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: rgba(248, 250, 252, 0.72);
+}
+
+.asg-verification-grid dt {
+    color: var(--asg-muted);
+    font-size: 0.76rem;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.asg-verification-grid dd {
+    margin: 0.2rem 0 0;
+    color: var(--asg-ink);
+    font-weight: 800;
+}
+
+.asg-analytics-grid,
+.asg-analytics-columns {
+    display: grid;
+    gap: 1rem;
+}
+
+.asg-analytics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-bottom: 1rem;
+}
+
+.asg-analytics-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.asg-analytics-card span {
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.asg-analytics-card strong {
+    display: block;
+    margin: 0.3rem 0;
+    color: var(--asg-ink);
+    font-size: 1.65rem;
+    line-height: 1.1;
+}
+
+.asg-insight-list {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 0.8rem;
+}
+
+.asg-insight-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
+.asg-insight-row span,
+.asg-insight-row small {
+    display: grid;
+}
+
+.asg-insight-row span {
+    color: var(--asg-ink);
+    font-weight: 800;
+}
+
+.asg-insight-row small {
+    margin-top: 0.2rem;
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 650;
+}
+
+.asg-insight-row strong {
+    white-space: nowrap;
+    color: var(--asg-primary-dark);
+    font-size: 0.9rem;
+}
+
 .certificate-sheet {
     border-color: var(--asg-blue) !important;
     background:
@@ -4405,6 +4539,10 @@ body.asg-theme-dark .asg-sidebar {
     .asg-learning-pattern {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .asg-analytics-columns {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 720px) {
@@ -4418,6 +4556,11 @@ body.asg-theme-dark .asg-sidebar {
     }
 
     .asg-learning-pattern {
+        grid-template-columns: 1fr;
+    }
+
+    .asg-certificate-verify-form,
+    .asg-analytics-columns {
         grid-template-columns: 1fr;
     }
 

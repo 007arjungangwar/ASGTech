@@ -12,12 +12,13 @@ const ASG_LEARNING_KEYS = {
     roadmapItems: "asgRoadmapItems",
     videoLibrary: "asgVideoLibrary",
     resourceLibrary: "asgResourceLibrary",
+    courseProgress: "asgCourseProgress",
     certificatePermissions: "asgCertificatePermissions",
     studentAnnouncement: "studentAnnouncement",
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 7;
+const ASG_LEARNING_DATA_VERSION = 8;
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -1153,6 +1154,11 @@ function asgEnsureLearningData() {
         }
     }
 
+    const courseProgress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, null);
+    if (!courseProgress || typeof courseProgress !== "object" || Array.isArray(courseProgress)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.courseProgress, {});
+    }
+
     const announcement = asgReadJSON(ASG_LEARNING_KEYS.studentAnnouncement, null);
     if (!announcement) {
         asgWriteJSON(ASG_LEARNING_KEYS.studentAnnouncement, {
@@ -1529,6 +1535,28 @@ function asgGetStudentCertificates(user) {
     return asgUniqueLearningRecords([...personal, ...matchingGlobal]);
 }
 
+function asgNormalizeCertificateId(value) {
+    const raw = String(value || "").trim().toUpperCase();
+    if (!raw) return "";
+    return raw.startsWith("ASG-") ? raw : `ASG-${raw}`;
+}
+
+function asgGetCertificateRecords() {
+    return asgUniqueLearningRecords(asgReadJSON("certificates", [])).map((record) => ({
+        ...record,
+        certificateId: asgNormalizeCertificateId(record.certificateId)
+    }));
+}
+
+function asgFindCertificateById(value) {
+    const credentialId = asgNormalizeCertificateId(value);
+    if (!credentialId) return null;
+    return asgGetCertificateRecords().find((record) => (
+        asgNormalizeCertificateId(record.certificateId) === credentialId ||
+        asgNormalizeCertificateId(record.id) === credentialId
+    )) || null;
+}
+
 function asgGetCertificatePermissionKey(user) {
     if (!user) return "guest";
     return String(user.id || user.email || user.name || "guest").toLowerCase();
@@ -1587,6 +1615,7 @@ function asgSaveCertificateRecord(record) {
         certificateId: record.certificateId || `ASG-${Date.now()}`,
         course: record.course || "Data Science & Machine Learning",
         date: record.date || new Date().toISOString(),
+        verificationUrl: String(record.verificationUrl || "").trim(),
         downloadAllowed: Boolean(record.downloadAllowed)
     };
 
@@ -1615,6 +1644,53 @@ function asgGetStudentEnrollments(user) {
     ));
 
     return asgUniqueLearningRecords([...personal, ...matchingGlobal]);
+}
+
+function asgGetCourseProgressKey(user, courseId) {
+    return `${asgGetLearningUserKey(user)}:${asgSlugify(courseId, "course")}`;
+}
+
+function asgGetCourseProgress(user, courseId = "") {
+    const progress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, {});
+    const course = courseId ? asgSlugify(courseId, "course") : "";
+    if (!user && !course) return progress;
+    if (course) return progress[asgGetCourseProgressKey(user, course)] || null;
+
+    const userKey = `${asgGetLearningUserKey(user)}:`;
+    return Object.keys(progress)
+        .filter((key) => key.startsWith(userKey))
+        .map((key) => progress[key]);
+}
+
+function asgSaveCourseProgress(user, course, topic, tab = "content") {
+    if (!course || !topic) return null;
+    const topics = Array.isArray(course.topics) ? course.topics.filter((item) => item.status !== "draft") : [];
+    const topicIndex = Math.max(0, topics.findIndex((item) => item.id === topic.id));
+    const existing = asgGetCourseProgress(user, course.id) || {};
+    const completedTopicIds = Array.from(new Set([...(existing.completedTopicIds || []), topic.id]));
+    const progressPercent = topics.length ? Math.round((completedTopicIds.length / topics.length) * 100) : 0;
+    const nextTopic = topics[topicIndex + 1] || null;
+    const record = {
+        userId: user ? user.id || "" : "",
+        email: user ? user.email || "" : "",
+        name: user ? user.name || "" : "",
+        courseId: course.id,
+        courseTitle: course.title,
+        topicId: topic.id,
+        topicTitle: topic.title,
+        topicIndex: topicIndex + 1,
+        totalTopics: topics.length,
+        completedTopicIds,
+        progressPercent,
+        nextTopicId: nextTopic ? nextTopic.id : "",
+        nextTopicTitle: nextTopic ? nextTopic.title : "",
+        tab: String(tab || "content"),
+        updatedAt: new Date().toISOString()
+    };
+    const progress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, {});
+    progress[asgGetCourseProgressKey(user, course.id)] = record;
+    asgWriteJSON(ASG_LEARNING_KEYS.courseProgress, progress);
+    return record;
 }
 
 function asgGetBestPercentage(records) {

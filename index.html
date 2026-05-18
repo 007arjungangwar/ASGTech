@@ -293,13 +293,20 @@
                 document.getElementById("nextActionLink").href = "exam-center.html";
             }
 
-            document.getElementById("homeCourseGrid").innerHTML = courses.map((course) => `
-                <article class="asg-home-course-card">
-                    <h3>${escapeHtml(course.title)}</h3>
-                    <p>${escapeHtml(course.summary)}</p>
-                    <a class="asg-card-link secondary" href="course-detail.html?course=${encodeURIComponent(course.id)}">Open course</a>
-                </article>
-            `).join("");
+            document.getElementById("homeCourseGrid").innerHTML = courses.map((course) => {
+                const courseProgress = asgGetCourseProgress(user, course.id);
+                const href = courseProgress && courseProgress.topicId
+                    ? `topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(courseProgress.topicId)}`
+                    : `course-detail.html?course=${encodeURIComponent(course.id)}`;
+                return `
+                    <article class="asg-home-course-card">
+                        <h3>${escapeHtml(course.title)}</h3>
+                        <p>${escapeHtml(course.summary)}</p>
+                        ${courseProgress ? `<p class="asg-progress-note">Last opened: ${escapeHtml(courseProgress.topicTitle)}</p>` : ""}
+                        <a class="asg-card-link secondary" href="${href}">${courseProgress ? "Continue" : "Open course"}</a>
+                    </article>
+                `;
+            }).join("");
         }
 
         let timerInterval;

@@ -474,6 +474,7 @@
             <div class="certificate-actions">
                 <button class="btn-primary" id="downloadCertificateButton" type="button" onclick="generateCertificate()">Download Certificate</button>
                 <button class="btn-secondary" type="button" onclick="requestCertificateApproval()">Request Approval</button>
+                <a class="btn-secondary" id="verifyCertificateLink" href="certificate-verify.html">Verify Credential</a>
                 <button class="btn-secondary" type="button" onclick="shareLinkedIn()">Share on LinkedIn</button>
             </div>
         </section>
@@ -571,6 +572,8 @@
         });
         document.getElementById("certNumber").textContent = certificateId;
         document.getElementById("verificationText").textContent = `ASG-${certificateId}`;
+        const verificationUrl = `${window.location.origin}${window.location.pathname.replace(/certificate\.html$/i, "certificate-verify.html")}?id=${encodeURIComponent(`ASG-${certificateId}`)}`;
+        document.getElementById("verifyCertificateLink").href = verificationUrl;
 
         if (certificateUser && certificateUser.name) {
             document.getElementById("studentName").value = certificateUser.name;
@@ -588,7 +591,7 @@
 
         function renderCredentialQr() {
             const svg = document.getElementById("credentialQr");
-            const value = `ASG-${certificateId}-${window.location.origin}${window.location.pathname}`;
+            const value = verificationUrl;
             let hash = 0;
             for (let index = 0; index < value.length; index += 1) {
                 hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
@@ -792,6 +795,7 @@
                     userId: certificateUser ? certificateUser.id : "",
                     certificateId: `ASG-${certificateId}`,
                     course: "Data Science & Machine Learning",
+                    verificationUrl,
                     downloadAllowed: true
                 });
             }).catch((error) => {
@@ -804,7 +808,7 @@
 
         function shareLinkedIn() {
             const name = document.getElementById("studentName").value.trim() || "Student";
-            const shareUrl = `${window.location.origin}${window.location.pathname}?credential=ASG-${encodeURIComponent(certificateId)}`;
+            const shareUrl = verificationUrl;
             const text = `${name} completed the Data Science & Machine Learning learning path at ASG Tech Online.`;
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
         }

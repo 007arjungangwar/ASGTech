@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Certificate | ASG Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav></nav>
+
+    <main class="asg-certificate-verify-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Credential verification</div>
+                <h1>Verify Certificate</h1>
+                <p>Employers and reviewers can check an ASG Tech credential ID from a student certificate.</p>
+            </div>
+            <div class="asg-hero-metrics">
+                <div><strong id="verifiedCount">0</strong><span>Records</span></div>
+                <div><strong>ASG</strong><span>Credential</span></div>
+                <div><strong>Live</strong><span>Lookup</span></div>
+            </div>
+        </section>
+
+        <section class="asg-live-panel">
+            <form class="asg-admin-form asg-certificate-verify-form" onsubmit="event.preventDefault(); verifyCredential();">
+                <label>
+                    <span>Credential ID</span>
+                    <input id="credentialIdInput" type="text" placeholder="ASG-2026-123456" autocomplete="off">
+                </label>
+                <button class="btn-primary" type="submit">Verify Certificate</button>
+            </form>
+            <div id="verificationResult" class="asg-certificate-result"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p class="copyright">ASG Tech Institute. Verified learning credentials.</p>
+    </footer>
+
+    <script>
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatDate(value) {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return "Not available";
+            return date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+        }
+
+        function renderEmptyState() {
+            document.getElementById("verificationResult").innerHTML = `
+                <div class="asg-empty-state">
+                    <h2>Enter a credential ID</h2>
+                    <p>Use the ID printed on the certificate, for example ASG-2026-123456.</p>
+                </div>
+            `;
+        }
+
+        function verifyCredential() {
+            const input = document.getElementById("credentialIdInput");
+            const credentialId = input.value.trim();
+            if (!credentialId) {
+                renderEmptyState();
+                input.focus();
+                return;
+            }
+
+            const record = asgFindCertificateById(credentialId);
+            const target = document.getElementById("verificationResult");
+
+            if (!record) {
+                target.innerHTML = `
+                    <article class="asg-certificate-result-card locked">
+                        <div class="asg-question-head">
+                            <span>Not verified</span>
+                            <small>${escapeHtml(asgNormalizeCertificateId(credentialId))}</small>
+                        </div>
+                        <h2>No matching certificate record found</h2>
+                        <p>Check the credential ID and confirm that the student downloaded an approved ASG Tech certificate.</p>
+                    </article>
+                `;
+                return;
+            }
+
+            target.innerHTML = `
+                <article class="asg-certificate-result-card verified">
+                    <div class="asg-question-head">
+                        <span>Verified credential</span>
+                        <small>${escapeHtml(record.certificateId)}</small>
+                    </div>
+                    <h2>${escapeHtml(record.name || "ASG Tech Student")}</h2>
+                    <dl class="asg-verification-grid">
+                        <div><dt>Course</dt><dd>${escapeHtml(record.course || "ASG Tech Learning Path")}</dd></div>
+                        <div><dt>Issued</dt><dd>${formatDate(record.date)}</dd></div>
+                        <div><dt>Email</dt><dd>${escapeHtml(record.email || "Private")}</dd></div>
+                        <div><dt>Status</dt><dd>${record.downloadAllowed ? "Approved certificate" : "Preview record"}</dd></div>
+                    </dl>
+                    <p>This certificate record matches the ASG Tech credential ID entered above.</p>
+                </article>
+            `;
+        }
+
+        const records = asgGetCertificateRecords();
+        document.getElementById("verifiedCount").textContent = records.length;
+        const params = new URLSearchParams(window.location.search);
+        const requestedId = params.get("id") || params.get("credential");
+        if (requestedId) {
+            document.getElementById("credentialIdInput").value = requestedId;
+            verifyCredential();
+        } else {
+            renderEmptyState();
+        }
+    </script>
+</body>
+</html>

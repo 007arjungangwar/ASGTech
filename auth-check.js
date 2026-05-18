@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v25",
+    cacheName: "asg-tech-v26",
     publicPages: [
         "",
         "index.html",
@@ -11,7 +11,8 @@ const ASG_AUTH = {
         "about.html",
         "blog.html",
         "projects.html",
-        "exam-login.html"
+        "exam-login.html",
+        "certificate-verify.html"
     ],
     studentPages: [
         "courses.html",
@@ -212,7 +213,8 @@ function getWorkspaceItems(user) {
         { label: "Home", page: "index.html", section: "Public", public: true },
         { label: "Blog", page: "blog.html", section: "Public", public: true },
         { label: "Projects", page: "projects.html", section: "Public", public: true },
-        { label: "About", page: "about.html", section: "Public", public: true }
+        { label: "About", page: "about.html", section: "Public", public: true },
+        { label: "Verify Certificate", page: "certificate-verify.html", section: "Public", public: true }
     ];
 
     const workspaceItems = navigationGroups(user).flatMap((group) => (
@@ -359,7 +361,8 @@ function renderTopNavigation(user) {
         { label: "Home", page: "index.html", public: true },
         { label: "Blog", page: "blog.html", public: true },
         { label: "Projects", page: "projects.html", public: true },
-        { label: "About", page: "about.html", public: true }
+        { label: "About", page: "about.html", public: true },
+        { label: "Verify Certificate", page: "certificate-verify.html", public: true }
     ];
     const searchItems = getWorkspaceItems(user);
     const notice = loggedIn ? getStudentAnnouncement() : null;

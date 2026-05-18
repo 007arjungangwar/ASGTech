@@ -76,7 +76,11 @@
         async function openCourse(courseId) {
             const course = asgGetCourseById(courseId);
             if (course) saveEnrollment(course);
-            const firstTopic = course && course.topics.length ? course.topics[0] : null;
+            const progress = course ? asgGetCourseProgress(courseUser, course.id) : null;
+            const savedTopic = progress && course
+                ? course.topics.find((topic) => topic.id === progress.topicId)
+                : null;
+            const firstTopic = savedTopic || (course && course.topics.length ? course.topics[0] : null);
             sessionStorage.setItem("asgCourseFullscreen", "1");
             await ASGExamGuard.requestFullscreen();
             window.location.href = firstTopic
@@ -89,19 +93,27 @@
             document.getElementById("courseCount").textContent = courses.length;
             document.getElementById("topicCount").textContent = courses.reduce((sum, course) => sum + course.topics.length, 0);
 
-            document.getElementById("courseGrid").innerHTML = courses.map((course) => `
-                <article class="asg-course-card">
-                    <div>
-                        <div class="asg-question-head">
-                            <span>${escapeHtml(course.price)}</span>
-                            <small>${course.topics.length} topics</small>
+            document.getElementById("courseGrid").innerHTML = courses.map((course) => {
+                const progress = asgGetCourseProgress(courseUser, course.id);
+                const hasProgress = Boolean(progress && progress.topicId);
+                return `
+                    <article class="asg-course-card">
+                        <div>
+                            <div class="asg-question-head">
+                                <span>${escapeHtml(course.price)}</span>
+                                <small>${course.topics.length} topics</small>
+                            </div>
+                            <h2>${escapeHtml(course.title)}</h2>
+                            <p>${escapeHtml(course.summary)}</p>
+                            ${hasProgress ? `
+                                <div class="asg-mini-progress"><span style="width: ${Math.min(progress.progressPercent || 0, 100)}%"></span></div>
+                                <p class="asg-progress-note">Continue from ${escapeHtml(progress.topicTitle)}.</p>
+                            ` : ""}
                         </div>
-                        <h2>${escapeHtml(course.title)}</h2>
-                        <p>${escapeHtml(course.summary)}</p>
-                    </div>
-                    <button class="btn-primary" type="button" onclick="openCourse('${escapeHtml(course.id)}')">Start Learning</button>
-                </article>
-            `).join("") || `
+                        <button class="btn-primary" type="button" onclick="openCourse('${escapeHtml(course.id)}')">${hasProgress ? "Continue Learning" : "Start Learning"}</button>
+                    </article>
+                `;
+            }).join("") || `
                 <div class="asg-empty-state">
                     <h2>No active courses</h2>
                     <p>Your admin can publish courses from the dashboard.</p>
