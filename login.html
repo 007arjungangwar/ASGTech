@@ -28,30 +28,37 @@
     <main>
         <div class="asg-auth-layout">
             <section class="asg-auth-intro">
-                <div class="asg-eyebrow">Student access</div>
-                <h1>Learn, practice, track, and certify from one secure workspace.</h1>
-                <p>
-                    Visitors can preview basic institute pages. Registered students get the complete portal:
-                    courses, resources, roadmap, quiz, progress tracker, certificates, forum, live chat, and AI support.
-                </p>
+                <div class="asg-auth-panel-header">
+                    <div>
+                        <div class="asg-eyebrow">Student access</div>
+                        <h1>Enter your ASG Tech learning workspace.</h1>
+                    </div>
+                    <span class="asg-auth-live-pill">Secure portal</span>
+                </div>
+                <p>Continue courses, quizzes, coding practice, certificates, and progress tracking from one focused dashboard.</p>
 
                 <div class="asg-auth-scoreboard" aria-label="Learning portal highlights">
-                    <div><strong>24/7</strong><span>Student access</span></div>
-                    <div><strong>Live</strong><span>Progress tracking</span></div>
-                    <div><strong>Admin</strong><span>Managed learning</span></div>
+                    <div><strong>24/7</strong><span>Access</span></div>
+                    <div><strong>Live</strong><span>Progress</span></div>
+                    <div><strong>Verified</strong><span>Certificates</span></div>
                 </div>
 
-                <div class="asg-auth-benefits">
-                    <div><strong>Public pages</strong><span>Home, blog, projects, and about.</span></div>
-                    <div><strong>Student pages</strong><span>Courses, roadmap, quiz, progress, videos, Q&A, forum, resources, and certificates.</span></div>
-                    <div><strong>Admin pages</strong><span>Dashboard, students, quizzes, coding practice, and progress reports.</span></div>
+                <div class="asg-auth-strip" aria-label="Portal workflow">
+                    <div><span>01</span><strong>Learn</strong><small>Courses and playlists</small></div>
+                    <div><span>02</span><strong>Practice</strong><small>Quiz and coding tasks</small></div>
+                    <div><span>03</span><strong>Certify</strong><small>Verified credential QR</small></div>
+                </div>
+
+                <div class="asg-auth-benefits" aria-label="Workspace features">
+                    <div><strong>Student tools</strong><span>Roadmap, videos, resources, tracker, forum, and Q&A.</span></div>
+                    <div><strong>Admin managed</strong><span>Content, progress, quiz sets, projects, and certificate access.</span></div>
                 </div>
             </section>
 
             <section class="auth-container">
                 <div class="asg-auth-card-top">
                     <span>ASG Tech Institute</span>
-                    <strong>Secure Portal</strong>
+                    <strong>Account Access</strong>
                 </div>
                 <div class="auth-tabs">
                     <button class="auth-tab active" type="button" onclick="switchTab('login')">Login</button>
@@ -62,8 +69,14 @@
                     <h2>Welcome back</h2>
                     <p>Use your student or admin account to continue.</p>
 
-                    <input type="email" id="loginEmail" placeholder="Email address" class="auth-input" autocomplete="email">
-                    <input type="password" id="loginPassword" placeholder="Password" class="auth-input" autocomplete="current-password">
+                    <label class="asg-auth-field">
+                        <span>Email address</span>
+                        <input type="email" id="loginEmail" placeholder="you@example.com" class="auth-input" autocomplete="email">
+                    </label>
+                    <label class="asg-auth-field">
+                        <span>Password</span>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" class="auth-input" autocomplete="current-password">
+                    </label>
                     <button class="auth-btn" type="button" onclick="login()">Login</button>
                     <div id="loginError" class="error-msg"></div>
 
@@ -73,13 +86,30 @@
                     <h2>Create student account</h2>
                     <p>Registration is free and unlocks the student workspace.</p>
 
-                    <input type="text" id="regName" placeholder="Full name" class="auth-input" autocomplete="name">
-                    <input type="email" id="regEmail" placeholder="Email address" class="auth-input" autocomplete="email">
-                    <input type="password" id="regPassword" placeholder="Password (minimum 6 characters)" class="auth-input" autocomplete="new-password">
-                    <input type="password" id="regConfirm" placeholder="Confirm password" class="auth-input" autocomplete="new-password">
+                    <label class="asg-auth-field">
+                        <span>Full name</span>
+                        <input type="text" id="regName" placeholder="Your full name" class="auth-input" autocomplete="name">
+                    </label>
+                    <label class="asg-auth-field">
+                        <span>Email address</span>
+                        <input type="email" id="regEmail" placeholder="you@example.com" class="auth-input" autocomplete="email">
+                    </label>
+                    <label class="asg-auth-field">
+                        <span>Password</span>
+                        <input type="password" id="regPassword" placeholder="Minimum 6 characters" class="auth-input" autocomplete="new-password">
+                    </label>
+                    <label class="asg-auth-field">
+                        <span>Confirm password</span>
+                        <input type="password" id="regConfirm" placeholder="Repeat password" class="auth-input" autocomplete="new-password">
+                    </label>
                     <button class="auth-btn" type="button" onclick="register()">Create account</button>
                     <div id="regError" class="error-msg"></div>
                     <div id="regSuccess" class="success-msg"></div>
+                </div>
+
+                <div class="asg-auth-card-note">
+                    <strong>New here?</strong>
+                    <span>Create a student account and your learning activity will start tracking immediately.</span>
                 </div>
             </section>
         </div>

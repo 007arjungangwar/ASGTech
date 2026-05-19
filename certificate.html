@@ -151,44 +151,6 @@
             border-bottom: 1.2mm solid;
         }
 
-        .certificate-watermark {
-            position: absolute;
-            inset: 45mm auto auto 50%;
-            width: 150mm;
-            height: 150mm;
-            display: grid;
-            place-items: center;
-            border: 1.6mm solid rgba(20, 63, 113, 0.035);
-            border-radius: 50%;
-            color: rgba(20, 63, 113, 0.055);
-            font-size: 15mm;
-            font-weight: 950;
-            letter-spacing: 0;
-            line-height: 1;
-            text-align: center;
-            text-transform: uppercase;
-            transform: translateX(-50%) rotate(-15deg);
-            pointer-events: none;
-        }
-
-        .certificate-watermark::before,
-        .certificate-watermark::after {
-            content: "";
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .certificate-watermark::before {
-            inset: 7mm;
-            border: 0.6mm solid rgba(199, 164, 76, 0.04);
-        }
-
-        .certificate-watermark::after {
-            inset: 22mm;
-            border: 0.45mm dashed rgba(20, 63, 113, 0.035);
-        }
-
         .certificate-inner {
             position: relative;
             z-index: 2;
@@ -515,7 +477,6 @@
                 <span class="certificate-corner top-right"></span>
                 <span class="certificate-corner bottom-left"></span>
                 <span class="certificate-corner bottom-right"></span>
-                <div class="certificate-watermark">ASG Tech<br>Verified</div>
 
                 <div class="certificate-inner">
                     <div class="certificate-topline">
