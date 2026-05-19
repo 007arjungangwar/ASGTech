@@ -2,285 +2,157 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+    <nav></nav>
+
+    <main class="asg-public-blog-page">
+        <section class="asg-page-hero asg-editorial-hero">
+            <div>
+                <div class="asg-eyebrow">Learning journal</div>
+                <h1>ASG Tech Blog</h1>
+                <p>Professional notes, tutorials, project thinking, and practical study guidance for coding and data science learners.</p>
             </div>
-        </div>
-    </nav>
-
-    <main>
-<div class="external-links-section" style="background: #f0f7ff; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-    <h3>📝 Also find me on Medium</h3>
-    <p>I write detailed articles on Medium. Click below to read!</p>
-    <div id="mediumLinks"></div>
-    <button onclick="addMediumLink()" class="btn-secondary" style="margin-top: 1rem;">+ Add your Medium article link</button>
-</div>
-
-<script>
-// Store Medium links
-let mediumLinks = JSON.parse(localStorage.getItem('mediumLinks') || '[]');
-
-// Display Medium links
-function displayMediumLinks() {
-    const container = document.getElementById('mediumLinks');
-    if(mediumLinks.length === 0) {
-        container.innerHTML = '<p>No links yet. Add your first Medium article!</p>';
-    } else {
-        container.innerHTML = mediumLinks.map(link => `
-            <div style="margin: 0.5rem 0; padding: 0.5rem; background: white; border-radius: 8px;">
-                <a href="${link.url}" target="_blank" style="font-weight: bold;">📖 ${link.title}</a>
-                <p style="font-size: 0.8rem; color: #666;">${link.description}</p>
-                <small>Added on ${new Date(link.date).toLocaleDateString()}</small>
-                <button onclick="deleteLink(${link.id})" style="float: right; background: none; border: none; color: red; cursor: pointer;">🗑️</button>
+            <div class="asg-hero-metrics">
+                <div><strong id="blogPostCount">0</strong><span>Posts</span></div>
+                <div><strong id="blogCategoryCount">0</strong><span>Topics</span></div>
+                <div><strong>Admin</strong><span>Editable</span></div>
             </div>
-        `).join('');
-    }
-}
+        </section>
 
-// Add new Medium link
-function addMediumLink() {
-    const title = prompt('Enter article title:');
-    if(!title) return;
-    
-    const url = prompt('Enter Medium article URL:');
-    if(!url) return;
-    
-    const description = prompt('Enter short description (optional):');
-    
-    mediumLinks.push({
-        id: Date.now(),
-        title: title,
-        url: url,
-        description: description || 'Read this article on Medium',
-        date: new Date().toISOString()
-    });
-    
-    localStorage.setItem('mediumLinks', JSON.stringify(mediumLinks));
-    displayMediumLinks();
-}
+        <section class="asg-public-toolbar">
+            <input id="blogSearch" type="search" placeholder="Search blog posts..." oninput="renderBlogPosts()">
+            <div class="asg-resource-filters" id="blogFilters"></div>
+        </section>
 
-// Delete link
-function deleteLink(id) {
-    mediumLinks = mediumLinks.filter(link => link.id !== id);
-    localStorage.setItem('mediumLinks', JSON.stringify(mediumLinks));
-    displayMediumLinks();
-}
-
-displayMediumLinks();
-</script>
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="🔍 Search tutorials, projects, resources... (Try: Python, ML, PINNs)">
-            <div class="search-results" style="display: none;"></div>
-        </div>
-        <h1>Blog</h1>
-        <p>Free tutorials to help you learn Data Science and Machine Learning.</p>
-
-        <div class="blog-list">
-
-            <div class="popular-posts">
-                <h3>🔥 Most Popular This Week</h3>
-                <div id="popular-list"></div>
-            </div>
-
-            <script>
-            // Track page views
-            const postViews = JSON.parse(localStorage.getItem('postViews') || '{}');
-            const currentPost = 'python-guide'; // Change for each post
-            postViews[currentPost] = (postViews[currentPost] || 0) + 1;
-            localStorage.setItem('postViews', JSON.stringify(postViews));
-
-            // Show popular posts
-            const sorted = Object.entries(postViews).sort((a,b) => b[1] - a[1]).slice(0,3);
-            const popularDiv = document.getElementById('popular-list');
-            if(popularDiv) {
-                popularDiv.innerHTML = sorted.map(([post, views]) => 
-                    `<p>📖 ${post.replace('-', ' ')} - ${views} views</p>`
-                ).join('');
-            }
-            </script>
-
-            <div class="post-item">
-                <h2><a href="posts/post1.html">How to Start Learning Python — Free Resources</a></h2>
-                <p class="post-date">April 19, 2024</p>
-                <p>A complete beginner's guide. No paid courses needed. Just free resources that actually work.</p>
-            </div>
-
-            <div class="post-item">
-                <h2><a href="posts/post2.html">What is Machine Learning? Explained for Beginners</a></h2>
-                <p class="post-date">April 18, 2024</p>
-                <p>No complex math. Just an intuitive explanation of what ML is and how it works.</p>
-            </div>
-
-            <!-- Add more posts here -->
-        </div>
+        <section class="asg-featured-story" id="featuredBlogPost"></section>
+        <section class="asg-blog-reader" id="blogReader" hidden></section>
+        <section class="asg-public-card-grid" id="blogGrid"></section>
     </main>
 
     <footer>
-        <p>© 2024 ASG Tech | Free resources for students</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Clear learning notes for serious students.</p>
     </footer>
 
-<script>
-// Simple search functionality
-const searchBox = document.querySelector('.search-box');
-const resultsDiv = document.querySelector('.search-results');
+    <script>
+        let activeBlogCategory = "All";
 
-const content = [
-    { title: "How to Start Learning Python", url: "posts/python-beginners-guide.html", category: "Blog" },
-    { title: "What is Machine Learning?", url: "posts/what-is-ml.html", category: "Blog" },
-    { title: "What are PINNs?", url: "posts/pinns-explained.html", category: "Blog" },
-    { title: "PINNs for Richards' Equation", url: "projects.html", category: "Project" },
-    { title: "Python Cheat Sheet", url: "resources.html", category: "Resource" },
-    { title: "ML Algorithms Mind Map", url: "resources.html", category: "Resource" },
-    { title: "Data Science Roadmap", url: "roadmap.html", category: "Guide" }
-];
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-searchBox.addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    if (query.length < 2) {
-        resultsDiv.style.display = 'none';
-        return;
-    }
-    
-    const matches = content.filter(item => 
-        item.title.toLowerCase().includes(query)
-    );
-    
-    if (matches.length > 0) {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = matches.map(match => `
-            <div class="search-result-item" onclick="window.location.href='${match.url}'">
-                <strong>${match.title}</strong><br>
-                <small style="color: #666;">${match.category}</small>
-            </div>
-        `).join('');
-    } else {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = '<div class="search-result-item">No results found</div>';
-    }
-});
+        function setBlogCategory(category) {
+            activeBlogCategory = category;
+            renderBlogPosts();
+        }
 
-// Hide results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!searchBox.contains(e.target)) {
-        resultsDiv.style.display = 'none';
-    }
-});
-</script>
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+        function blogPostHref(post) {
+            return post.url || `blog.html#${encodeURIComponent(post.id)}`;
+        }
 
-<script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (document.body.classList.contains('dark-mode')) {
-        btn.innerHTML = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        btn.innerHTML = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
+        function renderBlogBody(value) {
+            const lines = String(value || "")
+                .split(/\n+/)
+                .map((line) => line.trim())
+                .filter(Boolean);
+            return (lines.length ? lines : ["This article is being prepared by the ASG Tech team."])
+                .map((line) => `<p>${escapeHtml(line)}</p>`)
+                .join("");
+        }
 
-// Load dark mode preference
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    document.querySelector('.dark-mode-toggle').innerHTML = '☀️';
-}
-</script>
-<a href="questions.html" class="help-btn">💬</a>
+        function renderBlogAction(post, featured = false) {
+            const className = featured ? "btn-primary" : "asg-card-link secondary";
+            if (post.url) {
+                return `<a class="${className}" href="${escapeHtml(post.url)}" ${/^https?:\/\//i.test(post.url) ? "target=\"_blank\" rel=\"noopener\"" : ""}>Read Article</a>`;
+            }
+            return `<button class="${className}" type="button" onclick="openBlogPost('${escapeHtml(post.id)}')">Read Article</button>`;
+        }
 
-<div class="help-popup" id="helpPopup">
-    <h4>Need help? 🙋‍♂️</h4>
-    <p>Go to the <a href="questions.html">Q&A page</a> to ask your question. I reply within 24 hours!</p>
-    <button onclick="closeHelp()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem;">Close</button>
-</div>
+        function openBlogPost(postId) {
+            const post = asgGetBlogPosts().find((item) => item.id === postId);
+            if (!post) return;
+            const reader = document.getElementById("blogReader");
+            reader.hidden = false;
+            reader.innerHTML = `
+                <article>
+                    <div class="asg-question-head">
+                        <span>${escapeHtml(post.category)}</span>
+                        <small>${escapeHtml(post.readTime)} | ${escapeHtml(post.author)}</small>
+                    </div>
+                    <h2>${escapeHtml(post.title)}</h2>
+                    <div class="asg-blog-reader-body">${renderBlogBody(post.body || post.excerpt)}</div>
+                    <button class="asg-link-button" type="button" onclick="document.getElementById('blogReader').hidden = true">Close Article</button>
+                </article>
+            `;
+            reader.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
 
-<script>
-const helpBtn = document.querySelector('.help-btn');
-const helpPopup = document.getElementById('helpPopup');
+        function renderBlogPosts() {
+            const posts = asgGetBlogPosts();
+            const query = document.getElementById("blogSearch").value.trim().toLowerCase();
+            const categories = ["All", ...new Set(posts.map((post) => post.category))];
+            const visible = posts.filter((post) => {
+                const categoryMatch = activeBlogCategory === "All" || post.category === activeBlogCategory;
+                const text = `${post.title} ${post.category} ${post.excerpt} ${post.body}`.toLowerCase();
+                return categoryMatch && (!query || text.includes(query));
+            });
+            const featured = visible.find((post) => post.featured) || visible[0] || null;
+            const gridPosts = featured ? visible.filter((post) => post.id !== featured.id) : visible;
 
-helpBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    helpPopup.classList.toggle('active');
-    setTimeout(() => helpPopup.classList.remove('active'), 5000);
-});
+            document.getElementById("blogPostCount").textContent = posts.length;
+            document.getElementById("blogCategoryCount").textContent = Math.max(categories.length - 1, 0);
+            document.getElementById("blogFilters").innerHTML = categories.map((category) => `
+                <button class="${category === activeBlogCategory ? "active" : ""}" type="button" onclick="setBlogCategory(${escapeHtml(JSON.stringify(category))})">${escapeHtml(category)}</button>
+            `).join("");
 
-function closeHelp() {
-    helpPopup.classList.remove('active');
-}
-</script>
+            document.getElementById("featuredBlogPost").innerHTML = featured ? `
+                <article>
+                    <div class="asg-question-head">
+                        <span>${escapeHtml(featured.category)}</span>
+                        <small>${escapeHtml(featured.readTime)} | ${escapeHtml(featured.author)}</small>
+                    </div>
+                    <h2>${escapeHtml(featured.title)}</h2>
+                    <p>${escapeHtml(featured.excerpt)}</p>
+                    ${renderBlogAction(featured, true)}
+                </article>
+            ` : "";
+
+            document.getElementById("blogGrid").innerHTML = gridPosts.map((post) => `
+                <article class="asg-public-card">
+                    <div class="asg-question-head">
+                        <span>${escapeHtml(post.category)}</span>
+                        <small>${escapeHtml(post.readTime)}</small>
+                    </div>
+                    <h2>${escapeHtml(post.title)}</h2>
+                    <p>${escapeHtml(post.excerpt)}</p>
+                    ${renderBlogAction(post)}
+                </article>
+            `).join("") || `
+                <div class="asg-empty-state">
+                    <h2>No posts found</h2>
+                    <p>Try another search or ask admin to publish new posts.</p>
+                </div>
+            `;
+        }
+
+        window.addEventListener("asg:data-updated", (event) => {
+            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.blogPosts) renderBlogPosts();
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key === ASG_LEARNING_KEYS.blogPosts) renderBlogPosts();
+        });
+
+        renderBlogPosts();
+    </script>
 </body>
 </html>

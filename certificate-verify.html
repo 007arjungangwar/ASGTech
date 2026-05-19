@@ -66,6 +66,32 @@
             `;
         }
 
+        function getSignedPayloadForCredential(credentialId) {
+            const payload = asgReadCertificateVerificationPayload(new URLSearchParams(window.location.search));
+            if (!payload) return null;
+            if (asgNormalizeCertificateId(payload.certificateId) !== asgNormalizeCertificateId(credentialId)) return null;
+            return payload;
+        }
+
+        function renderVerifiedRecord(record, sourceLabel) {
+            document.getElementById("verificationResult").innerHTML = `
+                <article class="asg-certificate-result-card verified">
+                    <div class="asg-question-head">
+                        <span>Verified credential</span>
+                        <small>${escapeHtml(record.certificateId)}</small>
+                    </div>
+                    <h2>${escapeHtml(record.name || "ASG Tech Student")}</h2>
+                    <dl class="asg-verification-grid">
+                        <div><dt>Course</dt><dd>${escapeHtml(record.course || "ASG Tech Learning Path")}</dd></div>
+                        <div><dt>Issued</dt><dd>${formatDate(record.issued || record.date)}</dd></div>
+                        <div><dt>Status</dt><dd>${escapeHtml(sourceLabel)}</dd></div>
+                        <div><dt>Signature</dt><dd>${escapeHtml(record.signature || "Matched")}</dd></div>
+                    </dl>
+                    <p>This certificate ID matches an ASG Tech verification record.</p>
+                </article>
+            `;
+        }
+
         function verifyCredential() {
             const input = document.getElementById("credentialIdInput");
             const credentialId = input.value.trim();
@@ -77,6 +103,37 @@
 
             const record = asgFindCertificateById(credentialId);
             const target = document.getElementById("verificationResult");
+
+            if (record) {
+                renderVerifiedRecord(record, record.downloadAllowed ? "Approved certificate record" : "Preview record");
+                return;
+            }
+
+            const payload = getSignedPayloadForCredential(credentialId);
+            if (payload && asgVerifyCertificatePayload(payload)) {
+                renderVerifiedRecord({
+                    certificateId: payload.certificateId,
+                    name: payload.name,
+                    course: payload.course,
+                    issued: payload.issued,
+                    signature: payload.signature
+                }, "QR verification matched");
+                return;
+            }
+
+            if (payload && !asgVerifyCertificatePayload(payload)) {
+                target.innerHTML = `
+                    <article class="asg-certificate-result-card locked">
+                        <div class="asg-question-head">
+                            <span>Signature mismatch</span>
+                            <small>${escapeHtml(asgNormalizeCertificateId(credentialId))}</small>
+                        </div>
+                        <h2>This QR credential could not be verified</h2>
+                        <p>The certificate ID was found in the QR link, but the verification signature does not match the ASG Tech credential payload.</p>
+                    </article>
+                `;
+                return;
+            }
 
             if (!record) {
                 target.innerHTML = `
@@ -91,23 +148,6 @@
                 `;
                 return;
             }
-
-            target.innerHTML = `
-                <article class="asg-certificate-result-card verified">
-                    <div class="asg-question-head">
-                        <span>Verified credential</span>
-                        <small>${escapeHtml(record.certificateId)}</small>
-                    </div>
-                    <h2>${escapeHtml(record.name || "ASG Tech Student")}</h2>
-                    <dl class="asg-verification-grid">
-                        <div><dt>Course</dt><dd>${escapeHtml(record.course || "ASG Tech Learning Path")}</dd></div>
-                        <div><dt>Issued</dt><dd>${formatDate(record.date)}</dd></div>
-                        <div><dt>Email</dt><dd>${escapeHtml(record.email || "Private")}</dd></div>
-                        <div><dt>Status</dt><dd>${record.downloadAllowed ? "Approved certificate" : "Preview record"}</dd></div>
-                    </dl>
-                    <p>This certificate record matches the ASG Tech credential ID entered above.</p>
-                </article>
-            `;
         }
 
         const records = asgGetCertificateRecords();

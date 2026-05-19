@@ -20,12 +20,16 @@
             </div>
             <div class="asg-hero-metrics">
                 <div><strong id="videoCount">0</strong><span>Videos</span></div>
-                <div><strong id="videoCategoryCount">0</strong><span>Categories</span></div>
-                <div><strong>Wide</strong><span>Player</span></div>
+                <div><strong id="playlistCount">0</strong><span>Playlists</span></div>
+                <div><strong>YouTube</strong><span>Player</span></div>
             </div>
         </section>
 
-        <section class="asg-video-library">
+        <section class="asg-video-command">
+            <div id="videoPlaylistTabs" class="asg-resource-filters"></div>
+        </section>
+
+        <section class="asg-video-library asg-playlist-video-library">
             <article class="asg-live-panel asg-video-player-panel" id="videoPlayer"></article>
             <aside class="asg-video-playlist" id="videoPlaylist"></aside>
         </section>
@@ -36,6 +40,7 @@
     </footer>
 
     <script>
+        let activePlaylistId = "";
         let activeVideoId = "";
 
         function escapeHtml(value) {
@@ -64,22 +69,38 @@
             renderVideos();
         }
 
+        function selectPlaylist(playlistId) {
+            activePlaylistId = playlistId;
+            activeVideoId = "";
+            renderVideos();
+        }
+
         function renderVideos() {
+            const playlists = asgGetVideoPlaylists();
             const videos = asgGetVideoLibrary();
-            if (!videos.length) {
+            if (!playlists.length || !videos.length) {
                 document.getElementById("videoPlayer").innerHTML = `<div class="asg-empty-state"><h2>No videos yet</h2><p>Your admin can add video lessons from the dashboard.</p></div>`;
                 document.getElementById("videoPlaylist").innerHTML = "";
+                document.getElementById("videoPlaylistTabs").innerHTML = "";
                 return;
             }
 
-            const categories = [...new Set(videos.map((video) => video.category))];
-            const active = videos.find((video) => video.id === activeVideoId) || videos[0];
-            activeVideoId = active.id;
+            const activePlaylist = playlists.find((playlist) => playlist.id === activePlaylistId) || playlists[0];
+            activePlaylistId = activePlaylist.id;
+            const playlistVideos = videos.filter((video) => video.playlistId === activePlaylist.id);
+            const active = playlistVideos.find((video) => video.id === activeVideoId) || playlistVideos[0] || null;
+            activeVideoId = active ? active.id : "";
 
             document.getElementById("videoCount").textContent = videos.length;
-            document.getElementById("videoCategoryCount").textContent = categories.length;
+            document.getElementById("playlistCount").textContent = playlists.length;
+            document.getElementById("videoPlaylistTabs").innerHTML = playlists.map((playlist) => {
+                const playlistId = escapeHtml(JSON.stringify(playlist.id));
+                return `
+                    <button class="${playlist.id === activePlaylist.id ? "active" : ""}" type="button" onclick="selectPlaylist(${playlistId})">${escapeHtml(playlist.title)}</button>
+                `;
+            }).join("");
 
-            document.getElementById("videoPlayer").innerHTML = `
+            document.getElementById("videoPlayer").innerHTML = active ? `
                 ${isEmbeddable(active.url) ? `
                     <div class="asg-video-frame">
                         <iframe src="${escapeHtml(getEmbedUrl(active.url))}" title="${escapeHtml(active.title)}" allowfullscreen></iframe>
@@ -93,30 +114,42 @@
                 `}
                 <div class="asg-section-header">
                     <div>
-                        <div class="asg-eyebrow">${escapeHtml(active.category)} | ${escapeHtml(active.level)} | ${escapeHtml(active.duration)}</div>
+                        <div class="asg-eyebrow">${escapeHtml(activePlaylist.title)} | ${escapeHtml(active.level)} | ${escapeHtml(active.duration)}</div>
                         <h2>${escapeHtml(active.title)}</h2>
                         <p>${escapeHtml(active.description)}</p>
                     </div>
                 </div>
+            ` : `
+                <div class="asg-empty-state">
+                    <h2>${escapeHtml(activePlaylist.title)} has no videos yet</h2>
+                    <p>Admin can add YouTube lessons to this playlist from the dashboard.</p>
+                </div>
             `;
 
-            document.getElementById("videoPlaylist").innerHTML = videos.map((video) => {
+            document.getElementById("videoPlaylist").innerHTML = `
+                <div class="asg-challenge-list-head">
+                    <h2>${escapeHtml(activePlaylist.title)}</h2>
+                    <span>${playlistVideos.length} videos</span>
+                    <small>${escapeHtml(activePlaylist.description)}</small>
+                </div>
+                ${playlistVideos.map((video) => {
                 const videoId = escapeHtml(JSON.stringify(video.id));
                 return `
-                    <button class="asg-video-item ${video.id === active.id ? "active" : ""}" type="button" onclick="selectVideo(${videoId})">
+                    <button class="asg-video-item ${active && video.id === active.id ? "active" : ""}" type="button" onclick="selectVideo(${videoId})">
                         <span>${escapeHtml(video.category)}</span>
                         <strong>${escapeHtml(video.title)}</strong>
                         <small>${escapeHtml(video.level)} | ${escapeHtml(video.duration)}</small>
                     </button>
                 `;
-            }).join("");
+                }).join("")}
+            `;
         }
 
         window.addEventListener("asg:data-updated", (event) => {
-            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.videoLibrary) renderVideos();
+            if (event.detail && [ASG_LEARNING_KEYS.videoLibrary, ASG_LEARNING_KEYS.videoPlaylists].includes(event.detail.key)) renderVideos();
         });
         window.addEventListener("storage", (event) => {
-            if (event.key === ASG_LEARNING_KEYS.videoLibrary) renderVideos();
+            if ([ASG_LEARNING_KEYS.videoLibrary, ASG_LEARNING_KEYS.videoPlaylists].includes(event.key)) renderVideos();
         });
 
         renderVideos();

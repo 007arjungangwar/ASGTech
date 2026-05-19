@@ -153,13 +153,40 @@
 
         .certificate-watermark {
             position: absolute;
-            inset: auto -18mm -28mm auto;
-            color: rgba(20, 63, 113, 0.045);
-            font-size: 48mm;
+            inset: 45mm auto auto 50%;
+            width: 150mm;
+            height: 150mm;
+            display: grid;
+            place-items: center;
+            border: 1.6mm solid rgba(20, 63, 113, 0.035);
+            border-radius: 50%;
+            color: rgba(20, 63, 113, 0.055);
+            font-size: 15mm;
             font-weight: 950;
+            letter-spacing: 0;
             line-height: 1;
-            transform: rotate(-9deg);
+            text-align: center;
+            text-transform: uppercase;
+            transform: translateX(-50%) rotate(-15deg);
             pointer-events: none;
+        }
+
+        .certificate-watermark::before,
+        .certificate-watermark::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .certificate-watermark::before {
+            inset: 7mm;
+            border: 0.6mm solid rgba(199, 164, 76, 0.04);
+        }
+
+        .certificate-watermark::after {
+            inset: 22mm;
+            border: 0.45mm dashed rgba(20, 63, 113, 0.035);
         }
 
         .certificate-inner {
@@ -345,6 +372,7 @@
             height: 19mm;
             background: #ffffff;
             border: 1px solid #dbe3ef;
+            object-fit: contain;
         }
 
         .certificate-verification-copy {
@@ -487,7 +515,7 @@
                 <span class="certificate-corner top-right"></span>
                 <span class="certificate-corner bottom-left"></span>
                 <span class="certificate-corner bottom-right"></span>
-                <div class="certificate-watermark">ASG</div>
+                <div class="certificate-watermark">ASG Tech<br>Verified</div>
 
                 <div class="certificate-inner">
                     <div class="certificate-topline">
@@ -538,7 +566,7 @@
                         </div>
 
                         <div class="certificate-verification">
-                            <svg class="certificate-qr" id="credentialQr" viewBox="0 0 29 29" role="img" aria-label="Credential verification QR"></svg>
+                            <img class="certificate-qr" id="credentialQr" alt="Scan to verify this ASG Tech certificate" crossorigin="anonymous" referrerpolicy="no-referrer">
                             <div class="certificate-verification-copy">
                                 <strong>Verified Credential</strong>
                                 <span id="verificationText">Scan-ready credential record</span>
@@ -558,22 +586,27 @@
     <script>
         const certificateUser = getCurrentUser();
         const certificateIdKey = certificateUser ? `certificateId_${certificateUser.id}` : "certificateId_guest";
+        const certificateIssueDateKey = certificateUser ? `certificateIssueDate_${certificateUser.id}` : "certificateIssueDate_guest";
+        const certificateCourse = "Data Science & Machine Learning";
         let certificateId = localStorage.getItem(certificateIdKey);
+        let certificateIssueDate = localStorage.getItem(certificateIssueDateKey);
         let certificateLogoCanvasSource = null;
         if (!certificateId) {
             certificateId = `${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
             localStorage.setItem(certificateIdKey, certificateId);
         }
+        if (!certificateIssueDate) {
+            certificateIssueDate = new Date().toISOString();
+            localStorage.setItem(certificateIssueDateKey, certificateIssueDate);
+        }
 
-        document.getElementById("certDate").textContent = new Date().toLocaleDateString(undefined, {
+        document.getElementById("certDate").textContent = new Date(certificateIssueDate).toLocaleDateString(undefined, {
             year: "numeric",
             month: "short",
             day: "numeric"
         });
         document.getElementById("certNumber").textContent = certificateId;
-        document.getElementById("verificationText").textContent = `ASG-${certificateId}`;
-        const verificationUrl = `${window.location.origin}${window.location.pathname.replace(/certificate\.html$/i, "certificate-verify.html")}?id=${encodeURIComponent(`ASG-${certificateId}`)}`;
-        document.getElementById("verifyCertificateLink").href = verificationUrl;
+        let verificationUrl = "";
 
         if (certificateUser && certificateUser.name) {
             document.getElementById("studentName").value = certificateUser.name;
@@ -582,6 +615,7 @@
         function updateCertificateName() {
             const name = document.getElementById("studentName").value.trim() || "Student Name";
             document.getElementById("certName").textContent = name;
+            updateCredentialVerification();
         }
 
         function getCertificateProgress() {
@@ -589,38 +623,35 @@
             return asgGetStudentProgress(certificateUser).progressPercent;
         }
 
-        function renderCredentialQr() {
-            const svg = document.getElementById("credentialQr");
-            const value = verificationUrl;
-            let hash = 0;
-            for (let index = 0; index < value.length; index += 1) {
-                hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
+        function getCertificateVerificationBaseUrl() {
+            const productionBase = "https://007arjungangwar.github.io/learning-with-arjun/certificate-verify.html";
+            const localHosts = ["", "localhost", "127.0.0.1"];
+            if (window.location.protocol === "file:" || localHosts.includes(window.location.hostname)) {
+                return productionBase;
             }
+            return new URL("certificate-verify.html", window.location.href).href;
+        }
 
-            const size = 29;
-            const finderCells = [
-                [1, 1], [21, 1], [1, 21]
-            ];
-            let cells = `<rect width="${size}" height="${size}" fill="#ffffff"/>`;
+        function buildCredentialRecord() {
+            return {
+                certificateId: `ASG-${certificateId}`,
+                name: document.getElementById("studentName").value.trim() || "Student Name",
+                course: certificateCourse,
+                issued: certificateIssueDate.slice(0, 10)
+            };
+        }
 
-            finderCells.forEach(([x, y]) => {
-                cells += `<rect x="${x}" y="${y}" width="7" height="7" fill="#143f71"/>`;
-                cells += `<rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#ffffff"/>`;
-                cells += `<rect x="${x + 2}" y="${y + 2}" width="3" height="3" fill="#143f71"/>`;
-            });
+        function getQrCodeUrl(value) {
+            return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=12&data=${encodeURIComponent(value)}`;
+        }
 
-            for (let y = 0; y < size; y += 1) {
-                for (let x = 0; x < size; x += 1) {
-                    const inFinder = finderCells.some(([fx, fy]) => x >= fx && x < fx + 7 && y >= fy && y < fy + 7);
-                    if (inFinder) continue;
-                    const bit = (hash + x * 17 + y * 31 + x * y * 7) % 5;
-                    if (bit === 0 || bit === 2) {
-                        cells += `<rect x="${x}" y="${y}" width="1" height="1" fill="#172033"/>`;
-                    }
-                }
-            }
-
-            svg.innerHTML = cells;
+        function updateCredentialVerification() {
+            const credential = buildCredentialRecord();
+            const query = asgBuildCertificateVerificationQuery(credential);
+            verificationUrl = `${getCertificateVerificationBaseUrl()}?${query}`;
+            document.getElementById("verificationText").textContent = `${credential.certificateId} | Scan to verify`;
+            document.getElementById("verifyCertificateLink").href = verificationUrl;
+            document.getElementById("credentialQr").src = getQrCodeUrl(verificationUrl);
         }
 
         function refreshCertificateAccess() {
@@ -785,6 +816,7 @@
             button.textContent = "Preparing...";
 
             renderCertificateCanvas().then((canvas) => {
+                const credential = buildCredentialRecord();
                 const link = document.createElement("a");
                 link.download = `${name.replace(/\s+/g, "_")}_ASG_Tech_certificate.png`;
                 link.href = canvas.toDataURL("image/png");
@@ -793,8 +825,10 @@
                     name,
                     email: certificateUser ? certificateUser.email : "",
                     userId: certificateUser ? certificateUser.id : "",
-                    certificateId: `ASG-${certificateId}`,
-                    course: "Data Science & Machine Learning",
+                    certificateId: credential.certificateId,
+                    course: credential.course,
+                    date: certificateIssueDate,
+                    signature: asgCertificateSignature(credential),
                     verificationUrl,
                     downloadAllowed: true
                 });
@@ -809,7 +843,7 @@
         function shareLinkedIn() {
             const name = document.getElementById("studentName").value.trim() || "Student";
             const shareUrl = verificationUrl;
-            const text = `${name} completed the Data Science & Machine Learning learning path at ASG Tech Online.`;
+            const text = `${name} completed the ${certificateCourse} learning path at ASG Tech Online.`;
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
         }
 
@@ -822,7 +856,6 @@
             if (event.key === ASG_LEARNING_KEYS.certificatePermissions) refreshCertificateAccess();
         });
 
-        renderCredentialQr();
         refreshCertificateAccess();
     </script>
 </body>

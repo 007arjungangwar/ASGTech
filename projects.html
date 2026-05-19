@@ -2,63 +2,127 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="blog.html">Blog</a>
-                <a href="projects.html">Projects</a>
-                <a href="about.html">About</a>
-            </div>
-        </div>
-    </nav>
+    <nav></nav>
 
-    <main>
-        <section class="asg-section-header">
+    <main class="asg-public-project-page">
+        <section class="asg-page-hero asg-editorial-hero">
             <div>
-                <div class="asg-eyebrow">Public project preview</div>
-                <h1>Projects students build at ASG Tech</h1>
-                <p>Visitors can preview project themes. Registered students get the guided lessons, datasets, resources, and progress tracking.</p>
+                <div class="asg-eyebrow">Portfolio lab</div>
+                <h1>Projects Students Build</h1>
+                <p>Explore practical project briefs designed to turn lessons into portfolio-ready proof of skill.</p>
             </div>
-            <a class="asg-card-link primary" href="login.html?mode=register">Join to build</a>
+            <div class="asg-hero-metrics">
+                <div><strong id="projectCount">0</strong><span>Projects</span></div>
+                <div><strong id="projectCategoryCount">0</strong><span>Tracks</span></div>
+                <div><strong>Career</strong><span>Ready</span></div>
+            </div>
         </section>
 
-        <section class="asg-grid">
-            <article class="asg-program-card">
-                <div class="asg-card-kicker">AI and Science</div>
-                <h3>PINNs for Richards' Equation</h3>
-                <p>Use Physics-Informed Neural Networks to model soil water flow and connect deep learning with physical constraints.</p>
-                <p><strong>Skills:</strong> Python, TensorFlow, numerical methods, model evaluation.</p>
-                <a class="asg-card-link secondary" href="login.html?next=courses.html">Open student module</a>
-            </article>
-
-            <article class="asg-program-card">
-                <div class="asg-card-kicker">Data Science</div>
-                <h3>Student Performance Dashboard</h3>
-                <p>Clean data, analyze trends, and build a dashboard that helps an institute understand student progress.</p>
-                <p><strong>Skills:</strong> Pandas, visualization, metrics, presentation.</p>
-                <a class="asg-card-link secondary" href="login.html?next=roadmap.html">Follow roadmap</a>
-            </article>
-
-            <article class="asg-program-card">
-                <div class="asg-card-kicker">Web App</div>
-                <h3>Learning Portal Features</h3>
-                <p>Practice authentication flow, student dashboards, content organization, and admin views using this portal as a case study.</p>
-                <p><strong>Skills:</strong> HTML, CSS, JavaScript, UX structure.</p>
-                <a class="asg-card-link secondary" href="blog.html">Read public notes</a>
-            </article>
+        <section class="asg-public-toolbar">
+            <input id="projectSearch" type="search" placeholder="Search projects, skills, outcomes..." oninput="renderProjects()">
+            <div class="asg-resource-filters" id="projectFilters"></div>
         </section>
+
+        <section class="asg-featured-story" id="featuredProject"></section>
+        <section class="asg-public-card-grid" id="projectGrid"></section>
     </main>
 
     <footer>
-        <p class="copyright">© 2026 ASG Tech Institute. Project-based learning for practical skills.</p>
+        <p class="copyright">ASG Tech Institute. Project-based learning for practical skills.</p>
     </footer>
+
+    <script>
+        let activeProjectCategory = "All";
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function setProjectCategory(category) {
+            activeProjectCategory = category;
+            renderProjects();
+        }
+
+        function renderProjectCard(project) {
+            return `
+                <article class="asg-public-card asg-project-showcase-card">
+                    <div class="asg-question-head">
+                        <span>${escapeHtml(project.category)}</span>
+                        <small>${escapeHtml(project.difficulty)}</small>
+                    </div>
+                    <h2>${escapeHtml(project.title)}</h2>
+                    <p>${escapeHtml(project.summary)}</p>
+                    <div class="asg-skill-tags">
+                        ${project.skills.map((skill) => `<span>${escapeHtml(skill)}</span>`).join("")}
+                    </div>
+                    <p><strong>Outcome:</strong> ${escapeHtml(project.outcome)}</p>
+                    <a class="asg-card-link secondary" href="${escapeHtml(project.url || "courses.html")}">Open Path</a>
+                </article>
+            `;
+        }
+
+        function renderProjects() {
+            const projects = asgGetProjectShowcase();
+            const query = document.getElementById("projectSearch").value.trim().toLowerCase();
+            const categories = ["All", ...new Set(projects.map((project) => project.category))];
+            const visible = projects.filter((project) => {
+                const categoryMatch = activeProjectCategory === "All" || project.category === activeProjectCategory;
+                const text = `${project.title} ${project.category} ${project.summary} ${project.skills.join(" ")} ${project.outcome}`.toLowerCase();
+                return categoryMatch && (!query || text.includes(query));
+            });
+            const featured = visible.find((project) => project.featured) || visible[0] || null;
+            const gridProjects = featured ? visible.filter((project) => project.id !== featured.id) : visible;
+
+            document.getElementById("projectCount").textContent = projects.length;
+            document.getElementById("projectCategoryCount").textContent = Math.max(categories.length - 1, 0);
+            document.getElementById("projectFilters").innerHTML = categories.map((category) => `
+                <button class="${category === activeProjectCategory ? "active" : ""}" type="button" onclick="setProjectCategory(${escapeHtml(JSON.stringify(category))})">${escapeHtml(category)}</button>
+            `).join("");
+
+            document.getElementById("featuredProject").innerHTML = featured ? `
+                <article>
+                    <div class="asg-question-head">
+                        <span>${escapeHtml(featured.category)}</span>
+                        <small>${escapeHtml(featured.difficulty)}</small>
+                    </div>
+                    <h2>${escapeHtml(featured.title)}</h2>
+                    <p>${escapeHtml(featured.summary)}</p>
+                    <div class="asg-skill-tags">
+                        ${featured.skills.map((skill) => `<span>${escapeHtml(skill)}</span>`).join("")}
+                    </div>
+                    <p><strong>Expected outcome:</strong> ${escapeHtml(featured.outcome)}</p>
+                    <a class="btn-primary" href="${escapeHtml(featured.url || "courses.html")}">Start This Project</a>
+                </article>
+            ` : "";
+
+            document.getElementById("projectGrid").innerHTML = gridProjects.map(renderProjectCard).join("") || `
+                <div class="asg-empty-state">
+                    <h2>No projects found</h2>
+                    <p>Try another search or ask admin to publish new projects.</p>
+                </div>
+            `;
+        }
+
+        window.addEventListener("asg:data-updated", (event) => {
+            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.projectShowcase) renderProjects();
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key === ASG_LEARNING_KEYS.projectShowcase) renderProjects();
+        });
+
+        renderProjects();
+    </script>
 </body>
 </html>

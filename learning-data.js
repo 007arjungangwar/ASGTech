@@ -9,6 +9,9 @@ const ASG_LEARNING_KEYS = {
     examAttempts: "asgExamAttempts",
     examRetakePermissions: "asgExamRetakePermissions",
     courses: "asgCourses",
+    blogPosts: "asgBlogPosts",
+    projectShowcase: "asgProjectShowcase",
+    videoPlaylists: "asgVideoPlaylists",
     roadmapItems: "asgRoadmapItems",
     videoLibrary: "asgVideoLibrary",
     resourceLibrary: "asgResourceLibrary",
@@ -18,7 +21,7 @@ const ASG_LEARNING_KEYS = {
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 8;
+const ASG_LEARNING_DATA_VERSION = 10;
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -151,6 +154,7 @@ const ASG_DEFAULT_ROADMAP_ITEMS = [
 const ASG_DEFAULT_VIDEO_LIBRARY = [
     {
         id: "video-python-start",
+        playlistId: "python-foundations",
         title: "Python Starter Session",
         category: "Python",
         level: "Beginner",
@@ -162,6 +166,7 @@ const ASG_DEFAULT_VIDEO_LIBRARY = [
     },
     {
         id: "video-pandas-workflow",
+        playlistId: "data-analysis",
         title: "Pandas Data Cleaning Workflow",
         category: "Data Analysis",
         level: "Beginner",
@@ -173,6 +178,7 @@ const ASG_DEFAULT_VIDEO_LIBRARY = [
     },
     {
         id: "video-ml-models",
+        playlistId: "machine-learning",
         title: "Machine Learning Model Mindset",
         category: "Machine Learning",
         level: "Intermediate",
@@ -184,6 +190,7 @@ const ASG_DEFAULT_VIDEO_LIBRARY = [
     },
     {
         id: "video-project-build",
+        playlistId: "portfolio-projects",
         title: "Portfolio Project Walkthrough",
         category: "Projects",
         level: "Intermediate",
@@ -192,6 +199,112 @@ const ASG_DEFAULT_VIDEO_LIBRARY = [
         url: "projects.html",
         status: "active",
         order: 4
+    }
+];
+
+const ASG_DEFAULT_VIDEO_PLAYLISTS = [
+    {
+        id: "python-foundations",
+        title: "Python Foundations",
+        description: "Beginner-friendly lessons for syntax, functions, loops, and practical coding habits.",
+        level: "Beginner",
+        status: "active",
+        order: 1
+    },
+    {
+        id: "data-analysis",
+        title: "Data Analysis",
+        description: "Pandas, NumPy, data cleaning, and visual thinking for real datasets.",
+        level: "Beginner to Intermediate",
+        status: "active",
+        order: 2
+    },
+    {
+        id: "machine-learning",
+        title: "Machine Learning",
+        description: "Model mindset, feature thinking, validation, and responsible evaluation.",
+        level: "Intermediate",
+        status: "active",
+        order: 3
+    },
+    {
+        id: "portfolio-projects",
+        title: "Portfolio Projects",
+        description: "Project walkthroughs that help students turn lessons into public proof of skill.",
+        level: "Career",
+        status: "active",
+        order: 4
+    }
+];
+
+const ASG_DEFAULT_BLOG_POSTS = [
+    {
+        id: "python-learning-plan",
+        title: "How to Start Learning Python with a Practical Study Plan",
+        category: "Python",
+        excerpt: "A structured beginner plan for syntax, practice, projects, and revision without feeling scattered.",
+        body: "Start with syntax and small exercises, then move into functions, files, and data structures. Keep notes, solve small problems daily, and build one mini project each week.",
+        author: "ASG Tech",
+        readTime: "6 min read",
+        url: "posts/post1.html",
+        featured: true,
+        status: "active",
+        order: 1
+    },
+    {
+        id: "machine-learning-beginner",
+        title: "What Machine Learning Really Means for Beginners",
+        category: "Machine Learning",
+        excerpt: "A plain-language guide to datasets, features, models, validation, and why evaluation matters.",
+        body: "Machine learning is about learning patterns from examples. The useful workflow is data preparation, model training, validation, error analysis, and iteration.",
+        author: "ASG Tech",
+        readTime: "5 min read",
+        url: "posts/post2.html",
+        featured: false,
+        status: "active",
+        order: 2
+    }
+];
+
+const ASG_DEFAULT_PROJECT_SHOWCASE = [
+    {
+        id: "pinns-richards-equation",
+        title: "PINNs for Richards' Equation",
+        category: "AI and Science",
+        difficulty: "Advanced",
+        summary: "Use Physics-Informed Neural Networks to model soil water flow and connect deep learning with physical constraints.",
+        skills: ["Python", "TensorFlow", "Numerical Methods", "Model Evaluation"],
+        outcome: "A research-style notebook with model diagnostics and visualized predictions.",
+        url: "login.html?next=courses.html",
+        featured: true,
+        status: "active",
+        order: 1
+    },
+    {
+        id: "student-performance-dashboard",
+        title: "Student Performance Dashboard",
+        category: "Data Science",
+        difficulty: "Intermediate",
+        summary: "Clean student activity data, analyze trends, and build an institute-style progress dashboard.",
+        skills: ["Pandas", "Visualization", "Metrics", "Presentation"],
+        outcome: "A dashboard story that explains progress, weak areas, and intervention opportunities.",
+        url: "login.html?next=roadmap.html",
+        featured: false,
+        status: "active",
+        order: 2
+    },
+    {
+        id: "learning-portal-features",
+        title: "Learning Portal Features",
+        category: "Web App",
+        difficulty: "Beginner to Intermediate",
+        summary: "Practice authentication flow, student dashboards, content organization, and admin views using this portal as a case study.",
+        skills: ["HTML", "CSS", "JavaScript", "UX Structure"],
+        outcome: "A functional student-facing feature with clear admin controls and progress feedback.",
+        url: "blog.html",
+        featured: false,
+        status: "active",
+        order: 3
     }
 ];
 
@@ -1124,6 +1237,36 @@ function asgEnsureLearningData() {
         }
     }
 
+    const blogPosts = asgReadJSON(ASG_LEARNING_KEYS.blogPosts, null);
+    if (!Array.isArray(blogPosts) || (blogPosts.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.blogPosts, asgClone(ASG_DEFAULT_BLOG_POSTS));
+    } else {
+        const mergedPosts = asgMergeDefaultItems(blogPosts, ASG_DEFAULT_BLOG_POSTS, asgNormalizeBlogPost);
+        if (mergedPosts.length !== blogPosts.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.blogPosts, asgSortByOrder(mergedPosts));
+        }
+    }
+
+    const projectShowcase = asgReadJSON(ASG_LEARNING_KEYS.projectShowcase, null);
+    if (!Array.isArray(projectShowcase) || (projectShowcase.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.projectShowcase, asgClone(ASG_DEFAULT_PROJECT_SHOWCASE));
+    } else {
+        const mergedProjects = asgMergeDefaultItems(projectShowcase, ASG_DEFAULT_PROJECT_SHOWCASE, asgNormalizeProjectItem);
+        if (mergedProjects.length !== projectShowcase.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.projectShowcase, asgSortByOrder(mergedProjects));
+        }
+    }
+
+    const videoPlaylists = asgReadJSON(ASG_LEARNING_KEYS.videoPlaylists, null);
+    if (!Array.isArray(videoPlaylists) || (videoPlaylists.length === 0 && shouldUpgradeDefaults)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.videoPlaylists, asgClone(ASG_DEFAULT_VIDEO_PLAYLISTS));
+    } else {
+        const mergedPlaylists = asgMergeDefaultItems(videoPlaylists, ASG_DEFAULT_VIDEO_PLAYLISTS, asgNormalizeVideoPlaylist);
+        if (mergedPlaylists.length !== videoPlaylists.length) {
+            asgWriteJSON(ASG_LEARNING_KEYS.videoPlaylists, asgSortByOrder(mergedPlaylists));
+        }
+    }
+
     const roadmapItems = asgReadJSON(ASG_LEARNING_KEYS.roadmapItems, null);
     if (!Array.isArray(roadmapItems) || (roadmapItems.length === 0 && shouldUpgradeDefaults)) {
         asgWriteJSON(ASG_LEARNING_KEYS.roadmapItems, asgClone(ASG_DEFAULT_ROADMAP_ITEMS));
@@ -1541,6 +1684,61 @@ function asgNormalizeCertificateId(value) {
     return raw.startsWith("ASG-") ? raw : `ASG-${raw}`;
 }
 
+function asgCertificateSignature(record) {
+    const issued = String(record.issued || record.date || "").slice(0, 10);
+    const value = [
+        asgNormalizeCertificateId(record.certificateId || record.id),
+        String(record.name || "").trim().toLowerCase(),
+        String(record.course || "Data Science & Machine Learning").trim().toLowerCase(),
+        issued,
+        "asg-tech-online-credential-v1"
+    ].join("|");
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index += 1) {
+        hash ^= value.charCodeAt(index);
+        hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    return (hash >>> 0).toString(16).toUpperCase().padStart(8, "0");
+}
+
+function asgBuildCertificateVerificationQuery(record) {
+    const certificateId = asgNormalizeCertificateId(record.certificateId || record.id);
+    const name = String(record.name || "").trim() || "ASG Tech Student";
+    const course = String(record.course || "Data Science & Machine Learning").trim();
+    const issued = String(record.issued || record.date || new Date().toISOString()).slice(0, 10);
+    return new URLSearchParams({
+        id: certificateId,
+        name,
+        course,
+        issued,
+        sig: asgCertificateSignature({ certificateId, name, course, issued })
+    }).toString();
+}
+
+function asgReadCertificateVerificationPayload(params) {
+    const source = params instanceof URLSearchParams ? params : new URLSearchParams(params || "");
+    const certificateId = asgNormalizeCertificateId(source.get("id") || source.get("credential"));
+    const payload = {
+        certificateId,
+        name: String(source.get("name") || "").trim(),
+        course: String(source.get("course") || "Data Science & Machine Learning").trim(),
+        issued: String(source.get("issued") || source.get("date") || "").trim(),
+        signature: String(source.get("sig") || source.get("signature") || "").trim().toUpperCase()
+    };
+    if (!payload.certificateId || !payload.signature) return null;
+    return payload;
+}
+
+function asgVerifyCertificatePayload(payload) {
+    if (!payload) return false;
+    return payload.signature === asgCertificateSignature({
+        certificateId: payload.certificateId,
+        name: payload.name,
+        course: payload.course,
+        issued: payload.issued
+    });
+}
+
 function asgGetCertificateRecords() {
     return asgUniqueLearningRecords(asgReadJSON("certificates", [])).map((record) => ({
         ...record,
@@ -1615,9 +1813,11 @@ function asgSaveCertificateRecord(record) {
         certificateId: record.certificateId || `ASG-${Date.now()}`,
         course: record.course || "Data Science & Machine Learning",
         date: record.date || new Date().toISOString(),
+        signature: "",
         verificationUrl: String(record.verificationUrl || "").trim(),
         downloadAllowed: Boolean(record.downloadAllowed)
     };
+    savedRecord.signature = String(record.signature || asgCertificateSignature(savedRecord)).trim();
 
     const certs = asgReadJSON("certificates", []);
     certs.push(savedRecord);
@@ -1820,6 +2020,66 @@ function asgSaveCourses(courses) {
     asgWriteJSON(ASG_LEARNING_KEYS.courses, asgSortByOrder(normalized));
 }
 
+function asgNormalizeBlogPost(item, index) {
+    const title = String(item.title || `Blog Post ${index + 1}`).trim();
+    return {
+        id: asgSlugify(item.id || title, "post"),
+        title,
+        category: String(item.category || "Learning").trim(),
+        excerpt: String(item.excerpt || item.description || "Add a short blog summary from admin.").trim(),
+        body: String(item.body || "").trim(),
+        author: String(item.author || "ASG Tech").trim(),
+        readTime: String(item.readTime || "5 min read").trim(),
+        url: String(item.url || "").trim(),
+        featured: Boolean(item.featured),
+        status: item.status === "draft" ? "draft" : "active",
+        order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+        updatedAt: item.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgGetBlogPosts(includeDrafts = false) {
+    asgEnsureLearningData();
+    const posts = asgReadJSON(ASG_LEARNING_KEYS.blogPosts, []);
+    const normalized = posts.map(asgNormalizeBlogPost);
+    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((post) => post.status === "active"));
+}
+
+function asgSaveBlogPosts(posts) {
+    const normalized = posts.map(asgNormalizeBlogPost);
+    asgWriteJSON(ASG_LEARNING_KEYS.blogPosts, asgSortByOrder(normalized));
+}
+
+function asgNormalizeProjectItem(item, index) {
+    const title = String(item.title || `Project ${index + 1}`).trim();
+    return {
+        id: asgSlugify(item.id || title, "project"),
+        title,
+        category: String(item.category || "Project").trim(),
+        difficulty: String(item.difficulty || "Beginner").trim(),
+        summary: String(item.summary || item.description || "Add a project summary from admin.").trim(),
+        skills: asgNormalizeList(item.skills || []),
+        outcome: String(item.outcome || "Portfolio-ready project outcome.").trim(),
+        url: String(item.url || "courses.html").trim(),
+        featured: Boolean(item.featured),
+        status: item.status === "draft" ? "draft" : "active",
+        order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+        updatedAt: item.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgGetProjectShowcase(includeDrafts = false) {
+    asgEnsureLearningData();
+    const projects = asgReadJSON(ASG_LEARNING_KEYS.projectShowcase, []);
+    const normalized = projects.map(asgNormalizeProjectItem);
+    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((project) => project.status === "active"));
+}
+
+function asgSaveProjectShowcase(projects) {
+    const normalized = projects.map(asgNormalizeProjectItem);
+    asgWriteJSON(ASG_LEARNING_KEYS.projectShowcase, asgSortByOrder(normalized));
+}
+
 function asgNormalizeList(value) {
     if (Array.isArray(value)) {
         return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -1859,10 +2119,37 @@ function asgSaveRoadmapItems(items) {
     asgWriteJSON(ASG_LEARNING_KEYS.roadmapItems, asgSortByOrder(normalized));
 }
 
+function asgNormalizeVideoPlaylist(item, index) {
+    const title = String(item.title || `Playlist ${index + 1}`).trim();
+    return {
+        id: asgSlugify(item.id || title, "playlist"),
+        title,
+        description: String(item.description || "Add a playlist description from admin.").trim(),
+        level: String(item.level || "All levels").trim(),
+        status: item.status === "draft" ? "draft" : "active",
+        order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
+        updatedAt: item.updatedAt || new Date().toISOString()
+    };
+}
+
+function asgGetVideoPlaylists(includeDrafts = false) {
+    asgEnsureLearningData();
+    const playlists = asgReadJSON(ASG_LEARNING_KEYS.videoPlaylists, []);
+    const normalized = playlists.map(asgNormalizeVideoPlaylist);
+    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((playlist) => playlist.status === "active"));
+}
+
+function asgSaveVideoPlaylists(playlists) {
+    const normalized = playlists.map(asgNormalizeVideoPlaylist);
+    asgWriteJSON(ASG_LEARNING_KEYS.videoPlaylists, asgSortByOrder(normalized));
+}
+
 function asgNormalizeVideoItem(item, index) {
     const title = String(item.title || `Video ${index + 1}`).trim();
+    const playlistId = String(item.playlistId || asgSlugify(item.category || "Learning", "playlist")).trim();
     return {
         id: asgSlugify(item.id || title, "video"),
+        playlistId,
         title,
         category: String(item.category || "Learning").trim(),
         level: String(item.level || "Beginner").trim(),

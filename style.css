@@ -4535,12 +4535,172 @@ body.asg-theme-dark .asg-sidebar {
     background: linear-gradient(135deg, var(--asg-primary), var(--asg-blue)) !important;
 }
 
+.asg-public-blog-page,
+.asg-public-project-page {
+    display: grid;
+    gap: 18px;
+}
+
+.asg-editorial-hero {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 250, 0.8) 48%, rgba(255, 251, 235, 0.76)),
+        var(--asg-surface);
+}
+
+.asg-public-toolbar,
+.asg-video-command {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: var(--asg-surface);
+    box-shadow: 0 12px 34px rgba(23, 32, 51, 0.06);
+}
+
+.asg-video-command {
+    grid-template-columns: 1fr;
+}
+
+.asg-public-toolbar input {
+    min-height: 44px;
+    width: 100%;
+    padding: 0 14px;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--asg-ink);
+    font: inherit;
+}
+
+.asg-featured-story article,
+.asg-blog-reader article {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    padding: clamp(22px, 3vw, 34px);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.08), transparent 44%, rgba(199, 164, 76, 0.12)),
+        #ffffff;
+    box-shadow: 0 18px 48px rgba(23, 32, 51, 0.08);
+    overflow: hidden;
+}
+
+.asg-featured-story article::before,
+.asg-blog-reader article::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 5px;
+    background: linear-gradient(90deg, var(--asg-primary), var(--asg-blue), var(--asg-accent));
+}
+
+.asg-featured-story h2,
+.asg-blog-reader h2 {
+    margin: 0;
+    font-size: clamp(1.55rem, 3vw, 2.6rem);
+    line-height: 1.08;
+}
+
+.asg-public-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.asg-public-card {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    min-height: 250px;
+    padding: 20px;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 14px 36px rgba(23, 32, 51, 0.06);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.asg-public-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(15, 118, 110, 0.32);
+    box-shadow: 0 20px 48px rgba(23, 32, 51, 0.1);
+}
+
+.asg-public-card h2 {
+    margin: 0;
+    font-size: 1.18rem;
+    line-height: 1.22;
+}
+
+.asg-public-card p,
+.asg-featured-story p,
+.asg-blog-reader p {
+    margin: 0;
+}
+
+button.asg-card-link {
+    width: fit-content;
+    font: inherit;
+    cursor: pointer;
+}
+
+.asg-blog-reader[hidden] {
+    display: none;
+}
+
+.asg-blog-reader-body {
+    display: grid;
+    gap: 0.8rem;
+    max-width: 78ch;
+}
+
+.asg-skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.asg-skill-tags span {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid rgba(15, 118, 110, 0.18);
+    border-radius: 999px;
+    background: #f0fdfa;
+    color: var(--asg-primary-dark);
+    font-size: 0.78rem;
+    font-weight: 850;
+}
+
+.asg-public-admin-studio {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.asg-playlist-video-library .asg-video-player-panel {
+    overflow: hidden;
+}
+
+.asg-challenge-list-head small {
+    display: block;
+    margin-top: 4px;
+    color: var(--asg-muted);
+}
+
 @media (max-width: 1120px) {
     .asg-learning-pattern {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .asg-analytics-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .asg-public-admin-studio {
         grid-template-columns: 1fr;
     }
 }
@@ -4560,7 +4720,8 @@ body.asg-theme-dark .asg-sidebar {
     }
 
     .asg-certificate-verify-form,
-    .asg-analytics-columns {
+    .asg-analytics-columns,
+    .asg-public-toolbar {
         grid-template-columns: 1fr;
     }
 

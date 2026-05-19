@@ -49,6 +49,74 @@
             <article class="asg-live-panel asg-admin-wide">
                 <div class="asg-section-header">
                     <div>
+                        <h2>Public Content Studio</h2>
+                        <p>Manage the public Blog and Projects pages without editing HTML files.</p>
+                    </div>
+                    <div class="asg-item-actions">
+                        <a class="btn-secondary" href="blog.html">Preview Blog</a>
+                        <a class="btn-secondary" href="projects.html">Preview Projects</a>
+                    </div>
+                </div>
+                <section class="asg-public-admin-studio">
+                    <div class="asg-learn-admin-editor">
+                        <div class="asg-question-head">
+                            <div>
+                                <h3>Blog Builder</h3>
+                                <small>Publish tutorial notes, Medium links, and learning updates.</small>
+                            </div>
+                            <button class="asg-link-button" type="button" onclick="resetBlogForm()">New Post</button>
+                        </div>
+                        <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveBlogPost();">
+                            <input id="blogEditId" type="hidden">
+                            <label><span>Title</span><input id="blogTitle" type="text" placeholder="How to learn Python"></label>
+                            <label><span>Category</span><input id="blogCategory" type="text" placeholder="Python"></label>
+                            <label><span>Author</span><input id="blogAuthor" type="text" placeholder="ASG Tech"></label>
+                            <label><span>Read time</span><input id="blogReadTime" type="text" placeholder="6 min read"></label>
+                            <label><span>Status</span><select id="blogStatus"><option value="active">Active</option><option value="draft">Draft</option></select></label>
+                            <label class="asg-inline-check"><input id="blogFeatured" type="checkbox"><span>Featured post</span></label>
+                            <label class="asg-full-field"><span>Article URL</span><input id="blogUrl" type="text" placeholder="posts/post1.html or https://medium.com/..."></label>
+                            <label class="asg-full-field"><span>Excerpt</span><textarea id="blogExcerpt" rows="2" placeholder="Short public summary."></textarea></label>
+                            <label class="asg-full-field"><span>Body notes</span><textarea id="blogBody" rows="4" placeholder="Internal/preview article notes."></textarea></label>
+                            <div class="asg-form-actions asg-full-field">
+                                <button class="btn-primary" type="submit">Save Blog Post</button>
+                                <button class="btn-secondary" type="button" onclick="resetBlogForm()">Clear</button>
+                            </div>
+                        </form>
+                        <div class="asg-admin-list compact" id="blogPostList"></div>
+                    </div>
+
+                    <div class="asg-learn-admin-editor">
+                        <div class="asg-question-head">
+                            <div>
+                                <h3>Project Showcase Builder</h3>
+                                <small>Publish portfolio project briefs, skills, outcomes, and links.</small>
+                            </div>
+                            <button class="asg-link-button" type="button" onclick="resetProjectForm()">New Project</button>
+                        </div>
+                        <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveProjectItem();">
+                            <input id="projectEditId" type="hidden">
+                            <label><span>Title</span><input id="projectTitle" type="text" placeholder="Student Performance Dashboard"></label>
+                            <label><span>Category</span><input id="projectCategory" type="text" placeholder="Data Science"></label>
+                            <label><span>Difficulty</span><input id="projectDifficulty" type="text" placeholder="Intermediate"></label>
+                            <label><span>Status</span><select id="projectStatus"><option value="active">Active</option><option value="draft">Draft</option></select></label>
+                            <label class="asg-inline-check"><input id="projectFeatured" type="checkbox"><span>Featured project</span></label>
+                            <label class="asg-full-field"><span>Project URL</span><input id="projectUrl" type="text" placeholder="course-detail.html?course=..."></label>
+                            <label class="asg-full-field"><span>Summary</span><textarea id="projectSummary" rows="2" placeholder="Short project brief."></textarea></label>
+                            <label class="asg-full-field"><span>Skills</span><textarea id="projectSkills" rows="3" placeholder="Write one skill per line."></textarea></label>
+                            <label class="asg-full-field"><span>Outcome</span><textarea id="projectOutcome" rows="2" placeholder="What students will produce."></textarea></label>
+                            <div class="asg-form-actions asg-full-field">
+                                <button class="btn-primary" type="submit">Save Project</button>
+                                <button class="btn-secondary" type="button" onclick="resetProjectForm()">Clear</button>
+                            </div>
+                        </form>
+                        <div class="asg-admin-list compact" id="projectShowcaseList"></div>
+                    </div>
+                </section>
+            </article>
+
+            <article class="asg-live-panel asg-admin-wide">
+                <div class="asg-section-header">
+                    <div>
                         <h2>Registered Student Progress</h2>
                         <p>Progress combines tracker activity, quiz attempts, coding submissions, enrollments, and certificates.</p>
                     </div>
@@ -444,8 +512,40 @@
                             </div>
                             <button class="asg-link-button" type="button" onclick="resetVideoForm()">New Video</button>
                         </div>
+                        <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveVideoPlaylist();">
+                            <input id="videoPlaylistEditId" type="hidden">
+                            <label>
+                                <span>Playlist title</span>
+                                <input id="videoPlaylistTitle" type="text" placeholder="Python Foundations">
+                            </label>
+                            <label>
+                                <span>Level</span>
+                                <input id="videoPlaylistLevel" type="text" placeholder="Beginner">
+                            </label>
+                            <label>
+                                <span>Status</span>
+                                <select id="videoPlaylistStatus">
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                </select>
+                            </label>
+                            <label class="asg-full-field">
+                                <span>Description</span>
+                                <textarea id="videoPlaylistDescription" rows="2" placeholder="Describe the playlist learning path."></textarea>
+                            </label>
+                            <div class="asg-form-actions asg-full-field">
+                                <button class="btn-primary" type="submit">Save Playlist</button>
+                                <button class="btn-secondary" type="button" onclick="resetVideoPlaylistForm()">Clear Playlist</button>
+                            </div>
+                        </form>
+                        <div class="asg-admin-list compact" id="videoPlaylistList"></div>
+
                         <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveVideoItem();">
                             <input id="videoEditId" type="hidden">
+                            <label>
+                                <span>Playlist</span>
+                                <select id="videoPlaylistSelect"></select>
+                            </label>
                             <label>
                                 <span>Title</span>
                                 <input id="videoTitle" type="text" placeholder="Pandas Data Cleaning Workflow">
@@ -576,6 +676,9 @@
         let adminQuizCatalog = [];
         let adminCourses = [];
         let adminRoadmapItems = [];
+        let adminBlogPosts = [];
+        let adminProjectShowcase = [];
+        let adminVideoPlaylists = [];
         let adminVideoLibrary = [];
         let adminResourceLibrary = [];
 
@@ -682,6 +785,192 @@
             return getUsers().filter((user) => user.role === "student");
         }
 
+        function resetBlogForm() {
+            document.getElementById("blogEditId").value = "";
+            document.getElementById("blogTitle").value = "";
+            document.getElementById("blogCategory").value = "Learning";
+            document.getElementById("blogAuthor").value = "ASG Tech";
+            document.getElementById("blogReadTime").value = "5 min read";
+            document.getElementById("blogStatus").value = "active";
+            document.getElementById("blogFeatured").checked = false;
+            document.getElementById("blogUrl").value = "";
+            document.getElementById("blogExcerpt").value = "";
+            document.getElementById("blogBody").value = "";
+        }
+
+        function saveBlogPost() {
+            const editId = document.getElementById("blogEditId").value;
+            const title = document.getElementById("blogTitle").value.trim();
+            if (!title) {
+                alert("Add a blog title.");
+                return;
+            }
+
+            const existing = adminBlogPosts.find((item) => item.id === editId);
+            const post = {
+                id: editId || asgSlugify(title, "post"),
+                title,
+                category: document.getElementById("blogCategory").value.trim() || "Learning",
+                author: document.getElementById("blogAuthor").value.trim() || "ASG Tech",
+                readTime: document.getElementById("blogReadTime").value.trim() || "5 min read",
+                status: document.getElementById("blogStatus").value,
+                featured: document.getElementById("blogFeatured").checked,
+                url: document.getElementById("blogUrl").value.trim(),
+                excerpt: document.getElementById("blogExcerpt").value.trim(),
+                body: document.getElementById("blogBody").value.trim(),
+                order: existing ? existing.order : adminBlogPosts.length + 1,
+                updatedAt: new Date().toISOString()
+            };
+            const nextPosts = editId
+                ? adminBlogPosts.map((entry) => entry.id === editId ? post : entry)
+                : [...adminBlogPosts, post];
+
+            asgSaveBlogPosts(post.featured
+                ? nextPosts.map((entry) => entry.id === post.id ? entry : { ...entry, featured: false })
+                : nextPosts);
+            resetBlogForm();
+            refreshDashboard();
+        }
+
+        function editBlogPost(postId) {
+            const post = adminBlogPosts.find((item) => item.id === postId);
+            if (!post) return;
+            document.getElementById("blogEditId").value = post.id;
+            document.getElementById("blogTitle").value = post.title;
+            document.getElementById("blogCategory").value = post.category;
+            document.getElementById("blogAuthor").value = post.author;
+            document.getElementById("blogReadTime").value = post.readTime;
+            document.getElementById("blogStatus").value = post.status;
+            document.getElementById("blogFeatured").checked = Boolean(post.featured);
+            document.getElementById("blogUrl").value = post.url;
+            document.getElementById("blogExcerpt").value = post.excerpt;
+            document.getElementById("blogBody").value = post.body;
+        }
+
+        function toggleBlogStatus(postId) {
+            asgSaveBlogPosts(adminBlogPosts.map((post) => (
+                post.id === postId ? { ...post, status: post.status === "active" ? "draft" : "active", updatedAt: new Date().toISOString() } : post
+            )));
+            refreshDashboard();
+        }
+
+        function deleteBlogPost(postId) {
+            if (!confirm("Delete this blog post?")) return;
+            asgSaveBlogPosts(adminBlogPosts.filter((post) => post.id !== postId));
+            refreshDashboard();
+        }
+
+        function renderBlogPostsAdmin() {
+            document.getElementById("blogPostList").innerHTML = adminBlogPosts.map((post, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${post.status}${post.featured ? " | Featured" : ""} | ${escapeHtml(post.category)} | ${escapeHtml(post.readTime)}</span>
+                        <h3>${index + 1}. ${escapeHtml(post.title)}</h3>
+                        <p>${escapeHtml(post.excerpt || post.body || "No summary added yet.")}</p>
+                        <small>${escapeHtml(post.url || "Opens in the built-in blog reader")}</small>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editBlogPost('${post.id}')">Edit</button>
+                        <button class="asg-link-button" type="button" onclick="toggleBlogStatus('${post.id}')">${post.status === "active" ? "Draft" : "Publish"}</button>
+                        <button class="asg-link-button danger" type="button" onclick="deleteBlogPost('${post.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No blog posts</h2><p>Create the first public blog post above.</p></div>`;
+        }
+
+        function resetProjectForm() {
+            document.getElementById("projectEditId").value = "";
+            document.getElementById("projectTitle").value = "";
+            document.getElementById("projectCategory").value = "Portfolio";
+            document.getElementById("projectDifficulty").value = "Beginner";
+            document.getElementById("projectStatus").value = "active";
+            document.getElementById("projectFeatured").checked = false;
+            document.getElementById("projectUrl").value = "courses.html";
+            document.getElementById("projectSummary").value = "";
+            document.getElementById("projectSkills").value = "";
+            document.getElementById("projectOutcome").value = "";
+        }
+
+        function saveProjectItem() {
+            const editId = document.getElementById("projectEditId").value;
+            const title = document.getElementById("projectTitle").value.trim();
+            if (!title) {
+                alert("Add a project title.");
+                return;
+            }
+
+            const existing = adminProjectShowcase.find((item) => item.id === editId);
+            const project = {
+                id: editId || asgSlugify(title, "project"),
+                title,
+                category: document.getElementById("projectCategory").value.trim() || "Portfolio",
+                difficulty: document.getElementById("projectDifficulty").value.trim() || "Beginner",
+                status: document.getElementById("projectStatus").value,
+                featured: document.getElementById("projectFeatured").checked,
+                url: document.getElementById("projectUrl").value.trim() || "courses.html",
+                summary: document.getElementById("projectSummary").value.trim(),
+                skills: linesFromTextarea("projectSkills"),
+                outcome: document.getElementById("projectOutcome").value.trim(),
+                order: existing ? existing.order : adminProjectShowcase.length + 1,
+                updatedAt: new Date().toISOString()
+            };
+            const nextProjects = editId
+                ? adminProjectShowcase.map((entry) => entry.id === editId ? project : entry)
+                : [...adminProjectShowcase, project];
+
+            asgSaveProjectShowcase(project.featured
+                ? nextProjects.map((entry) => entry.id === project.id ? entry : { ...entry, featured: false })
+                : nextProjects);
+            resetProjectForm();
+            refreshDashboard();
+        }
+
+        function editProjectItem(projectId) {
+            const project = adminProjectShowcase.find((item) => item.id === projectId);
+            if (!project) return;
+            document.getElementById("projectEditId").value = project.id;
+            document.getElementById("projectTitle").value = project.title;
+            document.getElementById("projectCategory").value = project.category;
+            document.getElementById("projectDifficulty").value = project.difficulty;
+            document.getElementById("projectStatus").value = project.status;
+            document.getElementById("projectFeatured").checked = Boolean(project.featured);
+            document.getElementById("projectUrl").value = project.url;
+            document.getElementById("projectSummary").value = project.summary;
+            document.getElementById("projectSkills").value = project.skills.join("\n");
+            document.getElementById("projectOutcome").value = project.outcome;
+        }
+
+        function toggleProjectStatus(projectId) {
+            asgSaveProjectShowcase(adminProjectShowcase.map((project) => (
+                project.id === projectId ? { ...project, status: project.status === "active" ? "draft" : "active", updatedAt: new Date().toISOString() } : project
+            )));
+            refreshDashboard();
+        }
+
+        function deleteProjectItem(projectId) {
+            if (!confirm("Delete this project?")) return;
+            asgSaveProjectShowcase(adminProjectShowcase.filter((project) => project.id !== projectId));
+            refreshDashboard();
+        }
+
+        function renderProjectShowcaseAdmin() {
+            document.getElementById("projectShowcaseList").innerHTML = adminProjectShowcase.map((project, index) => `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${project.status}${project.featured ? " | Featured" : ""} | ${escapeHtml(project.category)} | ${escapeHtml(project.difficulty)}</span>
+                        <h3>${index + 1}. ${escapeHtml(project.title)}</h3>
+                        <p>${escapeHtml(project.summary || project.outcome || "No project summary added yet.")}</p>
+                        <small>${escapeHtml(project.skills.join(", ") || "No skills listed")}</small>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="editProjectItem('${project.id}')">Edit</button>
+                        <button class="asg-link-button" type="button" onclick="toggleProjectStatus('${project.id}')">${project.status === "active" ? "Draft" : "Publish"}</button>
+                        <button class="asg-link-button danger" type="button" onclick="deleteProjectItem('${project.id}')">Delete</button>
+                    </div>
+                </article>
+            `).join("") || `<div class="asg-empty-state"><h2>No projects</h2><p>Create the first public project above.</p></div>`;
+        }
+
         function renderStats() {
             const users = getUsers();
             const students = getStudents();
@@ -691,6 +980,8 @@
             const activeQuiz = quizQuestions.filter((question) => question.status === "active").length;
             const activeCoding = codingChallenges.filter((challenge) => challenge.status === "active").length;
             const activeRoadmap = adminRoadmapItems.filter((item) => item.status === "active").length;
+            const activePosts = adminBlogPosts.filter((post) => post.status === "active").length;
+            const activeProjects = adminProjectShowcase.filter((project) => project.status === "active").length;
             const activeVideos = adminVideoLibrary.filter((item) => item.status === "active").length;
             const activeResources = adminResourceLibrary.filter((item) => item.status === "active").length;
             const averageQuiz = attempts.length
@@ -707,6 +998,8 @@
                 { label: "Active quiz questions", value: activeQuiz },
                 { label: "Active coding challenges", value: activeCoding },
                 { label: "Roadmap milestones", value: activeRoadmap },
+                { label: "Blog posts", value: activePosts },
+                { label: "Projects", value: activeProjects },
                 { label: "Videos", value: activeVideos },
                 { label: "Resources", value: activeResources },
                 { label: "Exam submissions", value: examAttempts.length },
@@ -1750,8 +2043,95 @@
             `).join("") || `<div class="asg-empty-state"><h2>No roadmap items</h2><p>Create the first milestone above.</p></div>`;
         }
 
+        function renderVideoPlaylistOptions(selectedId = "") {
+            const select = document.getElementById("videoPlaylistSelect");
+            if (!select) return;
+            select.innerHTML = adminVideoPlaylists.map((playlist) => `
+                <option value="${escapeHtml(playlist.id)}">${escapeHtml(playlist.title)}</option>
+            `).join("");
+            if (selectedId && adminVideoPlaylists.some((playlist) => playlist.id === selectedId)) {
+                select.value = selectedId;
+            }
+        }
+
+        function resetVideoPlaylistForm() {
+            document.getElementById("videoPlaylistEditId").value = "";
+            document.getElementById("videoPlaylistTitle").value = "";
+            document.getElementById("videoPlaylistLevel").value = "Beginner";
+            document.getElementById("videoPlaylistStatus").value = "active";
+            document.getElementById("videoPlaylistDescription").value = "";
+        }
+
+        function saveVideoPlaylist() {
+            const editId = document.getElementById("videoPlaylistEditId").value;
+            const title = document.getElementById("videoPlaylistTitle").value.trim();
+            if (!title) {
+                alert("Add a playlist title.");
+                return;
+            }
+
+            const existing = adminVideoPlaylists.find((playlist) => playlist.id === editId);
+            const playlist = {
+                id: editId || asgSlugify(title, "playlist"),
+                title,
+                level: document.getElementById("videoPlaylistLevel").value.trim() || "All levels",
+                description: document.getElementById("videoPlaylistDescription").value.trim(),
+                status: document.getElementById("videoPlaylistStatus").value,
+                order: existing ? existing.order : adminVideoPlaylists.length + 1,
+                updatedAt: new Date().toISOString()
+            };
+
+            asgSaveVideoPlaylists(editId
+                ? adminVideoPlaylists.map((entry) => entry.id === editId ? playlist : entry)
+                : [...adminVideoPlaylists, playlist]);
+            resetVideoPlaylistForm();
+            refreshDashboard();
+        }
+
+        function editVideoPlaylist(playlistId) {
+            const playlist = adminVideoPlaylists.find((item) => item.id === playlistId);
+            if (!playlist) return;
+            document.getElementById("videoPlaylistEditId").value = playlist.id;
+            document.getElementById("videoPlaylistTitle").value = playlist.title;
+            document.getElementById("videoPlaylistLevel").value = playlist.level;
+            document.getElementById("videoPlaylistStatus").value = playlist.status;
+            document.getElementById("videoPlaylistDescription").value = playlist.description;
+        }
+
+        function deleteVideoPlaylist(playlistId) {
+            const playlistVideos = adminVideoLibrary.filter((video) => video.playlistId === playlistId);
+            if (playlistVideos.length) {
+                alert("Move or delete videos inside this playlist before deleting it.");
+                return;
+            }
+            if (!confirm("Delete this playlist?")) return;
+            asgSaveVideoPlaylists(adminVideoPlaylists.filter((playlist) => playlist.id !== playlistId));
+            refreshDashboard();
+        }
+
+        function renderVideoPlaylists() {
+            renderVideoPlaylistOptions(document.getElementById("videoPlaylistSelect").value);
+            document.getElementById("videoPlaylistList").innerHTML = adminVideoPlaylists.map((playlist, index) => {
+                const count = adminVideoLibrary.filter((video) => video.playlistId === playlist.id).length;
+                return `
+                    <article class="asg-admin-list-item">
+                        <div>
+                            <span class="asg-item-kicker">${playlist.status} | ${escapeHtml(playlist.level)} | ${count} videos</span>
+                            <h3>${index + 1}. ${escapeHtml(playlist.title)}</h3>
+                            <p>${escapeHtml(playlist.description)}</p>
+                        </div>
+                        <div class="asg-item-actions">
+                            <button class="asg-link-button" type="button" onclick="editVideoPlaylist('${playlist.id}')">Edit</button>
+                            <button class="asg-link-button danger" type="button" onclick="deleteVideoPlaylist('${playlist.id}')">Delete</button>
+                        </div>
+                    </article>
+                `;
+            }).join("") || `<div class="asg-empty-state"><h2>No playlists</h2><p>Create the first playlist above.</p></div>`;
+        }
+
         function resetVideoForm() {
             document.getElementById("videoEditId").value = "";
+            renderVideoPlaylistOptions(adminVideoPlaylists[0] ? adminVideoPlaylists[0].id : "");
             document.getElementById("videoTitle").value = "";
             document.getElementById("videoCategory").value = "";
             document.getElementById("videoLevel").value = "Beginner";
@@ -1770,8 +2150,10 @@
             }
 
             const existing = adminVideoLibrary.find((item) => item.id === editId);
+            const playlistId = document.getElementById("videoPlaylistSelect").value || (adminVideoPlaylists[0] ? adminVideoPlaylists[0].id : "");
             const item = {
                 id: editId || asgSlugify(title, "video"),
+                playlistId,
                 title,
                 category: document.getElementById("videoCategory").value.trim() || "Learning",
                 level: document.getElementById("videoLevel").value.trim() || "Beginner",
@@ -1794,6 +2176,7 @@
             const item = adminVideoLibrary.find((entry) => entry.id === itemId);
             if (!item) return;
             document.getElementById("videoEditId").value = item.id;
+            renderVideoPlaylistOptions(item.playlistId);
             document.getElementById("videoTitle").value = item.title;
             document.getElementById("videoCategory").value = item.category;
             document.getElementById("videoLevel").value = item.level;
@@ -1820,7 +2203,7 @@
             document.getElementById("videoLibraryList").innerHTML = adminVideoLibrary.map((item, index) => `
                 <article class="asg-admin-list-item">
                     <div>
-                        <span class="asg-item-kicker">${item.status} | ${escapeHtml(item.category)} | ${escapeHtml(item.level)}</span>
+                        <span class="asg-item-kicker">${item.status} | ${escapeHtml((adminVideoPlaylists.find((playlist) => playlist.id === item.playlistId) || {}).title || "No playlist")} | ${escapeHtml(item.level)}</span>
                         <h3>${index + 1}. ${escapeHtml(item.title)}</h3>
                         <p>${escapeHtml(item.description)}</p>
                         <small>${escapeHtml(item.duration)} | ${escapeHtml(item.url || "No link")}</small>
@@ -1989,7 +2372,10 @@
                 examRetakePermissions: asgGetExamRetakePermissions(),
                 courses: asgGetCourses(true),
                 courseProgress: asgGetCourseProgress(),
+                blogPosts: asgGetBlogPosts(true),
+                projectShowcase: asgGetProjectShowcase(true),
                 roadmapItems: asgGetRoadmapItems(true),
+                videoPlaylists: asgGetVideoPlaylists(true),
                 videoLibrary: asgGetVideoLibrary(true),
                 resourceLibrary: asgGetResourceLibrary(true),
                 certificatePermissions: asgGetCertificatePermissions(),
@@ -2014,6 +2400,9 @@
             codingChallenges = asgGetCodingChallenges(true);
             adminCourses = asgGetCourses(true);
             adminRoadmapItems = asgGetRoadmapItems(true);
+            adminBlogPosts = asgGetBlogPosts(true);
+            adminProjectShowcase = asgGetProjectShowcase(true);
+            adminVideoPlaylists = asgGetVideoPlaylists(true);
             adminVideoLibrary = asgGetVideoLibrary(true);
             adminResourceLibrary = asgGetResourceLibrary(true);
             renderQuizSetOptions(document.getElementById("quizSet").value);
@@ -2027,8 +2416,11 @@
             renderQuizCatalog();
             renderQuizQuestions();
             renderCodingChallenges();
+            renderBlogPostsAdmin();
+            renderProjectShowcaseAdmin();
             renderCourses();
             renderRoadmapItems();
+            renderVideoPlaylists();
             renderVideoLibrary();
             renderResourceLibrary();
             renderQuestions();
@@ -2045,7 +2437,10 @@
                 ASG_LEARNING_KEYS.examAttempts,
                 ASG_LEARNING_KEYS.examRetakePermissions,
                 ASG_LEARNING_KEYS.courses,
+                ASG_LEARNING_KEYS.blogPosts,
+                ASG_LEARNING_KEYS.projectShowcase,
                 ASG_LEARNING_KEYS.roadmapItems,
+                ASG_LEARNING_KEYS.videoPlaylists,
                 ASG_LEARNING_KEYS.videoLibrary,
                 ASG_LEARNING_KEYS.resourceLibrary,
                 ASG_LEARNING_KEYS.courseProgress,
@@ -2067,9 +2462,12 @@
         resetQuizForm();
         resetCodingForm();
         resetQuizCatalogForm();
+        resetBlogForm();
+        resetProjectForm();
         resetCourseForm();
         resetTopicForm();
         resetRoadmapForm();
+        resetVideoPlaylistForm();
         resetVideoForm();
         resetResourceForm();
     </script>
