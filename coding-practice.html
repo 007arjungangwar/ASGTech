@@ -60,7 +60,7 @@
 
                 <div class="asg-output-panel" id="runOutput">
                     <h3>Run output</h3>
-                    <p>Run your code to see stdout and test results.</p>
+                    <p>Run your code to see printed output, return values, and test results.</p>
                 </div>
             </section>
         </section>
@@ -73,6 +73,7 @@
     <script>
         const practiceUser = getCurrentUser();
         const editor = document.getElementById("pythonEditor");
+        asgEnhancePythonEditor(editor);
         let pyodideInstance = null;
         let pyodideLoading = null;
         let codingChallenges = [];
@@ -154,11 +155,13 @@
                     </div>
                 `;
                 editor.value = "";
+                asgRefreshPythonEditor(editor);
                 return;
             }
 
             const savedDraft = localStorage.getItem(draftKey(challenge.id));
             editor.value = savedDraft || challenge.starterCode || "def solution():\n    pass\n";
+            asgRefreshPythonEditor(editor);
 
             details.innerHTML = `
                 <div class="asg-question-head">
@@ -190,7 +193,7 @@
         function renderOutputIdle() {
             document.getElementById("runOutput").innerHTML = `
                 <h3>Run output</h3>
-                <p>Run your code to see stdout and test results.</p>
+                <p>Run your code to see printed output, return values, and test results.</p>
             `;
         }
 
@@ -203,6 +206,7 @@
             if (!challenge) return;
             if (!confirm("Reset this editor to the starter code?")) return;
             editor.value = challenge.starterCode || "def solution():\n    pass\n";
+            asgRefreshPythonEditor(editor);
             localStorage.setItem(draftKey(challenge.id), editor.value);
             renderOutputIdle();
         }
@@ -212,6 +216,7 @@
             const end = editor.selectionEnd;
             editor.value = `${editor.value.slice(0, start)}${text}${editor.value.slice(end)}`;
             editor.selectionStart = editor.selectionEnd = start + text.length;
+            asgRefreshPythonEditor(editor);
         }
 
         function handleTabKey(event) {
@@ -228,6 +233,7 @@
                     if (linePrefix === "    ") {
                         editor.value = editor.value.slice(0, lineStart) + editor.value.slice(lineStart + 4);
                         editor.selectionStart = editor.selectionEnd = Math.max(lineStart, start - 4);
+                        asgRefreshPythonEditor(editor);
                     }
                     return;
                 }
@@ -244,6 +250,7 @@
             editor.value = `${editor.value.slice(0, start)}${updated}${editor.value.slice(end)}`;
             editor.selectionStart = start;
             editor.selectionEnd = start + updated.length;
+            asgRefreshPythonEditor(editor);
         }
 
         function handleEnterKey(event) {
@@ -317,13 +324,14 @@ import traceback
 
 USER_CODE = ${codeLiteral}
 TESTS = json.loads(${testsLiteral})
-payload = {"passed": 0, "total": len(TESTS), "results": [], "stdout": "", "error": ""}
-buffer = io.StringIO()
+payload = {"passed": 0, "total": len(TESTS), "results": [], "stdout": "", "setupStdout": "", "error": ""}
+setup_buffer = io.StringIO()
 namespace = {}
 
 try:
-    with contextlib.redirect_stdout(buffer):
+    with contextlib.redirect_stdout(setup_buffer):
         exec(USER_CODE, namespace)
+    payload["setupStdout"] = setup_buffer.getvalue()
 
     solution = namespace.get("solution")
     if not callable(solution):
@@ -334,7 +342,9 @@ try:
         expected = test.get("expected")
 
         try:
-            result = solution(*args)
+            test_buffer = io.StringIO()
+            with contextlib.redirect_stdout(test_buffer):
+                result = solution(*args)
             passed = result == expected
             if passed:
                 payload["passed"] += 1
@@ -342,20 +352,25 @@ try:
             payload["results"].append({
                 "index": index,
                 "passed": passed,
+                "args": args,
                 "expected": expected,
-                "got": result
+                "got": result,
+                "stdout": test_buffer.getvalue()
             })
         except Exception as test_error:
             payload["results"].append({
                 "index": index,
                 "passed": False,
+                "args": args,
                 "expected": expected,
-                "got": "Error: " + str(test_error)
+                "got": "Error: " + str(test_error),
+                "stdout": locals().get("test_buffer", io.StringIO()).getvalue()
             })
 except Exception:
     payload["error"] = traceback.format_exc(limit=4)
+    payload["setupStdout"] = setup_buffer.getvalue()
 
-payload["stdout"] = buffer.getvalue()
+payload["stdout"] = payload["setupStdout"] + "".join([item.get("stdout", "") for item in payload["results"]])
 json.dumps(payload, default=str)
 `;
         }
@@ -366,8 +381,8 @@ json.dumps(payload, default=str)
             const errorBlock = payload.error
                 ? `<pre class="asg-error-output">${escapeHtml(payload.error)}</pre>`
                 : "";
-            const stdoutBlock = payload.stdout
-                ? `<pre>${escapeHtml(payload.stdout)}</pre>`
+            const stdoutBlock = payload.stdout || payload.setupStdout
+                ? `<pre>${escapeHtml(payload.stdout || payload.setupStdout)}</pre>`
                 : `<p>No printed output.</p>`;
 
             output.innerHTML = `
@@ -383,20 +398,28 @@ json.dumps(payload, default=str)
                     <p>${savedSubmission ? "Run saved to your progress." : "Run completed."}</p>
                 </div>
                 ${errorBlock}
-                <h3>Stdout</h3>
-                ${stdoutBlock}
-                <h3>Test details</h3>
-                <div class="asg-review-list">
-                    ${payload.results.map((result) => `
-                        <article class="asg-review-item ${result.passed ? "correct" : "wrong"}">
-                            <div class="asg-question-head">
-                                <span>Test ${result.index}</span>
-                                <small>${result.passed ? "Passed" : "Failed"}</small>
-                            </div>
-                            <p><strong>Expected:</strong> ${escapeHtml(JSON.stringify(result.expected))}</p>
-                            <p><strong>Got:</strong> ${escapeHtml(JSON.stringify(result.got))}</p>
-                        </article>
-                    `).join("")}
+                <div class="asg-run-output-grid">
+                    <section class="asg-console-output">
+                        <h3>Console output</h3>
+                        ${stdoutBlock}
+                    </section>
+                    <section class="asg-return-output">
+                        <h3>Function return values</h3>
+                        <div class="asg-review-list">
+                            ${payload.results.map((result) => `
+                                <article class="asg-review-item ${result.passed ? "correct" : "wrong"}">
+                                    <div class="asg-question-head">
+                                        <span>Test ${result.index}</span>
+                                        <small>${result.passed ? "Passed" : "Failed"}</small>
+                                    </div>
+                                    <p><strong>Input:</strong> solution(${escapeHtml((result.args || []).map((arg) => JSON.stringify(arg)).join(", "))})</p>
+                                    <p><strong>Returned:</strong> ${escapeHtml(JSON.stringify(result.got))}</p>
+                                    <p><strong>Expected:</strong> ${escapeHtml(JSON.stringify(result.expected))}</p>
+                                    ${result.stdout ? `<h4>Printed during this test</h4><pre>${escapeHtml(result.stdout)}</pre>` : ""}
+                                </article>
+                            `).join("")}
+                        </div>
+                    </section>
                 </div>
             `;
         }
@@ -409,6 +432,10 @@ json.dumps(payload, default=str)
             const runButton = document.querySelector(".asg-editor-toolbar .btn-primary");
             runButton.disabled = true;
             runButton.textContent = "Running...";
+            document.getElementById("runOutput").innerHTML = `
+                <h3>Run output</h3>
+                <p>Running your code. Console output and return values will appear here.</p>
+            `;
 
             try {
                 const engine = await getPyodideEngine();

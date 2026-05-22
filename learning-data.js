@@ -1091,6 +1091,96 @@ function asgSlugify(value, fallback = "item") {
     return slug || `${fallback}-${Date.now()}`;
 }
 
+function asgEscapeCodeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+function asgHighlightPythonCode(value) {
+    const keywords = new Set([
+        "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
+        "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
+        "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
+        "try", "while", "with", "yield"
+    ]);
+    const builtins = new Set([
+        "abs", "all", "any", "bool", "dict", "enumerate", "filter", "float", "int", "len", "list",
+        "map", "max", "min", "print", "range", "reversed", "round", "set", "sorted", "str", "sum",
+        "tuple", "zip"
+    ]);
+    const tokenPattern = /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][A-Za-z0-9_]*\b)/g;
+
+    return asgEscapeCodeHtml(value).replace(tokenPattern, (token) => {
+        if (token.startsWith("#")) return `<span class="tok-comment">${token}</span>`;
+        if (token.startsWith("\"") || token.startsWith("'")) return `<span class="tok-string">${token}</span>`;
+        if (/^\d/.test(token)) return `<span class="tok-number">${token}</span>`;
+        if (keywords.has(token)) return `<span class="tok-keyword">${token}</span>`;
+        if (builtins.has(token)) return `<span class="tok-builtin">${token}</span>`;
+        return token;
+    });
+}
+
+function asgRefreshPythonEditor(editor) {
+    if (!editor || !editor.dataset.asgEnhancedEditor) return;
+    const shell = editor.closest(".asg-code-editor-shell");
+    if (!shell) return;
+    const code = shell.querySelector(".asg-code-highlight");
+    const gutter = shell.querySelector(".asg-code-gutter");
+    const value = editor.value || "";
+    const lineCount = Math.max(value.split("\n").length, 1);
+
+    if (code) code.innerHTML = `${asgHighlightPythonCode(value)}\n`;
+    if (gutter) {
+        gutter.innerHTML = Array.from({ length: lineCount }, (_, index) => `<span>${index + 1}</span>`).join("");
+    }
+    asgSyncPythonEditorScroll(editor);
+}
+
+function asgSyncPythonEditorScroll(editor) {
+    if (!editor || !editor.dataset.asgEnhancedEditor) return;
+    const shell = editor.closest(".asg-code-editor-shell");
+    if (!shell) return;
+    const code = shell.querySelector(".asg-code-highlight");
+    const gutter = shell.querySelector(".asg-code-gutter");
+    if (code) code.style.transform = `translate(${-editor.scrollLeft}px, ${-editor.scrollTop}px)`;
+    if (gutter) gutter.style.transform = `translateY(${-editor.scrollTop}px)`;
+}
+
+function asgEnhancePythonEditor(editor) {
+    if (!editor || editor.dataset.asgEnhancedEditor) {
+        asgRefreshPythonEditor(editor);
+        return;
+    }
+
+    const shell = document.createElement("div");
+    shell.className = "asg-code-editor-shell";
+    shell.innerHTML = `
+        <div class="asg-code-editor-chrome">
+            <span></span><span></span><span></span>
+            <strong>Python</strong>
+        </div>
+        <div class="asg-code-editor-body">
+            <div class="asg-code-gutter" aria-hidden="true"></div>
+            <pre class="asg-code-highlight" aria-hidden="true"></pre>
+        </div>
+    `;
+
+    editor.parentNode.insertBefore(shell, editor);
+    shell.querySelector(".asg-code-editor-body").appendChild(editor);
+    editor.dataset.asgEnhancedEditor = "true";
+    editor.classList.add("asg-enhanced-python-editor");
+    editor.setAttribute("autocomplete", "off");
+    editor.setAttribute("autocapitalize", "off");
+    editor.setAttribute("spellcheck", "false");
+
+    editor.addEventListener("input", () => asgRefreshPythonEditor(editor));
+    editor.addEventListener("scroll", () => asgSyncPythonEditorScroll(editor));
+    asgRefreshPythonEditor(editor);
+    asgSyncPythonEditorScroll(editor);
+}
+
 function asgGetQuizCatalog() {
     return asgSortByOrder(asgReadJSON(ASG_LEARNING_KEYS.quizCatalog, ASG_QUIZ_CATALOG).map(asgNormalizeQuizCatalogItem));
 }

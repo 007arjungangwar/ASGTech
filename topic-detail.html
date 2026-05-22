@@ -168,28 +168,33 @@
 import contextlib, io, json, traceback
 USER_CODE = ${JSON.stringify(code)}
 TESTS = json.loads(${JSON.stringify(JSON.stringify(tests))})
-payload = {"passed": 0, "total": len(TESTS), "results": [], "stdout": "", "error": ""}
-buffer = io.StringIO()
+payload = {"passed": 0, "total": len(TESTS), "results": [], "stdout": "", "setupStdout": "", "error": ""}
+setup_buffer = io.StringIO()
 namespace = {}
 try:
-    with contextlib.redirect_stdout(buffer):
+    with contextlib.redirect_stdout(setup_buffer):
         exec(USER_CODE, namespace)
+    payload["setupStdout"] = setup_buffer.getvalue()
     solution = namespace.get("solution")
     if not callable(solution):
         raise Exception("Define a function named solution.")
     for index, test in enumerate(TESTS, start=1):
         try:
-            got = solution(*test.get("args", []))
+            test_buffer = io.StringIO()
+            args = test.get("args", [])
+            with contextlib.redirect_stdout(test_buffer):
+                got = solution(*args)
             expected = test.get("expected")
             passed = got == expected
             if passed:
                 payload["passed"] += 1
-            payload["results"].append({"index": index, "passed": passed, "expected": expected, "got": got})
+            payload["results"].append({"index": index, "passed": passed, "args": args, "expected": expected, "got": got, "stdout": test_buffer.getvalue()})
         except Exception as error:
-            payload["results"].append({"index": index, "passed": False, "expected": test.get("expected"), "got": "Error: " + str(error)})
+            payload["results"].append({"index": index, "passed": False, "args": test.get("args", []), "expected": test.get("expected"), "got": "Error: " + str(error), "stdout": locals().get("test_buffer", io.StringIO()).getvalue()})
 except Exception:
     payload["error"] = traceback.format_exc(limit=4)
-payload["stdout"] = buffer.getvalue()
+    payload["setupStdout"] = setup_buffer.getvalue()
+payload["stdout"] = payload["setupStdout"] + "".join([item.get("stdout", "") for item in payload["results"]])
 json.dumps(payload, default=str)
 `;
         }
@@ -240,7 +245,7 @@ json.dumps(payload, default=str)
                         <textarea id="topicCodingEditor" class="asg-python-editor" spellcheck="false" wrap="off">${escapeHtml(draft)}</textarea>
                         <div class="asg-output-panel" id="topicCodingOutput">
                             <h3>Run output</h3>
-                            <p>Run your solution to save coding progress for this topic.</p>
+                            <p>Run your solution to see printed output, return values, and save coding progress for this topic.</p>
                         </div>
                     </section>
                 </div>
@@ -257,6 +262,7 @@ json.dumps(payload, default=str)
             const editor = document.getElementById("topicCodingEditor");
             const challenge = topicCodingChallenges[activeCodingIndex];
             if (!editor || !challenge) return;
+            asgEnhancePythonEditor(editor);
             editor.addEventListener("input", () => {
                 localStorage.setItem(topicCodingDraftKey(challenge.id), editor.value);
             });
@@ -267,6 +273,7 @@ json.dumps(payload, default=str)
                 const end = editor.selectionEnd;
                 editor.value = `${editor.value.slice(0, start)}    ${editor.value.slice(end)}`;
                 editor.selectionStart = editor.selectionEnd = start + 4;
+                asgRefreshPythonEditor(editor);
             });
         }
 
@@ -274,6 +281,9 @@ json.dumps(payload, default=str)
             const output = document.getElementById("topicCodingOutput");
             if (!output) return;
             const percentage = payload.total ? Math.round((payload.passed / payload.total) * 100) : 0;
+            const stdoutBlock = payload.stdout || payload.setupStdout
+                ? `<pre>${escapeHtml(payload.stdout || payload.setupStdout)}</pre>`
+                : "<p>No printed output.</p>";
             output.innerHTML = `
                 <div class="asg-result-summary">
                     <div><span>Tests passed</span><strong>${payload.passed}/${payload.total}</strong></div>
@@ -281,17 +291,25 @@ json.dumps(payload, default=str)
                     <p>${savedSubmission ? "Coding progress saved for this topic." : "Run completed."}</p>
                 </div>
                 ${payload.error ? `<pre class="asg-error-output">${escapeHtml(payload.error)}</pre>` : ""}
-                <h3>Stdout</h3>
-                ${payload.stdout ? `<pre>${escapeHtml(payload.stdout)}</pre>` : "<p>No printed output.</p>"}
-                <h3>Test details</h3>
-                <div class="asg-review-list">
-                    ${payload.results.map((result) => `
-                        <article class="asg-review-item ${result.passed ? "correct" : "wrong"}">
-                            <div class="asg-question-head"><span>Test ${result.index}</span><small>${result.passed ? "Passed" : "Failed"}</small></div>
-                            <p><strong>Expected:</strong> ${escapeHtml(JSON.stringify(result.expected))}</p>
-                            <p><strong>Got:</strong> ${escapeHtml(JSON.stringify(result.got))}</p>
-                        </article>
-                    `).join("")}
+                <div class="asg-run-output-grid">
+                    <section class="asg-console-output">
+                        <h3>Console output</h3>
+                        ${stdoutBlock}
+                    </section>
+                    <section class="asg-return-output">
+                        <h3>Function return values</h3>
+                        <div class="asg-review-list">
+                            ${payload.results.map((result) => `
+                                <article class="asg-review-item ${result.passed ? "correct" : "wrong"}">
+                                    <div class="asg-question-head"><span>Test ${result.index}</span><small>${result.passed ? "Passed" : "Failed"}</small></div>
+                                    <p><strong>Input:</strong> solution(${escapeHtml((result.args || []).map((arg) => JSON.stringify(arg)).join(", "))})</p>
+                                    <p><strong>Returned:</strong> ${escapeHtml(JSON.stringify(result.got))}</p>
+                                    <p><strong>Expected:</strong> ${escapeHtml(JSON.stringify(result.expected))}</p>
+                                    ${result.stdout ? `<h4>Printed during this test</h4><pre>${escapeHtml(result.stdout)}</pre>` : ""}
+                                </article>
+                            `).join("")}
+                        </div>
+                    </section>
                 </div>
             `;
         }
@@ -304,6 +322,13 @@ json.dumps(payload, default=str)
 
             button.disabled = true;
             button.textContent = "Running...";
+            const output = document.getElementById("topicCodingOutput");
+            if (output) {
+                output.innerHTML = `
+                    <h3>Run output</h3>
+                    <p>Running your code. Console output and return values will appear here.</p>
+                `;
+            }
             try {
                 const engine = await getTopicPyodideEngine();
                 const payload = JSON.parse(await engine.runPythonAsync(buildTopicCodingHarness(editor.value, challenge.tests)));
