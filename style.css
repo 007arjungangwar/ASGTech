@@ -5742,7 +5742,7 @@ button.asg-card-link {
 
 /* Lesson Viewer reading experience */
 body.has-asg-shell.asg-lesson-focus main {
-    padding: clamp(14px, 1.4vw, 22px) clamp(24px, 2.8vw, 52px) clamp(28px, 3vw, 52px);
+    padding: clamp(12px, 1.2vw, 20px) clamp(16px, 2vw, 34px) clamp(28px, 3vw, 52px);
 }
 
 body.asg-lesson-focus .asg-breadcrumbs {
@@ -5752,12 +5752,15 @@ body.asg-lesson-focus .asg-breadcrumbs {
 body.asg-lesson-focus .asg-course-layout {
     grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
     gap: clamp(18px, 1.8vw, 30px);
-    max-width: 1560px;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
 }
 
 body.asg-lesson-focus.asg-topic-rail-collapsed .asg-course-layout {
-    max-width: 1180px;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: none;
 }
 
 body.asg-lesson-focus .asg-topic-workspace {
@@ -5911,11 +5914,12 @@ body.asg-lesson-focus .asg-topic-tabs .asg-topic-toggle {
 .asg-reader-shell {
     display: grid;
     gap: clamp(18px, 2vw, 28px);
-    padding: clamp(26px, 3.1vw, 52px);
-    border: 1px solid var(--asg-border);
-    border-radius: 8px;
-    background: var(--asg-surface);
-    box-shadow: var(--asg-shadow);
+    width: 100%;
+    padding: clamp(18px, 2.1vw, 38px) clamp(4px, 1.2vw, 22px) clamp(30px, 3vw, 54px);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 .asg-reader-header {
@@ -5927,8 +5931,12 @@ body.asg-lesson-focus .asg-topic-tabs .asg-topic-toggle {
     border-bottom: 1px solid var(--asg-border);
 }
 
+body.asg-lesson-focus.asg-topic-rail-collapsed .asg-reader-header {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+}
+
 .asg-reader-header h2 {
-    max-width: 18ch;
+    max-width: 26ch;
     margin: 0.28rem 0 0.65rem;
     color: var(--asg-ink);
     font-size: clamp(2.1rem, 3.5vw, 4.2rem);
@@ -5936,7 +5944,7 @@ body.asg-lesson-focus .asg-topic-tabs .asg-topic-toggle {
 }
 
 .asg-reader-header p {
-    max-width: 70ch;
+    max-width: 96ch;
     margin: 0;
     color: var(--asg-muted);
     font-size: 1rem;
@@ -5997,7 +6005,8 @@ body.asg-lesson-focus .asg-topic-tabs .asg-topic-toggle {
 }
 
 .asg-reader-body {
-    width: min(100%, 78ch);
+    width: 100%;
+    max-width: none;
     color: var(--asg-ink);
     font-size: 1.08rem;
     line-height: 1.82;
@@ -6017,7 +6026,7 @@ body.asg-lesson-focus .asg-topic-tabs .asg-topic-toggle {
 .asg-reader-body h2,
 .asg-reader-body h3,
 .asg-reader-body h4 {
-    max-width: 22ch;
+    max-width: 34ch;
     margin: 1.55em 0 0.5em;
     color: var(--asg-ink);
     line-height: 1.16;
@@ -6106,7 +6115,6 @@ body.asg-lesson-focus .asg-topic-tabs .asg-topic-toggle {
 body.asg-theme-dark.has-asg-shell .asg-topic-sidebar,
 body.asg-theme-dark.has-asg-shell .asg-topic-sidebar-head,
 body.asg-theme-dark.has-asg-shell .asg-topic-tabs,
-body.asg-theme-dark.has-asg-shell .asg-reader-shell,
 body.asg-theme-dark.has-asg-shell .asg-reader-meta span,
 body.asg-theme-dark.has-asg-shell .asg-reader-step,
 body.asg-theme-dark.has-asg-shell .asg-reader-nav a,
@@ -6126,6 +6134,10 @@ body.asg-theme-dark.has-asg-shell .asg-reader-body blockquote {
 body.asg-theme-dark.has-asg-shell .asg-reader-step.done {
     background: rgba(45, 212, 191, 0.12);
     color: #99f6e4;
+}
+
+body.asg-theme-dark.has-asg-shell .asg-reader-shell {
+    background: transparent;
 }
 
 @media (max-width: 900px) {
