@@ -3056,20 +3056,22 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 
 .asg-result-summary div {
     padding: 16px;
+    border: 1px solid var(--asg-border);
     border-radius: 8px;
-    background: var(--asg-ink);
-    color: white;
+    background: var(--asg-surface-raised);
+    color: var(--asg-ink);
 }
 
 .asg-result-summary span {
     display: block;
-    color: #cbd5e1;
+    color: var(--asg-muted);
     font-size: 0.82rem;
     font-weight: 750;
 }
 
 .asg-result-summary strong {
     display: block;
+    color: var(--asg-ink);
     font-size: 2rem;
     line-height: 1.1;
 }
@@ -3342,6 +3344,7 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     border: 1px solid var(--asg-border);
     border-radius: 8px;
     background: white;
+    color: var(--asg-ink);
 }
 
 .asg-output-panel pre,
@@ -3373,11 +3376,13 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     display: grid;
     gap: 0.75rem;
     min-width: 0;
+    color: var(--asg-ink);
 }
 
 .asg-output-panel h3,
 .asg-output-panel h4 {
     margin: 0.8rem 0 0.3rem;
+    color: var(--asg-ink);
 }
 
 .asg-output-panel h4 {
@@ -3392,6 +3397,11 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 .asg-run-output-grid .asg-review-list {
     display: grid;
     gap: 0.75rem;
+}
+
+.asg-output-panel p,
+.asg-return-output .asg-review-item p {
+    color: var(--asg-ink);
 }
 
 .asg-test-preview,
@@ -5240,7 +5250,12 @@ body.asg-theme-dark.has-asg-shell .asg-preview-top,
 body.asg-theme-dark.has-asg-shell .asg-preview-progress,
 body.asg-theme-dark.has-asg-shell .asg-preview-stack div,
 body.asg-theme-dark.has-asg-shell .asg-result-summary div {
+    color: var(--asg-ink);
     background: linear-gradient(180deg, var(--asg-surface-raised), var(--asg-surface-tint));
+}
+
+body.asg-theme-dark.has-asg-shell .asg-result-summary span {
+    color: var(--asg-muted);
 }
 
 body.asg-theme-dark.has-asg-shell .btn-secondary,
