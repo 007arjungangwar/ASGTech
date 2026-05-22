@@ -23,7 +23,7 @@
                     <button type="button" onclick="selectTopicTab('quiz', this)">Quiz</button>
                     <button type="button" onclick="selectTopicTab('coding', this)">Coding</button>
                     <button type="button" onclick="selectTopicTab('video', this)">Video</button>
-                    <button type="button" onclick="requestCourseFullscreen()">Fullscreen</button>
+                    <button id="topicFullscreenButton" type="button" onclick="toggleLessonFullscreen()" aria-pressed="false">Fullscreen</button>
                     <span class="asg-progress-note" id="lessonProgressState">Saving progress</span>
                 </div>
                 <article class="asg-topic-content" id="topicPanel"></article>
@@ -486,9 +486,66 @@ json.dumps(payload, default=str)
             }
         }
 
-        function requestCourseFullscreen() {
-            sessionStorage.setItem("asgCourseFullscreen", "1");
-            ASGExamGuard.requestFullscreen();
+        function getTopicPanel() {
+            return document.getElementById("topicPanel");
+        }
+
+        function ensureLessonFullscreenExitButton() {
+            const panel = getTopicPanel();
+            if (!panel || panel.querySelector(".asg-reader-fullscreen-exit")) return;
+
+            const button = document.createElement("button");
+            button.className = "asg-reader-fullscreen-exit";
+            button.type = "button";
+            button.textContent = "Exit Fullscreen";
+            button.setAttribute("aria-label", "Exit lesson fullscreen");
+            button.addEventListener("click", toggleLessonFullscreen);
+            panel.insertBefore(button, panel.firstChild);
+        }
+
+        function removeLessonFullscreenExitButton() {
+            const button = document.querySelector(".asg-reader-fullscreen-exit");
+            if (button) button.remove();
+        }
+
+        function setLessonFullscreenState(active) {
+            const panel = getTopicPanel();
+            document.body.classList.toggle("asg-topic-content-fullscreen", active);
+            if (panel) {
+                panel.classList.toggle("asg-topic-panel-fullscreen", active);
+                if (active) panel.setAttribute("tabindex", "-1");
+                else panel.removeAttribute("tabindex");
+            }
+
+            const button = document.getElementById("topicFullscreenButton");
+            if (button) {
+                button.textContent = active ? "Exit Fullscreen" : "Fullscreen";
+                button.setAttribute("aria-pressed", String(active));
+            }
+
+            if (active) ensureLessonFullscreenExitButton();
+            else removeLessonFullscreenExitButton();
+        }
+
+        async function toggleLessonFullscreen() {
+            const panel = getTopicPanel();
+            if (!panel) return;
+
+            const isActive = document.body.classList.contains("asg-topic-content-fullscreen");
+            sessionStorage.removeItem("asgCourseFullscreen");
+
+            if (isActive) {
+                setLessonFullscreenState(false);
+                if (document.fullscreenElement) {
+                    await ASGExamGuard.exitFullscreen();
+                }
+                return;
+            }
+
+            setLessonFullscreenState(true);
+            panel.scrollTop = 0;
+            panel.focus({ preventScroll: true });
+            await ASGExamGuard.requestFullscreen(panel);
         }
 
         function selectTopicTab(tab, button) {
@@ -499,22 +556,26 @@ json.dumps(payload, default=str)
             const panel = document.getElementById("topicPanel");
             if (tab === "quiz") {
                 panel.innerHTML = renderTopicQuiz();
+                if (document.body.classList.contains("asg-topic-content-fullscreen")) ensureLessonFullscreenExitButton();
                 saveLessonProgress();
                 return;
             }
             if (tab === "coding") {
                 panel.innerHTML = renderTopicCoding();
                 setupTopicCodingEditor();
+                if (document.body.classList.contains("asg-topic-content-fullscreen")) ensureLessonFullscreenExitButton();
                 saveLessonProgress();
                 return;
             }
             if (tab === "video") {
                 panel.innerHTML = renderVideo();
+                if (document.body.classList.contains("asg-topic-content-fullscreen")) ensureLessonFullscreenExitButton();
                 saveLessonProgress();
                 return;
             }
             const progress = saveLessonProgress();
             panel.innerHTML = renderLessonContentTab(progress);
+            if (document.body.classList.contains("asg-topic-content-fullscreen")) ensureLessonFullscreenExitButton();
         }
 
         function updateLessonProgressState(progress) {
@@ -586,10 +647,21 @@ json.dumps(payload, default=str)
         }
 
         renderTopic();
-        if (sessionStorage.getItem("asgCourseFullscreen") === "1") {
-            ASGExamGuard.requestFullscreen();
-            window.addEventListener("pointerdown", requestCourseFullscreen, { once: true });
-        }
+        sessionStorage.removeItem("asgCourseFullscreen");
+
+        document.addEventListener("fullscreenchange", () => {
+            const panel = getTopicPanel();
+            if (document.fullscreenElement === panel) return;
+            if (document.body.classList.contains("asg-topic-content-fullscreen")) {
+                setLessonFullscreenState(false);
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && document.body.classList.contains("asg-topic-content-fullscreen") && !document.fullscreenElement) {
+                setLessonFullscreenState(false);
+            }
+        });
     </script>
 </body>
 </html>
