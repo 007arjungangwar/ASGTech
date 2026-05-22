@@ -16,7 +16,7 @@
             <div>
                 <div class="asg-eyebrow">Progress center</div>
                 <h1>Learning Progress Tracker</h1>
-                <p>Track roadmap topics, build a study streak, and see when you are ready to request certificate download approval.</p>
+                <p>Progress updates from completed course lessons, topic quizzes, and coding tests for your signed-in account.</p>
             </div>
             <div class="asg-hero-metrics">
                 <div>
@@ -41,10 +41,10 @@
                     <small id="certificateStatus">Certificate locked</small>
                 </div>
                 <h2 id="nextTopicTitle">Start your roadmap</h2>
-                <p id="nextTopicCopy">Check off topics as you finish them. Your progress is saved automatically.</p>
+                <p id="nextTopicCopy">Open a course topic and finish its required lesson, quiz, and coding tasks to move progress forward.</p>
                 <div class="asg-mini-progress"><span id="overallProgressBar" style="width: 0%"></span></div>
                 <div class="asg-form-actions">
-                    <button class="btn-primary" type="button" onclick="saveProgress(true)">Save Progress</button>
+                    <button class="btn-primary" type="button" onclick="renderProgressGrid(true)">Refresh Progress</button>
                     <a class="btn-secondary" href="certificate.html">Certificate</a>
                 </div>
             </article>
@@ -63,9 +63,9 @@
         <section class="asg-section-header">
             <div>
                 <h2>Roadmap checklist</h2>
-                <p>Use this like a professional learning dashboard: each topic is small, visible, and measurable.</p>
+                <p>This dashboard is read-only. Completion comes from real course activity, not manual checkboxes.</p>
             </div>
-            <button class="btn-secondary" type="button" onclick="resetProgress()">Reset</button>
+            <a class="btn-secondary" href="courses.html">Open Courses</a>
         </section>
 
         <section class="asg-progress-grid" id="progressGrid"></section>
@@ -77,155 +77,79 @@
 
     <script>
         const trackerUser = getCurrentUser();
-        const progressStorageKey = trackerUser ? `progress_${trackerUser.id}` : "progress_guest";
-        const trackerCategories = [
-            {
-                id: "python",
-                title: "Python Foundations",
-                description: "Programming basics needed before data science.",
-                topics: [
-                    "Variables and data types",
-                    "Operators and input/output",
-                    "Conditionals and loops",
-                    "Lists, tuples, sets, dictionaries",
-                    "Functions and scope",
-                    "Files and exceptions"
-                ]
-            },
-            {
-                id: "data",
-                title: "Data Analysis",
-                description: "Core NumPy and Pandas workflow.",
-                topics: [
-                    "NumPy arrays",
-                    "Pandas DataFrames",
-                    "Reading CSV and Excel files",
-                    "Cleaning missing data",
-                    "Grouping and aggregation",
-                    "Basic visualization"
-                ]
-            },
-            {
-                id: "ml",
-                title: "Machine Learning",
-                description: "Model workflow from data to evaluation.",
-                topics: [
-                    "Train/test split",
-                    "Regression models",
-                    "Classification models",
-                    "Model evaluation metrics",
-                    "Overfitting and regularization",
-                    "Mini ML project"
-                ]
-            }
-        ];
 
-        function readSavedProgress() {
-            try {
-                const saved = JSON.parse(localStorage.getItem(progressStorageKey) || "{}");
-                return saved && typeof saved === "object" ? saved : {};
-            } catch (error) {
-                return {};
-            }
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
-        function topicKey(categoryId, topicIndex) {
-            return `${categoryId}_${topicIndex}`;
-        }
-
-        function renderProgressGrid() {
-            const saved = readSavedProgress();
-            let legacyIndex = 0;
-            document.getElementById("progressGrid").innerHTML = trackerCategories.map((category) => `
-                <article class="asg-progress-category" data-category="${category.id}">
-                    <div class="asg-question-head">
-                        <span>${category.title}</span>
-                        <small id="${category.id}Count">0/${category.topics.length}</small>
-                    </div>
-                    <h3>${category.description}</h3>
-                    <div class="asg-mini-progress"><span id="${category.id}Bar" style="width: 0%"></span></div>
-                    <div class="asg-topic-checklist">
-                        ${category.topics.map((topic, index) => {
-                            const key = topicKey(category.id, index);
-                            const legacyValue = localStorage.getItem(`progress_${legacyIndex}`);
-                            const checked = saved[key] === true || (saved[key] === undefined && legacyValue === "true");
-                            legacyIndex += 1;
-                            return `
-                                <label class="asg-topic-check">
-                                    <input type="checkbox" data-topic-key="${key}" ${checked ? "checked" : ""}>
-                                    <span>${topic}</span>
-                                </label>
-                            `;
-                        }).join("")}
-                    </div>
-                </article>
+        function renderTopicSteps(state) {
+            return state.steps.map((step) => `
+                <span class="asg-progress-step ${step.done ? "done" : "pending"}">
+                    ${escapeHtml(step.label)}: ${step.done ? "Done" : "Pending"}
+                </span>
             `).join("");
-
-            document.querySelectorAll("[data-topic-key]").forEach((checkbox) => {
-                checkbox.addEventListener("change", () => {
-                    markStudied();
-                    updateAllProgress();
-                    saveProgress(false);
-                });
-            });
         }
 
-        function collectProgress() {
-            const progress = {};
-            document.querySelectorAll("[data-topic-key]").forEach((checkbox) => {
-                progress[checkbox.dataset.topicKey] = checkbox.checked;
-            });
-            return progress;
-        }
+        function renderProgressGrid(showAlert = false) {
+            markStudied();
+            const summary = asgGetCourseProgressSummary(trackerUser);
+            const recordsByCourse = new Map(summary.records.map((record) => [record.courseId, record]));
+            const courses = asgGetCourses();
+            let nextTopic = null;
 
-        function saveProgress(showAlert = false) {
-            localStorage.setItem(progressStorageKey, JSON.stringify(collectProgress()));
-            if (showAlert) alert("Progress saved.");
-        }
-
-        function updateAllProgress() {
-            let totalChecked = 0;
-            let totalTopics = 0;
-            let nextTopic = "";
-
-            trackerCategories.forEach((category) => {
-                const checkboxes = Array.from(document.querySelectorAll(`[data-topic-key^="${category.id}_"]`));
-                const checked = checkboxes.filter((checkbox) => checkbox.checked).length;
-                const percent = checkboxes.length ? Math.round((checked / checkboxes.length) * 100) : 0;
-                totalChecked += checked;
-                totalTopics += checkboxes.length;
-
-                const count = document.getElementById(`${category.id}Count`);
-                const bar = document.getElementById(`${category.id}Bar`);
-                if (count) count.textContent = `${checked}/${checkboxes.length}`;
-                if (bar) bar.style.width = `${percent}%`;
+            document.getElementById("progressGrid").innerHTML = courses.map((course) => {
+                const record = recordsByCourse.get(course.id) || asgGetCourseProgress(trackerUser, course.id);
+                const percent = record ? record.progressPercent : 0;
+                const topicStates = record ? record.topicStates || [] : [];
+                const completed = record ? (record.completedTopicIds || []).length : 0;
 
                 if (!nextTopic) {
-                    const next = checkboxes.find((checkbox) => !checkbox.checked);
-                    if (next) nextTopic = next.closest("label").querySelector("span").textContent;
+                    const pending = topicStates.find((state) => !state.completed);
+                    if (pending) nextTopic = { course, topic: pending };
                 }
-            });
 
-            const overall = totalTopics ? Math.round((totalChecked / totalTopics) * 100) : 0;
-            document.getElementById("progressPercent").textContent = `${overall}%`;
-            document.getElementById("completedCount").textContent = `${totalChecked}/${totalTopics}`;
-            document.getElementById("overallProgressBar").style.width = `${overall}%`;
-            document.getElementById("nextTopicTitle").textContent = nextTopic || "Roadmap complete";
+                return `
+                    <article class="asg-progress-category" data-category="${escapeHtml(course.id)}">
+                        <div class="asg-question-head">
+                            <span>${escapeHtml(course.title)}</span>
+                            <small>${completed}/${course.topics.length} topics</small>
+                        </div>
+                        <h3>${escapeHtml(course.summary)}</h3>
+                        <div class="asg-mini-progress"><span style="width: ${Math.min(percent, 100)}%"></span></div>
+                        <div class="asg-topic-checklist">
+                            ${topicStates.map((state) => `
+                                <a class="asg-topic-check asg-derived-topic ${state.completed ? "is-complete" : ""}" href="topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(state.topicId)}">
+                                    <span>${escapeHtml(state.topicTitle)}</span>
+                                    <small>${renderTopicSteps(state)}</small>
+                                </a>
+                            `).join("")}
+                        </div>
+                    </article>
+                `;
+            }).join("") || `
+                <div class="asg-empty-state">
+                    <h2>No active courses</h2>
+                    <p>Your admin can publish course topics from the dashboard.</p>
+                </div>
+            `;
+
+            document.getElementById("progressPercent").textContent = `${summary.progressPercent}%`;
+            document.getElementById("completedCount").textContent = `${summary.completedTopics}/${summary.totalTopics}`;
+            document.getElementById("overallProgressBar").style.width = `${summary.progressPercent}%`;
+            document.getElementById("nextTopicTitle").textContent = nextTopic ? nextTopic.topic.topicTitle : "Course progress complete";
             document.getElementById("nextTopicCopy").textContent = nextTopic
-                ? "This is the next unfinished topic in your roadmap."
+                ? `${nextTopic.course.title}: finish the pending lesson, quiz, or coding requirement.`
                 : "Strong work. Move into exams, projects, and certificate download approval.";
-            document.getElementById("certificateStatus").textContent = overall >= 50
+            document.getElementById("certificateStatus").textContent = summary.progressPercent >= 50
                 ? "Ready to request approval"
                 : "Reach 50% for certificate";
-        }
 
-        function resetProgress() {
-            if (!confirm("Reset all tracker progress?")) return;
-            document.querySelectorAll("[data-topic-key]").forEach((checkbox) => {
-                checkbox.checked = false;
-            });
-            localStorage.removeItem(progressStorageKey);
-            updateAllProgress();
+            if (showAlert) alert("Progress refreshed from course activity.");
         }
 
         function markStudied() {
@@ -268,8 +192,6 @@
 
         renderProgressGrid();
         renderStreak();
-        updateAllProgress();
-        saveProgress(false);
     </script>
 </body>
 </html>

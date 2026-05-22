@@ -21,7 +21,7 @@ const ASG_LEARNING_KEYS = {
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 10;
+const ASG_LEARNING_DATA_VERSION = 11;
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -1437,11 +1437,19 @@ function asgGetLatestRecord(records, dateKey) {
 
 function asgNormalizeCodingChallenge(challenge, index) {
     const tests = Array.isArray(challenge.tests) ? challenge.tests : [];
+    const courseId = challenge.courseId ? asgSlugify(challenge.courseId, "course") : "";
+    const topicId = challenge.topicId ? asgSlugify(challenge.topicId, "topic") : "";
+    const scope = courseId && topicId ? "course-topic" : "global";
 
     return {
         id: challenge.id || asgCreateId("practice"),
         title: String(challenge.title || `Coding Challenge ${index + 1}`).trim(),
         topic: String(challenge.topic || "Python").trim(),
+        scope,
+        courseId,
+        courseTitle: String(challenge.courseTitle || "").trim(),
+        topicId,
+        topicTitle: String(challenge.topicTitle || "").trim(),
         difficulty: String(challenge.difficulty || "Beginner").trim(),
         prompt: String(challenge.prompt || ""),
         starterCode: String(challenge.starterCode || "def solution():\n    pass\n"),
@@ -1455,16 +1463,30 @@ function asgNormalizeCodingChallenge(challenge, index) {
     };
 }
 
-function asgGetCodingChallenges(includeDrafts = false) {
+function asgGetCodingChallenges(includeDrafts = false, filters = {}) {
     asgEnsureLearningData();
     const challenges = asgReadJSON(ASG_LEARNING_KEYS.codingChallenges, []);
     const normalized = challenges.map(asgNormalizeCodingChallenge);
-    return asgSortByOrder(includeDrafts ? normalized : normalized.filter((challenge) => challenge.status === "active"));
+    const statusFiltered = includeDrafts ? normalized : normalized.filter((challenge) => challenge.status === "active");
+    const courseId = filters.courseId ? asgSlugify(filters.courseId, "course") : "";
+    const topicId = filters.topicId ? asgSlugify(filters.topicId, "topic") : "";
+    const scopeFiltered = statusFiltered.filter((challenge) => {
+        if (filters.globalOnly) return !challenge.courseId && !challenge.topicId;
+        if (courseId && challenge.courseId !== courseId) return false;
+        if (topicId && challenge.topicId !== topicId) return false;
+        return true;
+    });
+
+    return asgSortByOrder(scopeFiltered);
 }
 
 function asgSaveCodingChallenges(challenges) {
     const normalized = challenges.map(asgNormalizeCodingChallenge);
     asgWriteJSON(ASG_LEARNING_KEYS.codingChallenges, asgSortByOrder(normalized));
+}
+
+function asgGetTopicCodingChallenges(courseId, topicId, includeDrafts = false) {
+    return asgGetCodingChallenges(includeDrafts, { courseId, topicId });
 }
 
 function asgSaveCodingSubmission(submission) {
@@ -1478,6 +1500,10 @@ function asgSaveCodingSubmission(submission) {
         userId: user ? user.id : submission.userId || null,
         studentName: user ? user.name : submission.studentName || "Guest Student",
         email: user ? user.email : submission.email || "",
+        courseId: submission.courseId ? asgSlugify(submission.courseId, "course") : "",
+        courseTitle: String(submission.courseTitle || "").trim(),
+        topicId: submission.topicId ? asgSlugify(submission.topicId, "topic") : "",
+        topicTitle: String(submission.topicTitle || "").trim(),
         passed: Number(submission.passed || 0),
         total: Number(submission.total || 0),
         percentage: Number(submission.percentage || 0),
@@ -1504,6 +1530,17 @@ function asgGetCodingSubmissions(user = null) {
         String(submission.userId || "") === String(user.id || "") ||
         String(submission.email || "").toLowerCase() === String(user.email || "").toLowerCase()
     ));
+}
+
+function asgGetTopicCodingSubmissions(user, courseId, topicId, challengeId = "") {
+    const normalizedCourseId = asgSlugify(courseId, "course");
+    const normalizedTopicId = asgSlugify(topicId, "topic");
+    return asgGetCodingSubmissions(user).filter((submission) => {
+        const matchesCourse = String(submission.courseId || "") === normalizedCourseId;
+        const matchesTopic = String(submission.topicId || "") === normalizedTopicId;
+        const matchesChallenge = !challengeId || String(submission.challengeId || "") === String(challengeId);
+        return matchesCourse && matchesTopic && matchesChallenge;
+    });
 }
 
 function asgGetLearningUserKey(user) {
@@ -1641,6 +1678,11 @@ function asgSaveExamAttempt(attempt) {
 
 function asgGetTrackerProgressPercent(user) {
     if (!user) return 0;
+
+    const courseSummary = asgGetCourseProgressSummary(user);
+    if (courseSummary.totalSteps) {
+        return courseSummary.progressPercent;
+    }
 
     const userProgress = asgReadJSON(`progress_${user.id}`, null);
     if (userProgress && typeof userProgress === "object" && !Array.isArray(userProgress)) {
@@ -1850,47 +1892,175 @@ function asgGetCourseProgressKey(user, courseId) {
     return `${asgGetLearningUserKey(user)}:${asgSlugify(courseId, "course")}`;
 }
 
-function asgGetCourseProgress(user, courseId = "") {
-    const progress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, {});
-    const course = courseId ? asgSlugify(courseId, "course") : "";
-    if (!user && !course) return progress;
-    if (course) return progress[asgGetCourseProgressKey(user, course)] || null;
-
-    const userKey = `${asgGetLearningUserKey(user)}:`;
-    return Object.keys(progress)
-        .filter((key) => key.startsWith(userKey))
-        .map((key) => progress[key]);
+function asgTopicHasQuiz(topic) {
+    return Boolean(String(topic && topic.quizHtml || "").trim());
 }
 
-function asgSaveCourseProgress(user, course, topic, tab = "content") {
-    if (!course || !topic) return null;
+function asgGetStoredCourseProgress(user, courseId = "") {
+    const progress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, {});
+    if (!courseId) return progress;
+    return progress[asgGetCourseProgressKey(user, courseId)] || null;
+}
+
+function asgGetCourseTopicCompletionState(user, course, topic, storedProgress = null) {
+    const topicStatusById = storedProgress && storedProgress.topicStatusById
+        ? storedProgress.topicStatusById
+        : {};
+    const status = topicStatusById[topic.id] || {};
+    const legacyCompleted = Array.isArray(storedProgress && storedProgress.completedTopicIds)
+        && storedProgress.completedTopicIds.includes(topic.id);
+    const codingChallenges = asgGetTopicCodingChallenges(course.id, topic.id);
+    const solvedChallengeIds = new Set(
+        asgGetTopicCodingSubmissions(user, course.id, topic.id)
+            .filter((submission) => submission.total > 0 && submission.passed === submission.total)
+            .map((submission) => submission.challengeId)
+    );
+    const codingRequired = codingChallenges.length > 0;
+    const codingCompleted = !codingRequired || codingChallenges.every((challenge) => solvedChallengeIds.has(challenge.id));
+    const quizRequired = asgTopicHasQuiz(topic);
+    const contentViewed = Boolean(status.contentViewed || legacyCompleted);
+    const quizCompleted = !quizRequired || Boolean(status.quizCompleted);
+    const completed = contentViewed && quizCompleted && codingCompleted;
+    const steps = [
+        { key: "content", label: "Lesson", required: true, done: contentViewed },
+        { key: "quiz", label: "Quiz", required: quizRequired, done: quizCompleted },
+        { key: "coding", label: "Coding", required: codingRequired, done: codingCompleted }
+    ].filter((step) => step.required);
+
+    return {
+        topicId: topic.id,
+        topicTitle: topic.title,
+        contentViewed,
+        quizRequired,
+        quizCompleted,
+        codingRequired,
+        codingCompleted,
+        codingChallengeCount: codingChallenges.length,
+        solvedCodingCount: solvedChallengeIds.size,
+        completed,
+        completedSteps: steps.filter((step) => step.done).length,
+        totalSteps: steps.length,
+        steps,
+        lastTab: status.lastTab || "",
+        updatedAt: status.updatedAt || ""
+    };
+}
+
+function asgBuildCourseProgressRecord(user, course, storedProgress = {}, activeTopic = null, tab = "") {
     const topics = Array.isArray(course.topics) ? course.topics.filter((item) => item.status !== "draft") : [];
-    const topicIndex = Math.max(0, topics.findIndex((item) => item.id === topic.id));
-    const existing = asgGetCourseProgress(user, course.id) || {};
-    const completedTopicIds = Array.from(new Set([...(existing.completedTopicIds || []), topic.id]));
-    const progressPercent = topics.length ? Math.round((completedTopicIds.length / topics.length) * 100) : 0;
-    const nextTopic = topics[topicIndex + 1] || null;
-    const record = {
+    const topicStatusById = { ...(storedProgress.topicStatusById || {}) };
+    const activeTopicId = activeTopic ? activeTopic.id : storedProgress.topicId || (topics[0] ? topics[0].id : "");
+
+    const topicStates = topics.map((topic) => {
+        const state = asgGetCourseTopicCompletionState(user, course, topic, { ...storedProgress, topicStatusById });
+        topicStatusById[topic.id] = {
+            ...(topicStatusById[topic.id] || {}),
+            contentViewed: state.contentViewed,
+            quizCompleted: state.quizCompleted,
+            codingCompleted: state.codingCompleted,
+            completed: state.completed,
+            completedAt: state.completed
+                ? (topicStatusById[topic.id] && topicStatusById[topic.id].completedAt) || new Date().toISOString()
+                : ""
+        };
+        return state;
+    });
+    const completedTopicIds = topicStates.filter((state) => state.completed).map((state) => state.topicId);
+    const completedSteps = topicStates.reduce((sum, state) => sum + state.completedSteps, 0);
+    const totalSteps = topicStates.reduce((sum, state) => sum + state.totalSteps, 0);
+    const progressPercent = totalSteps ? Math.round((completedSteps / totalSteps) * 100) : 0;
+    const topicIndex = Math.max(0, topics.findIndex((item) => item.id === activeTopicId));
+    const activeTopicRecord = topics[topicIndex] || activeTopic || topics[0] || null;
+    const nextTopic = topics.find((topic) => !completedTopicIds.includes(topic.id)) || null;
+
+    return {
         userId: user ? user.id || "" : "",
         email: user ? user.email || "" : "",
         name: user ? user.name || "" : "",
         courseId: course.id,
         courseTitle: course.title,
-        topicId: topic.id,
-        topicTitle: topic.title,
-        topicIndex: topicIndex + 1,
+        topicId: activeTopicRecord ? activeTopicRecord.id : "",
+        topicTitle: activeTopicRecord ? activeTopicRecord.title : "",
+        topicIndex: activeTopicRecord ? topicIndex + 1 : 0,
         totalTopics: topics.length,
         completedTopicIds,
+        completedSteps,
+        totalSteps,
+        topicStatusById,
+        topicStates,
         progressPercent,
         nextTopicId: nextTopic ? nextTopic.id : "",
         nextTopicTitle: nextTopic ? nextTopic.title : "",
-        tab: String(tab || "content"),
+        tab: String(tab || storedProgress.tab || "content"),
         updatedAt: new Date().toISOString()
     };
+}
+
+function asgGetCourseProgress(user, courseId = "") {
     const progress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, {});
+    const course = courseId ? asgSlugify(courseId, "course") : "";
+    if (!user && !course) return progress;
+    if (course) {
+        const stored = progress[asgGetCourseProgressKey(user, course)] || null;
+        const courseRecord = typeof asgGetCourseById === "function" ? asgGetCourseById(course) : null;
+        return courseRecord ? asgBuildCourseProgressRecord(user, courseRecord, stored || {}) : stored;
+    }
+
+    const userKey = `${asgGetLearningUserKey(user)}:`;
+    return Object.keys(progress)
+        .filter((key) => key.startsWith(userKey))
+        .map((key) => {
+            const stored = progress[key];
+            const courseRecord = typeof asgGetCourseById === "function" ? asgGetCourseById(stored.courseId) : null;
+            return courseRecord ? asgBuildCourseProgressRecord(user, courseRecord, stored) : stored;
+        });
+}
+
+function asgSaveCourseProgress(user, course, topic, tab = "content", options = {}) {
+    if (!course || !topic) return null;
+    const progress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, {});
+    const existing = progress[asgGetCourseProgressKey(user, course.id)] || {};
+    const topicStatusById = { ...(existing.topicStatusById || {}) };
+    const currentStatus = { ...(topicStatusById[topic.id] || {}) };
+    const normalizedTab = String(tab || "content");
+
+    if (normalizedTab === "content") currentStatus.contentViewed = true;
+    if (normalizedTab === "quiz") currentStatus.quizCompleted = true;
+    if (normalizedTab === "coding" && options.codingPassed) {
+        currentStatus.lastCodingChallengeId = String(options.codingChallengeId || "");
+        currentStatus.lastCodingPassedAt = new Date().toISOString();
+    }
+
+    currentStatus.lastTab = normalizedTab;
+    currentStatus.updatedAt = new Date().toISOString();
+    topicStatusById[topic.id] = currentStatus;
+
+    const record = asgBuildCourseProgressRecord(user, course, { ...existing, topicStatusById }, topic, normalizedTab);
     progress[asgGetCourseProgressKey(user, course.id)] = record;
     asgWriteJSON(ASG_LEARNING_KEYS.courseProgress, progress);
     return record;
+}
+
+function asgGetStudentCourseProgress(user) {
+    if (!user) return [];
+    return asgGetCourses().map((course) => asgGetCourseProgress(user, course.id));
+}
+
+function asgGetCourseProgressSummary(user) {
+    const records = asgGetStudentCourseProgress(user);
+    const completedSteps = records.reduce((sum, record) => sum + Number(record.completedSteps || 0), 0);
+    const totalSteps = records.reduce((sum, record) => sum + Number(record.totalSteps || 0), 0);
+    const completedTopics = records.reduce((sum, record) => sum + (record.completedTopicIds || []).length, 0);
+    const totalTopics = records.reduce((sum, record) => sum + Number(record.totalTopics || 0), 0);
+
+    return {
+        records,
+        completedSteps,
+        totalSteps,
+        completedTopics,
+        totalTopics,
+        progressPercent: totalSteps ? Math.round((completedSteps / totalSteps) * 100) : 0
+    };
 }
 
 function asgGetBestPercentage(records) {
@@ -1919,6 +2089,7 @@ function asgGetStudentProgress(user) {
     const quizAttempts = asgGetQuizAttempts(user);
     const codingSubmissions = asgGetCodingSubmissions(user);
     const examAttempts = asgGetExamAttempts(user);
+    const courseSummary = asgGetCourseProgressSummary(user);
     const completedChallengeIds = new Set(
         codingSubmissions
             .filter((submission) => submission.total > 0 && submission.passed === submission.total)
@@ -1935,7 +2106,12 @@ function asgGetStudentProgress(user) {
     ].filter(Boolean);
 
     return {
-        progressPercent: asgGetTrackerProgressPercent(user),
+        progressPercent: courseSummary.progressPercent || asgGetTrackerProgressPercent(user),
+        courseProgress: courseSummary.records,
+        completedCourseTopics: courseSummary.completedTopics,
+        totalCourseTopics: courseSummary.totalTopics,
+        completedCourseSteps: courseSummary.completedSteps,
+        totalCourseSteps: courseSummary.totalSteps,
         quizAttempts: quizAttempts.length,
         latestQuiz,
         bestQuiz: asgGetBestPercentage(quizAttempts),

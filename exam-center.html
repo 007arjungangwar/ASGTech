@@ -67,7 +67,7 @@
 
         function updateExamStats() {
             document.getElementById("examQuizCount").textContent = asgGetQuizCatalog().filter((quiz) => quiz.status !== "draft").length;
-            document.getElementById("examCodingCount").textContent = asgGetCodingChallenges().length;
+            document.getElementById("examCodingCount").textContent = asgGetCodingChallenges(false, { globalOnly: true }).length;
         }
 
         function showExamChoices() {
@@ -104,7 +104,7 @@
 
         function showCodingExams() {
             const examTopics = ["Python", "Machine Learning", "Pandas"];
-            const challenges = asgGetCodingChallenges().filter((challenge) => (
+            const challenges = asgGetCodingChallenges(false, { globalOnly: true }).filter((challenge) => (
                 examTopics.some((topic) => topic.toLowerCase() === challenge.topic.toLowerCase())
             ));
             const topics = [...new Set(challenges.map((challenge) => challenge.topic))];

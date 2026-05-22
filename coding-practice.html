@@ -444,7 +444,7 @@ json.dumps(payload, default=str)
         }
 
         function loadPracticeData(keepChallengeId = "") {
-            codingChallenges = asgGetCodingChallenges();
+            codingChallenges = asgGetCodingChallenges(false, { globalOnly: true });
 
             if (keepChallengeId) {
                 const nextIndex = codingChallenges.findIndex((challenge) => challenge.id === keepChallengeId);

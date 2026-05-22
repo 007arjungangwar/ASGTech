@@ -382,6 +382,21 @@
                         <input id="codingTopic" type="text" placeholder="Python, Machine Learning, or Pandas">
                     </label>
                     <label>
+                        <span>Placement</span>
+                        <select id="codingPlacement" onchange="toggleCodingPlacementFields()">
+                            <option value="global">General practice/exam</option>
+                            <option value="course-topic">Inside course topic</option>
+                        </select>
+                    </label>
+                    <label class="asg-coding-topic-field" hidden>
+                        <span>Course</span>
+                        <select id="codingCourse" onchange="renderCodingTopicOptions()"></select>
+                    </label>
+                    <label class="asg-coding-topic-field" hidden>
+                        <span>Course topic</span>
+                        <select id="codingTopicId" onchange="syncCodingTopicFromCourseTopic()"></select>
+                    </label>
+                    <label>
                         <span>Difficulty</span>
                         <select id="codingDifficulty">
                             <option>Beginner</option>
@@ -1449,7 +1464,7 @@
                     <thead>
                         <tr>
                             <th>Student</th>
-                            <th>Roadmap</th>
+                            <th>Course Progress</th>
                             <th>Best Quiz</th>
                             <th>Coding</th>
                             <th>Certificates</th>
@@ -1490,6 +1505,12 @@
             const progress = asgGetStudentProgress(student);
             const latestQuiz = progress.latestQuiz;
             const latestCoding = progress.latestCoding;
+            const courseProgress = progress.courseProgress || [];
+            const quizAttempts = asgGetQuizAttempts(student).sort((left, right) => new Date(right.submittedAt || 0) - new Date(left.submittedAt || 0));
+            const codingSubmissions = asgGetCodingSubmissions(student).sort((left, right) => new Date(right.submittedAt || 0) - new Date(left.submittedAt || 0));
+            const examAttempts = asgGetExamAttempts(student).sort((left, right) => new Date(right.submittedAt || 0) - new Date(left.submittedAt || 0));
+            const enrollments = asgGetStudentEnrollments(student);
+            const certificates = asgGetStudentCertificates(student);
 
             document.getElementById("studentDetail").innerHTML = `
                 <div class="asg-detail-card">
@@ -1499,12 +1520,77 @@
                     </div>
                     <dl>
                         <div><dt>Joined</dt><dd>${formatDate(student.joinDate)}</dd></div>
-                        <div><dt>Roadmap</dt><dd>${percentage(progress.progressPercent)}</dd></div>
+                        <div><dt>Course progress</dt><dd>${percentage(progress.progressPercent)}</dd></div>
                         <div><dt>Best quiz</dt><dd>${percentage(progress.bestQuiz)}</dd></div>
                         <div><dt>Latest quiz</dt><dd>${latestQuiz ? `${latestQuiz.score}/${latestQuiz.total} (${percentage(latestQuiz.percentage)})` : "No quiz yet"}</dd></div>
                         <div><dt>Coding solved</dt><dd>${progress.codingSolved}</dd></div>
                         <div><dt>Latest coding</dt><dd>${latestCoding ? `${escapeHtml(latestCoding.challengeTitle)} (${percentage(latestCoding.percentage)})` : "No coding run yet"}</dd></div>
                     </dl>
+                    <section class="asg-student-record-grid">
+                        <article>
+                            <h4>Course Topic Progress</h4>
+                            ${courseProgress.map((record) => `
+                                <div class="asg-student-record">
+                                    <strong>${escapeHtml(record.courseTitle)}</strong>
+                                    <small>${percentage(record.progressPercent)} | ${(record.completedTopicIds || []).length}/${record.totalTopics} topics | ${record.completedSteps || 0}/${record.totalSteps || 0} steps</small>
+                                    <div class="asg-student-topic-list">
+                                        ${(record.topicStates || []).map((state) => `
+                                            <span class="${state.completed ? "complete" : ""}">
+                                                ${escapeHtml(state.topicTitle)}
+                                                <small>${state.steps.map((step) => `${step.label}: ${step.done ? "Done" : "Pending"}`).join(" | ")}</small>
+                                            </span>
+                                        `).join("")}
+                                    </div>
+                                </div>
+                            `).join("") || `<p>No course activity yet.</p>`}
+                        </article>
+                        <article>
+                            <h4>Quiz Attempts</h4>
+                            ${quizAttempts.slice(0, 8).map((attempt) => `
+                                <div class="asg-student-record">
+                                    <strong>${escapeHtml(attempt.quizTitle)}</strong>
+                                    <small>${attempt.score}/${attempt.total} | ${percentage(attempt.percentage)} | ${formatDate(attempt.submittedAt)}</small>
+                                </div>
+                            `).join("") || `<p>No quiz attempts yet.</p>`}
+                        </article>
+                        <article>
+                            <h4>Coding Runs</h4>
+                            ${codingSubmissions.slice(0, 8).map((submission) => `
+                                <div class="asg-student-record">
+                                    <strong>${escapeHtml(submission.challengeTitle)}</strong>
+                                    <small>${submission.passed}/${submission.total} | ${percentage(submission.percentage)} | ${formatDate(submission.submittedAt)}</small>
+                                    ${submission.courseTitle ? `<small>${escapeHtml(submission.courseTitle)} > ${escapeHtml(submission.topicTitle)}</small>` : ""}
+                                </div>
+                            `).join("") || `<p>No coding submissions yet.</p>`}
+                        </article>
+                        <article>
+                            <h4>Exam Attempts</h4>
+                            ${examAttempts.slice(0, 8).map((attempt) => `
+                                <div class="asg-student-record">
+                                    <strong>${escapeHtml(attempt.examTitle)}</strong>
+                                    <small>${escapeHtml(attempt.examType)} | ${attempt.score}/${attempt.total} | ${percentage(attempt.percentage)} | ${formatDate(attempt.submittedAt)}</small>
+                                </div>
+                            `).join("") || `<p>No exam attempts yet.</p>`}
+                        </article>
+                        <article>
+                            <h4>Enrollments</h4>
+                            ${enrollments.map((enrollment) => `
+                                <div class="asg-student-record">
+                                    <strong>${escapeHtml(enrollment.course)}</strong>
+                                    <small>${escapeHtml(enrollment.type || "course")} | ${formatDate(enrollment.date)}</small>
+                                </div>
+                            `).join("") || `<p>No enrollments yet.</p>`}
+                        </article>
+                        <article>
+                            <h4>Certificates</h4>
+                            ${certificates.map((certificate) => `
+                                <div class="asg-student-record">
+                                    <strong>${escapeHtml(certificate.certificateId || certificate.id || "Certificate")}</strong>
+                                    <small>${escapeHtml(certificate.course || "Course")} | ${formatDate(certificate.date || certificate.issued)}</small>
+                                </div>
+                            `).join("") || `<p>No certificates yet.</p>`}
+                        </article>
+                    </section>
                 </div>
             `;
         }
@@ -1578,7 +1664,10 @@
         }
 
         function getCodingExamTopics() {
-            const topics = [...new Set(codingChallenges.map((challenge) => challenge.topic).filter(Boolean))];
+            const topics = [...new Set(codingChallenges
+                .filter((challenge) => !challenge.courseId && !challenge.topicId)
+                .map((challenge) => challenge.topic)
+                .filter(Boolean))];
             return topics.length ? topics : ["Python", "Machine Learning", "Pandas"];
         }
 
@@ -1884,6 +1973,55 @@
             }).join("");
         }
 
+        function getCourseTopicOption(courseId, topicId) {
+            const course = adminCourses.find((item) => item.id === courseId) || adminCourses[0] || null;
+            const topic = course && course.topics.find((item) => item.id === topicId) || (course && course.topics[0]) || null;
+            return { course, topic };
+        }
+
+        function renderCodingCourseOptions(selectedCourseId = "", selectedTopicId = "") {
+            const courseSelect = document.getElementById("codingCourse");
+            if (!courseSelect) return;
+            courseSelect.innerHTML = adminCourses.map((course) => `
+                <option value="${escapeHtml(course.id)}">${escapeHtml(course.title)}</option>
+            `).join("");
+            if (selectedCourseId && adminCourses.some((course) => course.id === selectedCourseId)) {
+                courseSelect.value = selectedCourseId;
+            }
+            renderCodingTopicOptions(selectedTopicId);
+        }
+
+        function renderCodingTopicOptions(selectedTopicId = "") {
+            const courseSelect = document.getElementById("codingCourse");
+            const topicSelect = document.getElementById("codingTopicId");
+            if (!courseSelect || !topicSelect) return;
+            const course = adminCourses.find((item) => item.id === courseSelect.value) || adminCourses[0] || { topics: [] };
+            topicSelect.innerHTML = course.topics.map((topic) => `
+                <option value="${escapeHtml(topic.id)}">${escapeHtml(topic.title)}</option>
+            `).join("");
+            if (selectedTopicId && course.topics.some((topic) => topic.id === selectedTopicId)) {
+                topicSelect.value = selectedTopicId;
+            }
+            syncCodingTopicFromCourseTopic();
+        }
+
+        function toggleCodingPlacementFields() {
+            const placement = document.getElementById("codingPlacement").value;
+            document.querySelectorAll(".asg-coding-topic-field").forEach((field) => {
+                field.hidden = placement !== "course-topic";
+            });
+            if (placement === "course-topic") syncCodingTopicFromCourseTopic();
+        }
+
+        function syncCodingTopicFromCourseTopic() {
+            if (document.getElementById("codingPlacement").value !== "course-topic") return;
+            const { topic } = getCourseTopicOption(
+                document.getElementById("codingCourse").value,
+                document.getElementById("codingTopicId").value
+            );
+            if (topic) document.getElementById("codingTopic").value = topic.title;
+        }
+
         function parseExpectedValue(value) {
             const trimmed = value.trim();
             if (!trimmed) return "";
@@ -1910,6 +2048,9 @@
             document.getElementById("codingEditId").value = "";
             document.getElementById("codingTitle").value = "";
             document.getElementById("codingTopic").value = "Python";
+            document.getElementById("codingPlacement").value = "global";
+            renderCodingCourseOptions(adminCourses[0] ? adminCourses[0].id : "", "");
+            toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = "Beginner";
             document.getElementById("codingStatus").value = "active";
             document.getElementById("codingPrompt").value = "";
@@ -1953,10 +2094,25 @@
                 return;
             }
 
+            const placement = document.getElementById("codingPlacement").value;
+            const selectedCourse = adminCourses.find((course) => course.id === document.getElementById("codingCourse").value) || null;
+            const selectedTopic = selectedCourse
+                ? selectedCourse.topics.find((topic) => topic.id === document.getElementById("codingTopicId").value) || null
+                : null;
+            if (placement === "course-topic" && (!selectedCourse || !selectedTopic)) {
+                alert("Choose a course and topic for this coding task.");
+                return;
+            }
+
             const challenge = {
                 id: editId || asgCreateId("practice"),
                 title: document.getElementById("codingTitle").value.trim(),
                 topic: document.getElementById("codingTopic").value.trim() || "Python",
+                scope: placement,
+                courseId: placement === "course-topic" ? selectedCourse.id : "",
+                courseTitle: placement === "course-topic" ? selectedCourse.title : "",
+                topicId: placement === "course-topic" ? selectedTopic.id : "",
+                topicTitle: placement === "course-topic" ? selectedTopic.title : "",
                 difficulty: document.getElementById("codingDifficulty").value,
                 prompt: document.getElementById("codingPrompt").value,
                 starterCode: document.getElementById("codingStarter").value,
@@ -1983,6 +2139,9 @@
             document.getElementById("codingEditId").value = challenge.id;
             document.getElementById("codingTitle").value = challenge.title;
             document.getElementById("codingTopic").value = challenge.topic;
+            document.getElementById("codingPlacement").value = challenge.courseId && challenge.topicId ? "course-topic" : "global";
+            renderCodingCourseOptions(challenge.courseId || (adminCourses[0] ? adminCourses[0].id : ""), challenge.topicId || "");
+            toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = challenge.difficulty;
             document.getElementById("codingStatus").value = challenge.status;
             document.getElementById("codingPrompt").value = challenge.prompt;
@@ -2012,21 +2171,26 @@
 
         function renderCodingChallenges() {
             const list = document.getElementById("codingChallengeList");
-            list.innerHTML = codingChallenges.map((challenge, index) => `
-                <article class="asg-admin-list-item">
-                    <div>
-                        <span class="asg-item-kicker">${challenge.status} | ${escapeHtml(challenge.topic)} | ${escapeHtml(challenge.difficulty)}</span>
-                        <h3>${index + 1}. ${escapeHtml(challenge.title)}</h3>
-                        <pre class="asg-question-text compact">${escapeHtml(challenge.prompt)}</pre>
-                        <small>${challenge.tests.length} tests</small>
-                    </div>
-                    <div class="asg-item-actions">
-                        <button class="asg-link-button" type="button" onclick="editCodingChallenge('${challenge.id}')">Edit</button>
-                        <button class="asg-link-button" type="button" onclick="toggleCodingStatus('${challenge.id}')">${challenge.status === "active" ? "Draft" : "Publish"}</button>
-                        <button class="asg-link-button danger" type="button" onclick="deleteCodingChallenge('${challenge.id}')">Delete</button>
-                    </div>
-                </article>
-            `).join("") || `<div class="asg-empty-state"><h2>No coding challenges</h2><p>Create the first challenge above.</p></div>`;
+            list.innerHTML = codingChallenges.map((challenge, index) => {
+                const placement = challenge.courseId && challenge.topicId
+                    ? `${challenge.courseTitle || challenge.courseId} > ${challenge.topicTitle || challenge.topicId}`
+                    : "General practice/exam";
+                return `
+                    <article class="asg-admin-list-item">
+                        <div>
+                            <span class="asg-item-kicker">${challenge.status} | ${escapeHtml(placement)} | ${escapeHtml(challenge.difficulty)}</span>
+                            <h3>${index + 1}. ${escapeHtml(challenge.title)}</h3>
+                            <pre class="asg-question-text compact">${escapeHtml(challenge.prompt)}</pre>
+                            <small>${challenge.tests.length} tests</small>
+                        </div>
+                        <div class="asg-item-actions">
+                            <button class="asg-link-button" type="button" onclick="editCodingChallenge('${challenge.id}')">Edit</button>
+                            <button class="asg-link-button" type="button" onclick="toggleCodingStatus('${challenge.id}')">${challenge.status === "active" ? "Draft" : "Publish"}</button>
+                            <button class="asg-link-button danger" type="button" onclick="deleteCodingChallenge('${challenge.id}')">Delete</button>
+                        </div>
+                    </article>
+                `;
+            }).join("") || `<div class="asg-empty-state"><h2>No coding challenges</h2><p>Create the first challenge above.</p></div>`;
         }
 
         function renderTopicCourseOptions(selectedId = "") {
@@ -2205,13 +2369,19 @@
                         <h3>${index + 1}. ${escapeHtml(course.title)}</h3>
                         <p>${escapeHtml(course.summary)}</p>
                         <div class="asg-topic-admin-list">
-                            ${course.topics.map((topic) => `
-                                <span>
-                                    ${escapeHtml(topic.title)}
-                                    <button class="asg-link-button" type="button" onclick="editTopic('${course.id}', '${topic.id}')">Edit</button>
-                                    <button class="asg-link-button danger" type="button" onclick="deleteTopic('${course.id}', '${topic.id}')">Delete</button>
-                                </span>
-                            `).join("")}
+                            ${course.topics.map((topic) => {
+                                const codingCount = codingChallenges.filter((challenge) => (
+                                    challenge.courseId === course.id && challenge.topicId === topic.id
+                                )).length;
+                                return `
+                                    <span>
+                                        ${escapeHtml(topic.title)}
+                                        <small>${codingCount} coding task${codingCount === 1 ? "" : "s"}</small>
+                                        <button class="asg-link-button" type="button" onclick="editTopic('${course.id}', '${topic.id}')">Edit</button>
+                                        <button class="asg-link-button danger" type="button" onclick="deleteTopic('${course.id}', '${topic.id}')">Delete</button>
+                                    </span>
+                                `;
+                            }).join("")}
                         </div>
                     </div>
                     <div class="asg-item-actions">
@@ -2673,6 +2843,8 @@
             adminVideoLibrary = asgGetVideoLibrary(true);
             adminResourceLibrary = asgGetResourceLibrary(true);
             renderQuizSetOptions(document.getElementById("quizSet").value);
+            renderCodingCourseOptions(document.getElementById("codingCourse").value, document.getElementById("codingTopicId").value);
+            toggleCodingPlacementFields();
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
             renderStats();

@@ -3778,6 +3778,58 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     font-weight: 800;
 }
 
+.asg-student-record-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.asg-student-record-grid article {
+    display: grid;
+    gap: 0.65rem;
+    align-content: start;
+    padding: 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.asg-student-record-grid h4 {
+    margin: 0;
+    color: var(--asg-ink);
+}
+
+.asg-student-record {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.65rem;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.asg-student-topic-list {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+}
+
+.asg-student-topic-list span {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #7f1d1d;
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.asg-student-topic-list span.complete {
+    background: #dcfce7;
+    color: #166534;
+}
+
 .asg-activity-item {
     margin-bottom: 10px;
 }
@@ -3806,6 +3858,10 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 
     .asg-admin-layout,
     .asg-practice-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .asg-topic-coding-layout {
         grid-template-columns: 1fr;
     }
 
@@ -4135,6 +4191,44 @@ body.asg-lesson-focus .asg-topic-content h3 {
     border-radius: 8px;
 }
 
+.asg-topic-coding-layout {
+    display: grid;
+    grid-template-columns: minmax(190px, 0.34fr) minmax(0, 1fr);
+    gap: 1rem;
+}
+
+.asg-topic-coding-list,
+.asg-topic-coding-workspace {
+    display: grid;
+    gap: 0.8rem;
+    align-content: start;
+}
+
+.asg-topic-coding-list button {
+    display: grid;
+    gap: 0.25rem;
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--asg-ink);
+    text-align: left;
+    cursor: pointer;
+}
+
+.asg-topic-coding-list button.active,
+.asg-topic-coding-list button:hover {
+    border-color: rgba(15, 118, 110, 0.28);
+    background: #f0fdfa;
+}
+
+.asg-topic-coding-list small {
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
 .asg-video-frame {
     aspect-ratio: 16 / 9;
     width: 100%;
@@ -4371,6 +4465,46 @@ body.asg-lesson-focus .asg-topic-content h3 {
     border-radius: 8px;
     background: #f8fafc;
     cursor: pointer;
+}
+
+.asg-derived-topic {
+    justify-content: space-between;
+    color: inherit;
+    text-decoration: none;
+}
+
+.asg-derived-topic small {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.asg-derived-topic.is-complete {
+    border-color: rgba(15, 118, 110, 0.28);
+    background: #f0fdfa;
+}
+
+.asg-progress-step {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: var(--asg-muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+}
+
+.asg-progress-step.done {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.asg-progress-step.pending {
+    background: #fee2e2;
+    color: #7f1d1d;
 }
 
 .asg-topic-check input {

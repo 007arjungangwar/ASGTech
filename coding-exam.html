@@ -537,7 +537,7 @@ json.dumps(payload, default=str)
 
         function loadExam() {
             document.getElementById("examTitle").textContent = `${activeTopic} Coding Exam`;
-            challenges = asgGetCodingChallenges().filter((challenge) => challenge.topic.toLowerCase() === activeTopic.toLowerCase());
+            challenges = asgGetCodingChallenges(false, { globalOnly: true }).filter((challenge) => challenge.topic.toLowerCase() === activeTopic.toLowerCase());
             updateStats();
             if (!challenges.length) {
                 renderChallengeList();
