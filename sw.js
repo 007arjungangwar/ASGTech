@@ -1,4 +1,4 @@
-const CACHE_NAME = "asg-tech-v33";
+const CACHE_NAME = "asg-tech-v34";
 const urlsToCache = [
     "/learning-with-arjun/",
     "/learning-with-arjun/index.html",

@@ -63,6 +63,102 @@
             return value;
         }
 
+        function getActiveTopics() {
+            return course && Array.isArray(course.topics)
+                ? course.topics.filter((item) => item.status !== "draft")
+                : [];
+        }
+
+        function getCurrentTopicIndex() {
+            return Math.max(0, getActiveTopics().findIndex((item) => item.id === topic.id));
+        }
+
+        function getPlainLessonText(html) {
+            const reader = document.createElement("div");
+            reader.innerHTML = String(html || "");
+            return reader.textContent || reader.innerText || "";
+        }
+
+        function getEstimatedReadMinutes() {
+            const plainText = topic.contentType === "pdf"
+                ? topic.title
+                : getPlainLessonText(topic.content || topic.title);
+            const words = plainText.trim().split(/\s+/).filter(Boolean).length;
+            return Math.max(1, Math.ceil(words / 180));
+        }
+
+        function getTopicState(progressRecord = null) {
+            const progress = progressRecord || asgGetCourseProgress(topicUser, course.id);
+            const state = progress && Array.isArray(progress.topicStates)
+                ? progress.topicStates.find((item) => item.topicId === topic.id)
+                : null;
+            return state || asgGetCourseTopicCompletionState(topicUser, course, topic, asgGetStoredCourseProgress(topicUser, course.id));
+        }
+
+        function renderReaderSteps(state) {
+            return `
+                <div class="asg-reader-steps" aria-label="Lesson completion steps">
+                    ${state.steps.map((step) => `
+                        <span class="asg-reader-step ${step.done ? "done" : ""}">
+                            ${escapeHtml(step.label)}
+                            <strong>${step.done ? "Done" : "Pending"}</strong>
+                        </span>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        function topicHref(item) {
+            return `topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(item.id)}`;
+        }
+
+        function renderReaderNav() {
+            const topics = getActiveTopics();
+            const index = getCurrentTopicIndex();
+            const previous = topics[index - 1];
+            const next = topics[index + 1];
+
+            const previousHtml = previous
+                ? `<a href="${topicHref(previous)}"><span>Previous lesson</span><strong>${escapeHtml(previous.title)}</strong></a>`
+                : `<span class="disabled"><span>Previous lesson</span><strong>Start of course</strong></span>`;
+            const nextHtml = next
+                ? `<a class="next" href="${topicHref(next)}"><span>Next lesson</span><strong>${escapeHtml(next.title)}</strong></a>`
+                : `<span class="disabled next"><span>Next lesson</span><strong>Course complete</strong></span>`;
+
+            return `<nav class="asg-reader-nav" aria-label="Lesson navigation">${previousHtml}${nextHtml}</nav>`;
+        }
+
+        function renderLessonContentTab(progressRecord = null) {
+            const topics = getActiveTopics();
+            const index = getCurrentTopicIndex();
+            const state = getTopicState(progressRecord);
+            const usesMediaReader = topic.contentType === "pdf" || shouldUseHtmlFrame(topic.content, "auto");
+            const statusText = state.completed
+                ? "Completed"
+                : `${state.completedSteps}/${state.totalSteps} steps complete`;
+
+            return `
+                <div class="asg-reader-shell ${usesMediaReader ? "has-media" : ""}">
+                    <header class="asg-reader-header">
+                        <div>
+                            <span class="asg-reader-kicker">Lesson ${index + 1} of ${topics.length}</span>
+                            <h2>${escapeHtml(topic.title)}</h2>
+                            <p>${escapeHtml(course.summary || "Read the lesson, then complete the quiz and coding task when available.")}</p>
+                        </div>
+                        <aside class="asg-reader-meta" aria-label="Lesson overview">
+                            <span><strong>${getEstimatedReadMinutes()}</strong> min read</span>
+                            <span><strong>${escapeHtml(statusText)}</strong> progress</span>
+                        </aside>
+                    </header>
+                    ${renderReaderSteps(state)}
+                    <div class="asg-reader-body ${usesMediaReader ? "has-media" : ""}">
+                        ${renderTopicContent()}
+                    </div>
+                    ${renderReaderNav()}
+                </div>
+            `;
+        }
+
         function renderVideo() {
             if (!topic.videoUrl) {
                 return `<div class="asg-empty-state"><h2>No video added</h2><p>The admin can add a topic video link from the dashboard.</p></div>`;
@@ -417,16 +513,21 @@ json.dumps(payload, default=str)
                 saveLessonProgress();
                 return;
             }
-            panel.innerHTML = renderTopicContent();
-            saveLessonProgress();
+            const progress = saveLessonProgress();
+            panel.innerHTML = renderLessonContentTab(progress);
         }
 
-        function saveLessonProgress() {
-            const progress = asgSaveCourseProgress(topicUser, course, topic, activeTopicTab);
+        function updateLessonProgressState(progress) {
             const status = document.getElementById("lessonProgressState");
             if (status && progress) {
                 status.textContent = `Saved: ${progress.topicIndex}/${progress.totalTopics}`;
             }
+        }
+
+        function saveLessonProgress() {
+            const progress = asgSaveCourseProgress(topicUser, course, topic, activeTopicTab);
+            updateLessonProgressState(progress);
+            return progress;
         }
 
         function renderTopic() {
@@ -442,6 +543,10 @@ json.dumps(payload, default=str)
             }
 
             document.title = `${topic.title} | ASG Tech`;
+            const progress = asgSaveCourseProgress(topicUser, course, topic, activeTopicTab) || asgGetCourseProgress(topicUser, course.id);
+            const activeTopics = getActiveTopics();
+            const currentTopicIndex = getCurrentTopicIndex();
+            const stateByTopicId = new Map((progress.topicStates || []).map((state) => [state.topicId, state]));
             document.getElementById("topicHero").innerHTML = `
                 <div>
                     <div class="asg-eyebrow">${escapeHtml(course.title)}</div>
@@ -449,24 +554,35 @@ json.dumps(payload, default=str)
                     <p>Lesson content uses a focused course reader. Use Topics to show or hide the course outline.</p>
                 </div>
                 <div class="asg-hero-metrics">
-                    <div><strong>${course.topics.length}</strong><span>Topics</span></div>
+                    <div><strong>${activeTopics.length}</strong><span>Topics</span></div>
                     <div><strong>${escapeHtml(topic.status)}</strong><span>Status</span></div>
                     <div><strong>Lesson</strong><span>Mode</span></div>
                 </div>
             `;
             document.getElementById("topicList").innerHTML = `
-                <div class="asg-challenge-list-head">
-                    <h2>Topics</h2>
-                    <a href="courses.html">Courses</a>
+                <div class="asg-topic-sidebar-head">
+                    <span>Course outline</span>
+                    <strong>${escapeHtml(course.title)}</strong>
+                    <small>${currentTopicIndex + 1} of ${activeTopics.length} lessons</small>
                 </div>
-                ${course.topics.map((item) => `
-                    <a class="asg-topic-link ${item.id === topic.id ? "active" : ""}" href="topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(item.id)}">
-                        <span>${escapeHtml(item.title)}</span>
-                    </a>
-                `).join("")}
+                <div class="asg-topic-list-scroll">
+                    ${activeTopics.map((item, index) => {
+                        const state = stateByTopicId.get(item.id);
+                        const progressText = state
+                            ? (state.completed ? "Done" : `${state.completedSteps}/${state.totalSteps}`)
+                            : "Open";
+                        return `
+                            <a class="asg-topic-link ${item.id === topic.id ? "active" : ""}" href="${topicHref(item)}">
+                                <span><small>Lesson ${index + 1}</small>${escapeHtml(item.title)}</span>
+                                <em>${escapeHtml(progressText)}</em>
+                            </a>
+                        `;
+                    }).join("")}
+                </div>
+                <a class="asg-topic-back-link" href="courses.html">Back to courses</a>
             `;
-            document.getElementById("topicPanel").innerHTML = renderTopicContent();
-            saveLessonProgress();
+            document.getElementById("topicPanel").innerHTML = renderLessonContentTab(progress);
+            updateLessonProgressState(progress);
         }
 
         renderTopic();
