@@ -2,243 +2,237 @@
 <html lang="en">
 <head>
     <script src="auth-check.js"></script>
+    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Study Assistant | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .chat-container {
-            background: white;
-            border-radius: 12px;
-            height: 500px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-        
-        .message {
-            margin: 0.5rem 0;
-            padding: 0.75rem;
-            border-radius: 12px;
-            max-width: 80%;
-        }
-        
-        .user-message {
-            background: #0066cc;
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-        
-        .bot-message {
-            background: #f0f0f0;
-            color: #333;
-        }
-        
-        .chat-input-area {
-            display: flex;
-            padding: 1rem;
-            border-top: 1px solid #eaeaea;
-        }
-        
-        .chat-input {
-            flex: 1;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-        
-        .quick-questions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            padding: 1rem;
-            background: #f9f9f9;
-        }
-        
-        .quick-btn {
-            padding: 0.5rem 1rem;
-            background: #e0e0e0;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-    </style>
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
-<body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
-            </div>
-        </div>
-    </nav>
+<body class="asg-ai-page">
+    <nav></nav>
 
-    <main>
-        <h1>🤖 Your AI Study Assistant</h1>
-        <p>Ask me anything about Data Science, ML, Python, or IIT life!</p>
+    <main class="asg-ai-shell">
+        <section class="asg-page-hero asg-ai-hero">
+            <div>
+                <div class="asg-eyebrow">AI Tutor</div>
+                <h1>Your AI Study Assistant</h1>
+                <p>Ask about Python, machine learning, projects, exams, roadmaps, and study planning.</p>
+            </div>
+            <div class="asg-hero-metrics">
+                <div><strong id="aiSessionCount">0</strong><span>Messages</span></div>
+                <div><strong id="aiTopicCount">8</strong><span>Topics</span></div>
+                <div><strong>Live</strong><span>Assistant</span></div>
+            </div>
+        </section>
 
-        <div class="chat-container">
-            <div class="quick-questions">
-                <button class="quick-btn" onclick="askQuick('How to start Python?')">🐍 How to start Python?</button>
-                <button class="quick-btn" onclick="askQuick('What is ML?')">🤖 What is ML?</button>
-                <button class="quick-btn" onclick="askQuick('Best resources?')">📚 Best resources?</button>
-                <button class="quick-btn" onclick="askQuick('IIT preparation?')">🎓 IIT preparation?</button>
-            </div>
-            
-            <div class="chat-messages" id="chatMessages">
-                <div class="message bot-message">👋 Hi! I'm your study assistant. Ask me anything about Data Science, Machine Learning, or how to succeed in your learning journey!</div>
-            </div>
-            
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" id="chatInput" placeholder="Type your question here..." onkeypress="if(event.key==='Enter') sendMessage()">
-                <button onclick="sendMessage()" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;">Send ➤</button>
-            </div>
-        </div>
+        <section class="asg-ai-layout">
+            <aside class="asg-live-panel asg-ai-side">
+                <div class="asg-question-head">
+                    <span>Quick prompts</span>
+                    <small>Study help</small>
+                </div>
+                <div class="asg-ai-prompts" id="quickPrompts"></div>
+                <button class="btn-secondary" type="button" onclick="clearAssistantChat()">Clear Chat</button>
+            </aside>
+
+            <section class="asg-live-panel asg-ai-chat-card">
+                <div class="asg-ai-chat-head">
+                    <div>
+                        <h2>Study Chat</h2>
+                        <p id="assistantStatus">Ready to help with your next learning step.</p>
+                    </div>
+                    <span class="asg-ai-status-dot">Online</span>
+                </div>
+
+                <div class="asg-ai-messages" id="chatMessages" aria-live="polite"></div>
+
+                <form class="asg-ai-input-row" onsubmit="event.preventDefault(); sendMessage();">
+                    <textarea id="chatInput" rows="2" placeholder="Ask a study question..." onkeydown="handleAssistantInput(event)"></textarea>
+                    <button class="btn-primary" type="submit">Send</button>
+                </form>
+            </section>
+        </section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">🐙 GitHub</a>
-                <a href="#">💼 LinkedIn</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | AI Assistant - Your 24/7 study buddy</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Learn with focused guidance.</p>
     </footer>
 
     <script>
-        function addMessage(text, isUser) {
-            const messagesDiv = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-            messageDiv.innerHTML = text;
-            messagesDiv.appendChild(messageDiv);
+        const assistantStorageKey = "asgAssistantChatHistory";
+        const assistantPrompts = [
+            "How should I start Python?",
+            "Explain machine learning simply",
+            "Give me a 7 day study plan",
+            "Suggest a beginner project",
+            "How do I prepare for coding tests?",
+            "What should I learn after Pandas?",
+            "How can I improve my resume?",
+            "Explain PINNs in simple words"
+        ];
+
+        const assistantKnowledge = [
+            {
+                match: ["python", "start", "beginner", "basics"],
+                title: "Python start plan",
+                body: "Start with variables, input/output, conditions, loops, lists, dictionaries, and functions. Then solve 3 small problems daily: one loop problem, one list problem, and one function problem. After that, open Coding Practice and run your code against tests."
+            },
+            {
+                match: ["machine learning", "ml", "model", "train"],
+                title: "Machine learning path",
+                body: "Machine learning means learning patterns from data. Learn the workflow in this order: clean data, split train/test, choose a model, train it, evaluate it, and improve features. Start with regression and classification before deep learning."
+            },
+            {
+                match: ["pandas", "dataframe", "data analysis", "csv"],
+                title: "Pandas practice",
+                body: "Practice read_csv, head, info, describe, selecting columns, filtering rows, groupby, missing values, and simple plots. A good project is a student marks dashboard or sales summary notebook."
+            },
+            {
+                match: ["project", "portfolio", "github"],
+                title: "Project guidance",
+                body: "Build projects that show a complete workflow. Use a clear README, screenshots, dataset notes, method, result, and next improvements. Good starters: student performance dashboard, house price regression, movie recommender, and resume keyword analyzer."
+            },
+            {
+                match: ["coding test", "exam", "practice", "hacker", "leetcode"],
+                title: "Coding test practice",
+                body: "For coding tests, focus on clean function writing. Read the input, handle edge cases, return the exact expected value, and use print only for debugging. Practice arrays, strings, dictionaries, sorting, and simple recursion."
+            },
+            {
+                match: ["iit", "college", "jee", "admission"],
+                title: "College and skill advice",
+                body: "A strong college can help, but skills and proof matter a lot. Keep your fundamentals strong, build projects, publish your work, and practice communication. Consistent work beats random long study sessions."
+            },
+            {
+                match: ["resume", "job", "career", "placement", "internship"],
+                title: "Career plan",
+                body: "Your resume should show skills through evidence: projects, GitHub links, problem-solving, tools, and measurable outcomes. Add one strong project, one dashboard, one model, and one deployed or documented tool."
+            },
+            {
+                match: ["pinn", "physics", "deep learning", "neural"],
+                title: "PINNs and deep learning",
+                body: "A Physics-Informed Neural Network combines data loss with physics-equation loss. Learn neural networks, gradients, loss functions, and differential equations basics before building a PINN project."
+            }
+        ];
+
+        function escapeAssistantText(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function readAssistantHistory() {
+            try {
+                const history = JSON.parse(localStorage.getItem(assistantStorageKey) || "[]");
+                return Array.isArray(history) ? history : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveAssistantHistory(history) {
+            localStorage.setItem(assistantStorageKey, JSON.stringify(history.slice(-30)));
+        }
+
+        function updateAssistantStats() {
+            document.getElementById("aiSessionCount").textContent = readAssistantHistory().length;
+        }
+
+        function renderQuickPrompts() {
+            document.getElementById("quickPrompts").innerHTML = assistantPrompts.map((prompt) => `
+                <button type="button" onclick="askQuick('${escapeAssistantText(prompt)}')">${escapeAssistantText(prompt)}</button>
+            `).join("");
+        }
+
+        function addMessage(text, role, persist = true) {
+            const messagesDiv = document.getElementById("chatMessages");
+            const message = document.createElement("article");
+            message.className = `asg-ai-message ${role === "user" ? "user" : "assistant"}`;
+            message.innerHTML = `
+                <span>${role === "user" ? "You" : "ASG Tutor"}</span>
+                <p>${escapeAssistantText(text)}</p>
+            `;
+            messagesDiv.appendChild(message);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            if (persist) {
+                const history = readAssistantHistory();
+                history.push({ role, text, at: new Date().toISOString() });
+                saveAssistantHistory(history);
+                updateAssistantStats();
+            }
         }
-        
+
+        function renderAssistantHistory() {
+            const messagesDiv = document.getElementById("chatMessages");
+            messagesDiv.innerHTML = "";
+            const history = readAssistantHistory();
+            if (!history.length) {
+                addMessage("Hi, I am your ASG study tutor. Tell me what you are learning and I will suggest a clear next step.", "assistant", false);
+                updateAssistantStats();
+                return;
+            }
+            history.forEach((item) => addMessage(item.text, item.role, false));
+            updateAssistantStats();
+        }
+
         function getBotResponse(question) {
-            const q = question.toLowerCase();
-            
-            if(q.includes('python') || q.includes('how to start')) {
-                return "🐍 Start Python with free resources: Automate the Boring Stuff book, freeCodeCamp YouTube (4-hour course), and practice on HackerRank. Start today, even 30 minutes daily!";
+            const q = String(question || "").toLowerCase();
+            const matched = assistantKnowledge.find((entry) => entry.match.some((word) => q.includes(word)));
+
+            if (matched) {
+                return `${matched.title}: ${matched.body}`;
             }
-            else if(q.includes('machine learning') || q.includes('ml')) {
-                return "🤖 Machine Learning is teaching computers to learn from data instead of programming rules. Start with Andrew Ng's course on YouTube, then practice on Kaggle!";
+
+            if (q.includes("roadmap") || q.includes("plan") || q.includes("schedule")) {
+                return "Study plan: choose one course topic, read the lesson, finish the quiz, solve the coding task, and write 3 revision notes. Repeat this cycle daily for steady progress.";
             }
-            else if(q.includes('resource') || q.includes('course')) {
-                return "📚 Best free resources: CS50 (Harvard), Fast.ai, Kaggle Learn, Google's ML Crash Course. All free and excellent!";
+
+            if (q.includes("certificate")) {
+                return "Certificate progress depends on real course activity. Complete lessons, topic quizzes, and coding tasks first, then request certificate access from the certificate page.";
             }
-            else if(q.includes('iit') || q.includes('college') || q.includes('admission')) {
-                return "🎓 For IIT: Focus on JEE Advanced preparation. But remember - skills matter more than college. Many successful data scientists are from normal colleges!";
-            }
-            else if(q.includes('project') || q.includes('portfolio')) {
-                return "💡 Start with small projects: Titanic survival prediction, Iris classification, then move to web scraping, API projects, and finally deep learning projects. Put everything on GitHub!";
-            }
-            else if(q.includes('job') || q.includes('career') || q.includes('placement')) {
-                return "💼 Build a strong GitHub portfolio, contribute to open source, practice LeetCode, and network on LinkedIn. Many companies hire based on skills, not degrees!";
-            }
-            else if(q.includes('pinn') || q.includes('physics')) {
-                return "🔬 PINNs are Physics-Informed Neural Networks! They combine deep learning with physics equations. Perfect for scientific ML. Check my projects section for examples!";
-            }
-            else {
-                return "Great question! 💡 Check out my Blog and Resources sections for detailed tutorials. Or ask more specifically - I'm here to help! You can also post your question on the Q&A page for a detailed response.";
-            }
+
+            return "Here is a practical next step: write down the topic, the exact confusion, and one example. Then open the matching course lesson or coding practice. If you ask with the topic name, I can give a more direct explanation.";
         }
-        
+
         function sendMessage() {
-            const input = document.getElementById('chatInput');
+            const input = document.getElementById("chatInput");
             const question = input.value.trim();
-            if(!question) return;
-            
-            addMessage(question, true);
-            input.value = '';
-            
-            setTimeout(() => {
+            if (!question) return;
+
+            addMessage(question, "user");
+            input.value = "";
+            document.getElementById("assistantStatus").textContent = "Thinking through your study question...";
+
+            window.setTimeout(() => {
                 const response = getBotResponse(question);
-                addMessage(response, false);
-            }, 500);
+                addMessage(response, "assistant");
+                document.getElementById("assistantStatus").textContent = "Ready to help with your next learning step.";
+            }, 240);
         }
-        
+
+        function handleAssistantInput(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
         function askQuick(question) {
-            document.getElementById('chatInput').value = question;
+            document.getElementById("chatInput").value = question;
             sendMessage();
         }
+
+        function clearAssistantChat() {
+            if (!confirm("Clear this AI Tutor chat?")) return;
+            localStorage.removeItem(assistantStorageKey);
+            renderAssistantHistory();
+        }
+
+        renderQuickPrompts();
+        renderAssistantHistory();
     </script>
 </body>
 </html>
