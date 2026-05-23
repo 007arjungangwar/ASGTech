@@ -115,6 +115,41 @@
             box-shadow: inset 0 0 0 0.7mm rgba(199, 164, 76, 0.18);
         }
 
+        .certificate-sheet::before,
+        .certificate-sheet::after {
+            z-index: 1;
+        }
+
+        .certificate-guilloche {
+            position: absolute;
+            inset: 11mm;
+            z-index: 0;
+            width: calc(100% - 22mm);
+            height: calc(100% - 22mm);
+            pointer-events: none;
+            opacity: 0.52;
+        }
+
+        .certificate-guilloche .blue-line {
+            fill: none;
+            stroke: #143f71;
+            stroke-width: 1.05;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .certificate-guilloche .gold-line {
+            fill: none;
+            stroke: #c7a44c;
+            stroke-width: 0.95;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .certificate-guilloche .fine-line {
+            fill: none;
+            stroke-width: 0.55;
+            vector-effect: non-scaling-stroke;
+        }
+
         .certificate-corner {
             position: absolute;
             width: 34mm;
@@ -357,6 +392,20 @@
             display: none;
         }
 
+        .certificate-security-caption {
+            position: absolute;
+            left: 50%;
+            bottom: 13.5mm;
+            z-index: 1;
+            transform: translateX(-50%);
+            color: rgba(20, 63, 113, 0.58);
+            font-size: 2.25mm;
+            font-weight: 900;
+            letter-spacing: 0.7mm;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
         .certificate-export-host {
             position: fixed;
             left: -200vw;
@@ -478,6 +527,74 @@
                 <span class="certificate-corner top-right"></span>
                 <span class="certificate-corner bottom-left"></span>
                 <span class="certificate-corner bottom-right"></span>
+                <svg class="certificate-guilloche" viewBox="0 0 2970 2100" preserveAspectRatio="none" aria-hidden="true">
+                    <defs>
+                        <path id="guilloche-wave-a" d="M0 105 C55 18 115 18 170 105 S285 192 340 105 S455 18 510 105 S625 192 680 105 S795 18 850 105 S965 192 1020 105 S1135 18 1190 105 S1305 192 1360 105 S1475 18 1530 105 S1645 192 1700 105 S1815 18 1870 105 S1985 192 2040 105 S2155 18 2210 105 S2325 192 2380 105 S2495 18 2550 105 S2665 192 2720 105 S2835 18 2890 105 S3005 192 3060 105" />
+                        <path id="guilloche-wave-b" d="M0 105 C45 170 125 170 170 105 S295 40 340 105 S465 170 510 105 S635 40 680 105 S805 170 850 105 S975 40 1020 105 S1145 170 1190 105 S1315 40 1360 105 S1485 170 1530 105 S1655 40 1700 105 S1825 170 1870 105 S1995 40 2040 105 S2165 170 2210 105 S2335 40 2380 105 S2505 170 2550 105 S2675 40 2720 105 S2845 170 2890 105 S3015 40 3060 105" />
+                        <ellipse id="guilloche-ellipse-blue" cx="1485" cy="1050" rx="455" ry="142" />
+                        <ellipse id="guilloche-ellipse-gold" cx="1485" cy="1050" rx="335" ry="104" />
+                        <ellipse id="guilloche-seal-ring" cx="1485" cy="1050" rx="760" ry="296" />
+                    </defs>
+                    <g opacity="0.42">
+                        <use href="#guilloche-wave-a" class="blue-line" x="-45" y="72" />
+                        <use href="#guilloche-wave-b" class="gold-line fine-line" x="-45" y="104" />
+                        <use href="#guilloche-wave-a" class="gold-line fine-line" x="-45" y="168" />
+                        <use href="#guilloche-wave-b" class="blue-line fine-line" x="-45" y="1932" />
+                        <use href="#guilloche-wave-a" class="gold-line fine-line" x="-45" y="1898" />
+                        <use href="#guilloche-wave-b" class="blue-line" x="-45" y="1830" />
+                    </g>
+                    <g opacity="0.26">
+                        <use href="#guilloche-wave-a" class="blue-line fine-line" transform="translate(145 2100) rotate(-90)" />
+                        <use href="#guilloche-wave-b" class="gold-line fine-line" transform="translate(195 2100) rotate(-90)" />
+                        <use href="#guilloche-wave-a" class="gold-line fine-line" transform="translate(2775 2100) rotate(-90)" />
+                        <use href="#guilloche-wave-b" class="blue-line fine-line" transform="translate(2825 2100) rotate(-90)" />
+                    </g>
+                    <g opacity="0.18">
+                        <circle cx="330" cy="320" r="126" class="blue-line" />
+                        <circle cx="330" cy="320" r="82" class="gold-line fine-line" />
+                        <circle cx="2640" cy="320" r="126" class="blue-line" />
+                        <circle cx="2640" cy="320" r="82" class="gold-line fine-line" />
+                        <circle cx="330" cy="1780" r="126" class="blue-line" />
+                        <circle cx="330" cy="1780" r="82" class="gold-line fine-line" />
+                        <circle cx="2640" cy="1780" r="126" class="blue-line" />
+                        <circle cx="2640" cy="1780" r="82" class="gold-line fine-line" />
+                    </g>
+                    <g opacity="0.22">
+                        <use href="#guilloche-seal-ring" class="blue-line fine-line" />
+                        <use href="#guilloche-seal-ring" class="gold-line fine-line" transform="rotate(90 1485 1050)" />
+                        <use href="#guilloche-seal-ring" class="blue-line fine-line" transform="rotate(45 1485 1050)" />
+                        <use href="#guilloche-seal-ring" class="gold-line fine-line" transform="rotate(135 1485 1050)" />
+                    </g>
+                    <g opacity="0.36">
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(0 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(15 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(30 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(45 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(60 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(75 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(90 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(105 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(120 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(135 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(150 1485 1050)" />
+                        <use href="#guilloche-ellipse-blue" class="blue-line" transform="rotate(165 1485 1050)" />
+                    </g>
+                    <g opacity="0.46">
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(7.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(22.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(37.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(52.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(67.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(82.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(97.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(112.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(127.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(142.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(157.5 1485 1050)" />
+                        <use href="#guilloche-ellipse-gold" class="gold-line fine-line" transform="rotate(172.5 1485 1050)" />
+                    </g>
+                </svg>
+                <span class="certificate-security-caption">Complex Guilloche Security Pattern</span>
 
                 <div class="certificate-inner">
                     <div class="certificate-topline">
