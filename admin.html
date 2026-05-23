@@ -445,7 +445,7 @@
                 <div class="asg-section-header">
                     <div>
                         <h2>Course & Topic Builder</h2>
-                        <p>Create course pages, upload lesson PDFs or HTML, add topic quiz HTML, and video links for students.</p>
+                        <p>Create course pages, upload lesson HTML, add topic quiz HTML, and video links for students.</p>
                     </div>
                     <button class="btn-secondary" type="button" onclick="resetCourseForm()">New Course</button>
                 </div>
@@ -508,9 +508,9 @@
                         <input id="topicVideoUrl" type="url" placeholder="https://youtu.be/...">
                     </label>
                     <label class="asg-full-field">
-                        <span>Lesson file (PDF or HTML)</span>
-                        <input id="topicContentFile" type="file" accept=".pdf,.html,.htm,application/pdf,text/html">
-                        <small class="asg-field-hint">PDF opens in the student reader. HTML is shown in an isolated viewer so page scripts can run.</small>
+                        <span>Lesson HTML file</span>
+                        <input id="topicContentFile" type="file" accept=".html,.htm,text/html">
+                        <small class="asg-field-hint">Use HTML lessons on the free Firebase plan. Keep images as external URLs; PDF uploads require Firebase Storage on Blaze.</small>
                     </label>
                     <label class="asg-full-field">
                         <span>Content HTML fallback</span>
@@ -806,7 +806,7 @@
             });
         }
 
-        async function readTopicContentUpload(existingTopic = null, uploadContext = {}) {
+        async function readTopicContentUpload(existingTopic = null) {
             const file = document.getElementById("topicContentFile").files[0];
             if (!file) {
                 return {
@@ -819,30 +819,7 @@
             }
 
             if (/pdf$/i.test(file.name) || file.type === "application/pdf") {
-                if (window.ASG_BACKEND && typeof window.ASG_BACKEND.uploadLessonAsset === "function") {
-                    const upload = await window.ASG_BACKEND.uploadLessonAsset(
-                        file,
-                        [
-                            "lesson-assets",
-                            "courses",
-                            asgSlugify(uploadContext.courseId || "course", "course"),
-                            asgSlugify(uploadContext.topicId || "topic", "topic")
-                        ].join("/")
-                    );
-                    return {
-                        contentType: "pdf",
-                        contentFileName: file.name,
-                        contentDataUrl: "",
-                        contentUrl: upload.url,
-                        contentStoragePath: upload.path
-                    };
-                }
-
-                return {
-                    contentType: "pdf",
-                    contentFileName: file.name,
-                    contentDataUrl: await readFileAsDataUrl(file)
-                };
+                throw new Error("PDF uploads need Firebase Storage on the Blaze plan. Please upload an HTML lesson file instead.");
             }
 
             return {
@@ -2317,10 +2294,7 @@
             let quizUpload = {};
 
             try {
-                contentUpload = await readTopicContentUpload(selectedExistingTopic, {
-                    courseId,
-                    topicId: editId || asgSlugify(title, "topic")
-                });
+                contentUpload = await readTopicContentUpload(selectedExistingTopic);
                 quizUpload = await readTopicQuizUpload(selectedExistingTopic);
             } catch (error) {
                 alert(error.message || "Could not read the selected file.");

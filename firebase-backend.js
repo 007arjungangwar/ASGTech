@@ -155,9 +155,8 @@
         servicesPromise = Promise.all([
             import(firebaseModule("app")),
             import(firebaseModule("auth")),
-            import(firebaseModule("firestore")),
-            import(firebaseModule("storage"))
-        ]).then(async ([appMod, authMod, firestoreMod, storageMod]) => {
+            import(firebaseModule("firestore"))
+        ]).then(async ([appMod, authMod, firestoreMod]) => {
             const app = appMod.getApps().length
                 ? appMod.getApp()
                 : appMod.initializeApp(ASG_FIREBASE_CONFIG);
@@ -167,11 +166,9 @@
                 app,
                 auth,
                 db: firestoreMod.getFirestore(app),
-                storage: storageMod.getStorage(app),
                 appMod,
                 authMod,
-                firestoreMod,
-                storageMod
+                firestoreMod
             };
         }).catch((error) => {
             console.warn("Firebase backend could not initialize.", error);
@@ -611,39 +608,6 @@
         });
     }
 
-    async function uploadLessonAsset(file, pathHint = "") {
-        if (!file) throw new Error("No file selected.");
-        const profile = currentProfile || await restoreSession();
-        if (!isProfileAdmin(profile)) {
-            throw new Error("Admin access is required to upload lesson files.");
-        }
-
-        const services = await loadServices();
-        const safeName = String(file.name || "lesson-file")
-            .replace(/[^a-zA-Z0-9._-]+/g, "-")
-            .replace(/^-+|-+$/g, "")
-            || "lesson-file";
-        const normalizedPath = String(pathHint || safeName)
-            .replace(/\\/g, "/")
-            .replace(/\/+/g, "/")
-            .replace(/^\/|\/$/g, "");
-        const storagePath = normalizedPath.startsWith("lesson-assets/")
-            ? normalizedPath
-            : `lesson-assets/${normalizedPath}`;
-        const finalPath = storagePath.endsWith(safeName) ? storagePath : `${storagePath}/${Date.now()}-${safeName}`;
-        const fileRef = services.storageMod.ref(services.storage, finalPath);
-
-        const snapshot = await services.storageMod.uploadBytes(fileRef, file, {
-            contentType: file.type || "application/octet-stream",
-            customMetadata: {
-                uploadedBy: profile.email || "",
-                uploadedAt: new Date().toISOString()
-            }
-        });
-        const url = await services.storageMod.getDownloadURL(snapshot.ref);
-        return { url, path: finalPath };
-    }
-
     window.ASG_BACKEND = {
         config: ASG_FIREBASE_CONFIG,
         ready: loadServices,
@@ -655,7 +619,6 @@
         saveDataKey,
         startLearningSync,
         startUsersSync,
-        uploadLessonAsset,
         getCurrentProfile: () => currentProfile || getStoredSessionUser(),
         isAdminEmail,
         syncKeys: ASG_SYNC_KEYS.slice()
