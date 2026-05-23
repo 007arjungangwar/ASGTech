@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
+    <script src="firebase-backend.js"></script>
 </head>
 <body class="asg-auth-page">
     <nav class="asg-navbar">
@@ -167,11 +168,24 @@
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                provider: user.provider || "local"
             }));
         }
 
-        function login() {
+        function formatFirebaseAuthError(error) {
+            const code = error && error.code ? error.code : "";
+            if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+                return "Invalid email or password.";
+            }
+            if (code === "auth/too-many-requests") return "Too many attempts. Please wait a few minutes and try again.";
+            if (code === "auth/network-request-failed") return "Network issue. Please check your connection and try again.";
+            if (code === "auth/email-already-in-use") return "This email is already registered. Please login.";
+            if (code === "auth/operation-not-allowed") return "Email/password login is not enabled in Firebase yet.";
+            return "Could not connect to Firebase right now. Please try again.";
+        }
+
+        async function login() {
             const email = document.getElementById("loginEmail").value.trim().toLowerCase();
             const password = document.getElementById("loginPassword").value;
             const error = document.getElementById("loginError");
@@ -182,19 +196,42 @@
                 return;
             }
 
+            let firebaseError = null;
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.signIn === "function") {
+                try {
+                    const cloudUser = await window.ASG_BACKEND.signIn(email, password);
+                    setCurrentUser(cloudUser);
+                    window.location.href = safeNextFor(cloudUser);
+                    return;
+                } catch (authError) {
+                    firebaseError = authError;
+                }
+            }
+
             const users = ensureDefaultUsers();
             const user = users.find((item) => item.email.toLowerCase() === email && item.password === password);
 
             if (!user) {
-                error.textContent = "Invalid email or password.";
+                error.textContent = firebaseError ? formatFirebaseAuthError(firebaseError) : "Invalid email or password.";
                 return;
+            }
+
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.migrateLocalUser === "function") {
+                try {
+                    const migratedUser = await window.ASG_BACKEND.migrateLocalUser(user, password);
+                    setCurrentUser(migratedUser);
+                    window.location.href = safeNextFor(migratedUser);
+                    return;
+                } catch (migrationError) {
+                    console.warn("Could not migrate local account to Firebase.", migrationError);
+                }
             }
 
             setCurrentUser(user);
             window.location.href = safeNextFor(user);
         }
 
-        function register() {
+        async function register() {
             const name = document.getElementById("regName").value.trim();
             const email = document.getElementById("regEmail").value.trim().toLowerCase();
             const password = document.getElementById("regPassword").value;
@@ -226,6 +263,21 @@
             if (exists) {
                 error.textContent = "This email is already registered. Please login.";
                 return;
+            }
+
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.register === "function") {
+                try {
+                    const cloudUser = await window.ASG_BACKEND.register({ name, email, password });
+                    setCurrentUser(cloudUser);
+                    success.textContent = "Account created. Opening your student workspace...";
+                    setTimeout(() => {
+                        window.location.href = safeNextFor(cloudUser);
+                    }, 700);
+                    return;
+                } catch (authError) {
+                    error.textContent = formatFirebaseAuthError(authError);
+                    return;
+                }
             }
 
             const newUser = {
@@ -265,11 +317,16 @@
         const mode = new URLSearchParams(window.location.search).get("mode");
         if (mode === "register") switchTab("register");
 
-        const currentUser = sessionStorage.getItem("currentUser");
-        if (currentUser) {
-            const user = JSON.parse(currentUser);
-            window.location.href = safeNextFor(user);
-        }
+        (async function redirectSignedInUser() {
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
+                await window.ASG_BACKEND.restoreSession();
+            }
+            const currentUser = sessionStorage.getItem("currentUser");
+            if (currentUser) {
+                const user = JSON.parse(currentUser);
+                window.location.href = safeNextFor(user);
+            }
+        })();
     </script>
 </body>
 </html>

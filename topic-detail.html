@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="firebase-backend.js"></script>
     <script src="auth-check.js"></script>
     <script src="published-learning-data.js"></script>
     <script src="learning-data.js"></script>
@@ -190,15 +191,16 @@
         }
 
         function renderTopicContent() {
-            if (topic.contentType === "pdf" && topic.contentDataUrl) {
+            const pdfSource = topic.contentType === "pdf" ? (topic.contentUrl || topic.contentDataUrl || "") : "";
+            if (pdfSource) {
                 return `
                     <div class="asg-file-reader">
                         <div class="asg-question-head">
                             <span>${escapeHtml(topic.contentFileName || "Lesson PDF")}</span>
-                            <a href="${escapeHtml(topic.contentDataUrl)}" target="_blank" rel="noopener">Open PDF</a>
+                            <a href="${escapeHtml(pdfSource)}" target="_blank" rel="noopener">Open PDF</a>
                         </div>
-                        <object data="${escapeHtml(topic.contentDataUrl)}" type="application/pdf">
-                            <iframe src="${escapeHtml(topic.contentDataUrl)}" title="${escapeHtml(topic.title)} PDF"></iframe>
+                        <object data="${escapeHtml(pdfSource)}" type="application/pdf">
+                            <iframe src="${escapeHtml(pdfSource)}" title="${escapeHtml(topic.title)} PDF"></iframe>
                         </object>
                     </div>
                 `;

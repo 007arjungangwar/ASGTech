@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="firebase-backend.js"></script>
     <script src="auth-check.js"></script>
     <script src="published-learning-data.js"></script>
     <script src="learning-data.js"></script>
@@ -797,6 +798,11 @@
                 requestedAt: new Date().toISOString()
             });
             localStorage.setItem("asgCertificateRequests", JSON.stringify(requests));
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.saveDataKey === "function") {
+                window.ASG_BACKEND.saveDataKey("asgCertificateRequests", requests).catch((error) => {
+                    console.warn("Could not sync certificate request to Firebase.", error);
+                });
+            }
             alert("Your certificate download request has been saved for admin review.");
         }
 

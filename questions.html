@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="firebase-backend.js"></script>
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -179,6 +180,11 @@
 
         function writeDoubts(doubts) {
             localStorage.setItem(doubtStorageKey, JSON.stringify(doubts));
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.saveDataKey === "function") {
+                window.ASG_BACKEND.saveDataKey(doubtStorageKey, doubts).catch((error) => {
+                    console.warn("Could not sync doubts to Firebase.", error);
+                });
+            }
         }
 
         function getDisplayDoubts() {
@@ -258,6 +264,10 @@
             document.getElementById("doubtName").value = currentUser.name || "";
             document.getElementById("doubtEmail").value = currentUser.email || "";
         }
+
+        window.addEventListener("asg:data-updated", (event) => {
+            if (event.detail && event.detail.key === doubtStorageKey) renderDoubts();
+        });
 
         renderDoubts();
     </script>

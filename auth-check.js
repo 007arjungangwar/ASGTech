@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v41",
+    cacheName: "asg-tech-v42",
     publicPages: [
         "",
         "index.html",
@@ -155,10 +155,13 @@ function asgEscapeHtml(value) {
         .replace(/'/g, "&#039;");
 }
 
-function logout() {
+async function logout() {
     const confirmed = confirm("Do you want to sign out of ASG Tech?");
     if (!confirmed) return;
 
+    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.signOut === "function") {
+        await window.ASG_BACKEND.signOut();
+    }
     sessionStorage.removeItem("currentUser");
     localStorage.removeItem("loggedIn");
     localStorage.removeItem("userEmail");
@@ -831,8 +834,17 @@ window.addEventListener("storage", function(event) {
     }
 });
 
-function initializeASGPortal() {
+async function initializeASGPortal() {
+    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
+        await window.ASG_BACKEND.restoreSession();
+    }
     if (!checkPageAccess()) return;
+    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startLearningSync === "function") {
+        window.ASG_BACKEND.startLearningSync();
+    }
+    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startUsersSync === "function") {
+        window.ASG_BACKEND.startUsersSync();
+    }
     keepServiceWorkerFresh();
     updateUIForUser();
 }

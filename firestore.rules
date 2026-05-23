@@ -1,0 +1,81 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminEmail() {
+      return signedIn()
+        && request.auth.token.email in ["arjungangwariitpkd@gmail.com"];
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && (
+          isAdminEmail()
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"
+        );
+    }
+
+    function isContentDoc(docId) {
+      return docId in [
+        "asgQuizCatalog",
+        "asgQuizQuestions",
+        "asgCodingChallenges",
+        "asgCourses",
+        "asgBlogPosts",
+        "asgProjectShowcase",
+        "asgVideoPlaylists",
+        "asgRoadmapItems",
+        "asgVideoLibrary",
+        "asgResourceLibrary",
+        "studentAnnouncement"
+      ];
+    }
+
+    function isActivityDoc(docId) {
+      return docId in [
+        "asgQuizAttempts",
+        "quizScores",
+        "asgCodingSubmissions",
+        "asgExamAttempts",
+        "asgCourseProgress",
+        "certificates",
+        "asgCertificateRequests",
+        "studentQuestions"
+      ];
+    }
+
+    match /siteData/{docId} {
+      allow read: if isContentDoc(docId) || signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && (
+          request.resource.data.role == "student"
+          || (request.resource.data.role == "admin" && isAdminEmail())
+        );
+      allow update: if signedIn()
+        && (
+          isAdmin()
+          || (
+            request.auth.uid == userId
+            && request.resource.data.role == resource.data.role
+          )
+        );
+
+      match /activity/{activityId} {
+        allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+        allow write: if signedIn()
+          && isActivityDoc(activityId)
+          && (request.auth.uid == userId || isAdmin());
+      }
+    }
+  }
+}

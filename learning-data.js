@@ -23,6 +23,7 @@ const ASG_LEARNING_KEYS = {
 };
 
 const ASG_LEARNING_DATA_VERSION = 12;
+let ASG_LEARNING_SEEDING_DEFAULTS = false;
 
 const ASG_PUBLISHABLE_DATA_FIELDS = [
     { field: "quizCatalog", storageKey: ASG_LEARNING_KEYS.quizCatalog },
@@ -1087,6 +1088,11 @@ function asgReadJSON(key, fallback) {
 function asgWriteJSON(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
     window.dispatchEvent(new CustomEvent("asg:data-updated", { detail: { key, value } }));
+    if (!ASG_LEARNING_SEEDING_DEFAULTS && window.ASG_BACKEND && typeof window.ASG_BACKEND.saveDataKey === "function") {
+        window.ASG_BACKEND.saveDataKey(key, value).catch((error) => {
+            console.warn(`Could not save ${key} to Firebase.`, error);
+        });
+    }
 }
 
 function asgClone(value) {
@@ -1320,6 +1326,8 @@ function asgEnsureLearningData() {
 
     const storedVersion = Number(localStorage.getItem(ASG_LEARNING_KEYS.dataVersion) || 0);
     const shouldUpgradeDefaults = storedVersion < ASG_LEARNING_DATA_VERSION;
+    ASG_LEARNING_SEEDING_DEFAULTS = true;
+    try {
     const quizCatalog = asgReadJSON(ASG_LEARNING_KEYS.quizCatalog, null);
     if (!Array.isArray(quizCatalog) || (quizCatalog.length === 0 && shouldUpgradeDefaults)) {
         asgWriteJSON(ASG_LEARNING_KEYS.quizCatalog, asgClone(ASG_QUIZ_CATALOG));
@@ -1460,6 +1468,9 @@ function asgEnsureLearningData() {
             body: "",
             updatedAt: new Date().toISOString()
         });
+    }
+    } finally {
+        ASG_LEARNING_SEEDING_DEFAULTS = false;
     }
 
     localStorage.setItem(ASG_LEARNING_KEYS.dataVersion, String(ASG_LEARNING_DATA_VERSION));
@@ -2306,6 +2317,8 @@ function asgNormalizeTopic(topic, index) {
         contentType: topic.contentType === "pdf" ? "pdf" : "html",
         contentFileName: String(topic.contentFileName || "").trim(),
         contentDataUrl: String(topic.contentDataUrl || ""),
+        contentUrl: String(topic.contentUrl || "").trim(),
+        contentStoragePath: String(topic.contentStoragePath || "").trim(),
         quizHtml: String(topic.quizHtml || `<h2>${title} Quiz</h2><p>Add quiz content from the admin dashboard.</p>`),
         quizFileName: String(topic.quizFileName || "").trim(),
         quizRenderMode: topic.quizRenderMode === "iframe" ? "iframe" : "auto",

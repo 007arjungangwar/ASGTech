@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
+    <script src="firebase-backend.js"></script>
     <script src="auth-check.js"></script>
     <script src="published-learning-data.js"></script>
     <script src="learning-data.js"></script>
@@ -805,17 +806,38 @@
             });
         }
 
-        async function readTopicContentUpload(existingTopic = null) {
+        async function readTopicContentUpload(existingTopic = null, uploadContext = {}) {
             const file = document.getElementById("topicContentFile").files[0];
             if (!file) {
                 return {
                     contentType: existingTopic ? existingTopic.contentType || "html" : "html",
                     contentFileName: existingTopic ? existingTopic.contentFileName || "" : "",
-                    contentDataUrl: existingTopic ? existingTopic.contentDataUrl || "" : ""
+                    contentDataUrl: existingTopic ? existingTopic.contentDataUrl || "" : "",
+                    contentUrl: existingTopic ? existingTopic.contentUrl || "" : "",
+                    contentStoragePath: existingTopic ? existingTopic.contentStoragePath || "" : ""
                 };
             }
 
             if (/pdf$/i.test(file.name) || file.type === "application/pdf") {
+                if (window.ASG_BACKEND && typeof window.ASG_BACKEND.uploadLessonAsset === "function") {
+                    const upload = await window.ASG_BACKEND.uploadLessonAsset(
+                        file,
+                        [
+                            "lesson-assets",
+                            "courses",
+                            asgSlugify(uploadContext.courseId || "course", "course"),
+                            asgSlugify(uploadContext.topicId || "topic", "topic")
+                        ].join("/")
+                    );
+                    return {
+                        contentType: "pdf",
+                        contentFileName: file.name,
+                        contentDataUrl: "",
+                        contentUrl: upload.url,
+                        contentStoragePath: upload.path
+                    };
+                }
+
                 return {
                     contentType: "pdf",
                     contentFileName: file.name,
@@ -827,6 +849,8 @@
                 contentType: "html",
                 contentFileName: file.name,
                 contentDataUrl: "",
+                contentUrl: "",
+                contentStoragePath: "",
                 content: await readFileAsText(file)
             };
         }
@@ -2293,7 +2317,10 @@
             let quizUpload = {};
 
             try {
-                contentUpload = await readTopicContentUpload(selectedExistingTopic);
+                contentUpload = await readTopicContentUpload(selectedExistingTopic, {
+                    courseId,
+                    topicId: editId || asgSlugify(title, "topic")
+                });
                 quizUpload = await readTopicQuizUpload(selectedExistingTopic);
             } catch (error) {
                 alert(error.message || "Could not read the selected file.");
@@ -2317,6 +2344,8 @@
                     contentType: resolvedContentType,
                     contentFileName: resolvedContentType === "pdf" ? contentUpload.contentFileName || "" : "",
                     contentDataUrl: resolvedContentType === "pdf" ? contentUpload.contentDataUrl || "" : "",
+                    contentUrl: resolvedContentType === "pdf" ? contentUpload.contentUrl || "" : "",
+                    contentStoragePath: resolvedContentType === "pdf" ? contentUpload.contentStoragePath || "" : "",
                     quizHtml: quizUpload.quizHtml || typedQuizHtml || (existingTopic ? existingTopic.quizHtml : "") || `<h2>${escapeHtml(title)} Quiz</h2><p>Add quiz content here.</p>`,
                     quizFileName: quizUpload.quizFileName || "",
                     quizRenderMode: quizUpload.quizRenderMode || "auto",
