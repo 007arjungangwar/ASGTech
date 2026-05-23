@@ -7372,6 +7372,187 @@ body.asg-theme-dark.has-asg-shell .asg-community-card-head strong.open {
     }
 }
 
+/* Shared social links and site footer */
+body.has-asg-shell .asg-site-footer {
+    display: grid;
+    gap: 1rem;
+    text-align: left;
+    padding-top: clamp(22px, 3vw, 34px);
+    padding-bottom: clamp(20px, 2.4vw, 28px);
+}
+
+.asg-footer-main {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.82fr) minmax(320px, 1fr);
+    gap: clamp(18px, 3vw, 38px);
+    align-items: start;
+}
+
+.asg-footer-brand {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.asg-footer-logo {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--asg-ink);
+    text-decoration: none;
+}
+
+.asg-footer-logo span:last-child {
+    display: grid;
+    gap: 0.08rem;
+}
+
+.asg-footer-logo strong {
+    font-size: 1.02rem;
+}
+
+.asg-footer-logo small,
+.asg-footer-brand p,
+.asg-footer-bottom {
+    color: var(--asg-muted);
+}
+
+.asg-footer-brand p {
+    max-width: 520px;
+    margin: 0;
+}
+
+.asg-footer-connect {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.asg-footer-connect > span {
+    color: var(--asg-primary-dark);
+    font-size: 0.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.asg-social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.asg-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0.35rem 0.7rem 0.35rem 0.42rem;
+    border: 1px solid var(--asg-border);
+    border-radius: 999px;
+    background: var(--asg-surface-raised);
+    color: var(--asg-ink);
+    font-weight: 850;
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.asg-social-link:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--asg-primary) 42%, var(--asg-border));
+    background: var(--asg-surface-soft);
+}
+
+.asg-social-mark {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--asg-primary);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 950;
+    text-transform: none;
+}
+
+.asg-social-link.detailed {
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 66px;
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.asg-social-link.detailed > span:last-child {
+    display: grid;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.asg-social-link.detailed strong,
+.asg-social-link.detailed small {
+    display: block;
+}
+
+.asg-social-link.detailed small {
+    color: var(--asg-muted);
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.asg-social-instagram .asg-social-mark {
+    background: #e4405f;
+}
+
+.asg-social-linkedin .asg-social-mark {
+    background: #0a66c2;
+}
+
+.asg-social-medium .asg-social-mark,
+.asg-social-x .asg-social-mark,
+.asg-social-codepen .asg-social-mark {
+    background: #111827;
+}
+
+.asg-social-youtube .asg-social-mark {
+    background: #dc2626;
+}
+
+.asg-social-email .asg-social-mark {
+    background: #d14836;
+}
+
+.asg-footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem 1rem;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--asg-border);
+    font-size: 0.92rem;
+}
+
+.asg-footer-bottom a {
+    color: var(--asg-primary-dark);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+body.asg-theme-dark.has-asg-shell .asg-social-link {
+    background: var(--asg-surface-raised);
+    color: var(--asg-ink);
+}
+
+body.asg-theme-dark.has-asg-shell .asg-social-medium .asg-social-mark,
+body.asg-theme-dark.has-asg-shell .asg-social-x .asg-social-mark,
+body.asg-theme-dark.has-asg-shell .asg-social-codepen .asg-social-mark {
+    background: #e5e7eb;
+    color: #111827;
+}
+
 /* Professional public About page */
 .asg-about-shell {
     display: grid;
@@ -7614,6 +7795,47 @@ body.asg-theme-dark.has-asg-shell .asg-community-card-head strong.open {
     background: color-mix(in srgb, var(--asg-surface-raised) 88%, transparent);
 }
 
+.asg-about-connect {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(320px, 1.2fr);
+    gap: clamp(18px, 3vw, 34px);
+    align-items: start;
+    padding: clamp(22px, 3.2vw, 36px);
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--asg-blue) 8%, transparent), color-mix(in srgb, var(--asg-primary) 8%, transparent)),
+        var(--asg-surface);
+    box-shadow: var(--asg-card-shadow);
+}
+
+.asg-about-connect-copy {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.asg-about-connect h2 {
+    margin: 0;
+    color: var(--asg-ink);
+    font-size: clamp(1.75rem, 3vw, 3.1rem);
+    line-height: 1.04;
+}
+
+.asg-about-connect p {
+    margin: 0;
+    color: var(--asg-muted);
+}
+
+.asg-about-social-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.asg-about-social-grid .asg-social-email {
+    grid-column: 1 / -1;
+}
+
 .asg-about-cta {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -7635,6 +7857,7 @@ body.asg-theme-dark.has-asg-shell .asg-community-card-head strong.open {
 body.asg-theme-dark.has-asg-shell .asg-about-hero,
 body.asg-theme-dark.has-asg-shell .asg-about-identity,
 body.asg-theme-dark.has-asg-shell .asg-about-panel,
+body.asg-theme-dark.has-asg-shell .asg-about-connect,
 body.asg-theme-dark.has-asg-shell .asg-about-proof article,
 body.asg-theme-dark.has-asg-shell .asg-about-model article,
 body.asg-theme-dark.has-asg-shell .asg-about-cta {
@@ -7663,9 +7886,11 @@ body.asg-theme-dark.has-asg-shell .asg-about-identity img {
 }
 
 @media (max-width: 900px) {
+    .asg-footer-main,
     .asg-about-hero,
     .asg-about-mission,
     .asg-about-split,
+    .asg-about-connect,
     .asg-about-cta {
         grid-template-columns: 1fr;
     }
@@ -7686,6 +7911,7 @@ body.asg-theme-dark.has-asg-shell .asg-about-identity img {
 @media (max-width: 640px) {
     .asg-about-hero,
     .asg-about-panel,
+    .asg-about-connect,
     .asg-about-cta {
         padding: 16px;
     }
@@ -7697,6 +7923,7 @@ body.asg-theme-dark.has-asg-shell .asg-about-identity img {
 
     .asg-about-proof,
     .asg-about-model,
+    .asg-about-social-grid,
     .asg-about-values-grid {
         grid-template-columns: 1fr;
     }

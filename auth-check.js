@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v39",
+    cacheName: "asg-tech-v40",
     publicPages: [
         "",
         "index.html",
@@ -39,6 +39,58 @@ const ASG_AUTH = {
         "admin.html"
     ]
 };
+
+const ASG_SOCIAL_LINKS = [
+    {
+        key: "instagram",
+        label: "Instagram",
+        shortLabel: "IG",
+        url: "https://instagram.com/007arjungangwar",
+        description: "Visual updates"
+    },
+    {
+        key: "linkedin",
+        label: "LinkedIn",
+        shortLabel: "in",
+        url: "https://linkedin.com/in/arjun-singh-gangwar-54b264280",
+        description: "Professional profile"
+    },
+    {
+        key: "medium",
+        label: "Medium",
+        shortLabel: "M",
+        url: "https://medium.com/@007arjungangwar",
+        description: "Articles and notes"
+    },
+    {
+        key: "x",
+        label: "X",
+        shortLabel: "X",
+        url: "https://x.com/007arjungangwar",
+        description: "Quick updates"
+    },
+    {
+        key: "youtube",
+        label: "YouTube",
+        shortLabel: "YT",
+        url: "https://youtube.com/@Epsilonacademyofficial",
+        description: "Video lessons"
+    },
+    {
+        key: "codepen",
+        label: "CodePen",
+        shortLabel: "CP",
+        url: "https://codepen.io/007arjungangwar",
+        description: "Frontend demos"
+    },
+    {
+        key: "email",
+        label: "Email",
+        shortLabel: "@",
+        url: "mailto:arjungangwariitpkd@gmail.com",
+        description: "Direct contact"
+    }
+];
 
 function getCurrentPage() {
     return (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
@@ -643,6 +695,61 @@ function showAuthNotice() {
     sessionStorage.removeItem("authNotice");
 }
 
+function renderSocialLinkMarkup(mode = "compact") {
+    return ASG_SOCIAL_LINKS.map((item) => {
+        const external = !item.url.startsWith("mailto:");
+        const externalAttrs = external ? ' target="_blank" rel="noopener noreferrer"' : "";
+        const text = mode === "detailed"
+            ? `<span><strong>${asgEscapeHtml(item.label)}</strong><small>${asgEscapeHtml(item.description)}</small></span>`
+            : `<span>${asgEscapeHtml(item.label)}</span>`;
+
+        return `
+            <a class="asg-social-link asg-social-${asgEscapeHtml(item.key)} ${mode === "detailed" ? "detailed" : ""}"
+               href="${asgEscapeHtml(item.url)}"${externalAttrs}
+               aria-label="${asgEscapeHtml(`${item.label} - ${item.description}`)}">
+                <span class="asg-social-mark" aria-hidden="true">${asgEscapeHtml(item.shortLabel)}</span>
+                ${text}
+            </a>
+        `;
+    }).join("");
+}
+
+function renderSiteFooter() {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+
+    footer.classList.add("asg-site-footer");
+    footer.innerHTML = `
+        <div class="asg-footer-main">
+            <div class="asg-footer-brand">
+                <a href="${asgUrl("index.html")}" class="asg-footer-logo" aria-label="ASG Tech home">
+                    <span class="asg-logo-mark"><span>ASG</span></span>
+                    <span>
+                        <strong>ASG Tech Institute</strong>
+                        <small>Practical technology learning for students.</small>
+                    </span>
+                </a>
+                <p>
+                    Follow Arjun Singh Gangwar for learning updates, coding demos, articles, video lessons,
+                    and direct contact.
+                </p>
+            </div>
+
+            <nav class="asg-footer-connect" aria-label="Arjun Singh Gangwar social links">
+                <span>Connect with Arjun</span>
+                <div class="asg-social-links">
+                    ${renderSocialLinkMarkup()}
+                </div>
+            </nav>
+        </div>
+
+        <div class="asg-footer-bottom">
+            <span>&copy; 2026 ASG Tech Institute.</span>
+            <a href="mailto:arjungangwariitpkd@gmail.com">arjungangwariitpkd@gmail.com</a>
+        </div>
+    `;
+}
+
 function keepServiceWorkerFresh() {
     if (!("serviceWorker" in navigator)) return;
 
@@ -697,6 +804,7 @@ function updateUIForUser() {
     updateHomeDashboard(user);
     renderStudentAnnouncement(user);
     showAuthNotice();
+    renderSiteFooter();
 }
 
 document.addEventListener("click", function(event) {
