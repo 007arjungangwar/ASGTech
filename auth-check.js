@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v40",
+    cacheName: "asg-tech-v41",
     publicPages: [
         "",
         "index.html",
@@ -75,13 +75,6 @@ const ASG_SOCIAL_LINKS = [
         shortLabel: "YT",
         url: "https://youtube.com/@Epsilonacademyofficial",
         description: "Video lessons"
-    },
-    {
-        key: "codepen",
-        label: "CodePen",
-        shortLabel: "CP",
-        url: "https://codepen.io/007arjungangwar",
-        description: "Frontend demos"
     },
     {
         key: "email",

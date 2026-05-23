@@ -18,10 +18,25 @@ const ASG_LEARNING_KEYS = {
     courseProgress: "asgCourseProgress",
     certificatePermissions: "asgCertificatePermissions",
     studentAnnouncement: "studentAnnouncement",
+    publishedDataVersion: "asgPublishedLearningDataVersion",
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 11;
+const ASG_LEARNING_DATA_VERSION = 12;
+
+const ASG_PUBLISHABLE_DATA_FIELDS = [
+    { field: "quizCatalog", storageKey: ASG_LEARNING_KEYS.quizCatalog },
+    { field: "quizQuestions", storageKey: ASG_LEARNING_KEYS.quizQuestions },
+    { field: "codingChallenges", storageKey: ASG_LEARNING_KEYS.codingChallenges },
+    { field: "courses", storageKey: ASG_LEARNING_KEYS.courses },
+    { field: "blogPosts", storageKey: ASG_LEARNING_KEYS.blogPosts },
+    { field: "projectShowcase", storageKey: ASG_LEARNING_KEYS.projectShowcase },
+    { field: "videoPlaylists", storageKey: ASG_LEARNING_KEYS.videoPlaylists },
+    { field: "roadmapItems", storageKey: ASG_LEARNING_KEYS.roadmapItems },
+    { field: "videoLibrary", storageKey: ASG_LEARNING_KEYS.videoLibrary },
+    { field: "resourceLibrary", storageKey: ASG_LEARNING_KEYS.resourceLibrary },
+    { field: "studentAnnouncement", storageKey: ASG_LEARNING_KEYS.studentAnnouncement }
+];
 
 const ASG_QUIZ_CATALOG = [
     {
@@ -1078,6 +1093,49 @@ function asgClone(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
+function asgGetPublishedLearningData() {
+    const published = window.ASG_PUBLISHED_LEARNING_DATA;
+    if (!published || typeof published !== "object" || Array.isArray(published)) return null;
+
+    const data = published.data && typeof published.data === "object" && !Array.isArray(published.data)
+        ? published.data
+        : {};
+    const version = Number(published.version || 0);
+
+    if (!version || !Object.keys(data).length) return null;
+
+    return {
+        version,
+        publishedAt: String(published.publishedAt || ""),
+        data
+    };
+}
+
+function asgApplyPublishedLearningData() {
+    const published = asgGetPublishedLearningData();
+    if (!published) return false;
+
+    const appliedVersion = Number(localStorage.getItem(ASG_LEARNING_KEYS.publishedDataVersion) || 0);
+    if (published.version <= appliedVersion) return false;
+
+    ASG_PUBLISHABLE_DATA_FIELDS.forEach((entry) => {
+        if (!Object.prototype.hasOwnProperty.call(published.data, entry.field)) return;
+        const value = published.data[entry.field];
+        if (value === undefined || value === null) return;
+        localStorage.setItem(entry.storageKey, JSON.stringify(value));
+    });
+
+    localStorage.setItem(ASG_LEARNING_KEYS.publishedDataVersion, String(published.version));
+    localStorage.setItem(ASG_LEARNING_KEYS.dataVersion, "0");
+    window.dispatchEvent(new CustomEvent("asg:published-data-applied", {
+        detail: {
+            version: published.version,
+            publishedAt: published.publishedAt
+        }
+    }));
+    return true;
+}
+
 function asgCreateId(prefix) {
     return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -1258,6 +1316,8 @@ function asgMergeDefaultItems(existingItems, defaultItems, normalizeItem) {
 }
 
 function asgEnsureLearningData() {
+    asgApplyPublishedLearningData();
+
     const storedVersion = Number(localStorage.getItem(ASG_LEARNING_KEYS.dataVersion) || 0);
     const shouldUpgradeDefaults = storedVersion < ASG_LEARNING_DATA_VERSION;
     const quizCatalog = asgReadJSON(ASG_LEARNING_KEYS.quizCatalog, null);

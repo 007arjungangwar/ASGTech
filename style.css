@@ -7511,8 +7511,7 @@ body.has-asg-shell .asg-site-footer {
 }
 
 .asg-social-medium .asg-social-mark,
-.asg-social-x .asg-social-mark,
-.asg-social-codepen .asg-social-mark {
+.asg-social-x .asg-social-mark {
     background: #111827;
 }
 
@@ -7547,8 +7546,7 @@ body.asg-theme-dark.has-asg-shell .asg-social-link {
 }
 
 body.asg-theme-dark.has-asg-shell .asg-social-medium .asg-social-mark,
-body.asg-theme-dark.has-asg-shell .asg-social-x .asg-social-mark,
-body.asg-theme-dark.has-asg-shell .asg-social-codepen .asg-social-mark {
+body.asg-theme-dark.has-asg-shell .asg-social-x .asg-social-mark {
     background: #e5e7eb;
     color: #111827;
 }

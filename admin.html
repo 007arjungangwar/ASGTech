@@ -6,6 +6,7 @@
     <title>Admin Dashboard | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
     <script src="auth-check.js"></script>
+    <script src="published-learning-data.js"></script>
     <script src="learning-data.js"></script>
 </head>
 <body>
@@ -34,6 +35,7 @@
                 </div>
                 <div class="asg-admin-actions">
                     <button class="btn-primary" type="button" onclick="exportAdminData()">Export Data</button>
+                    <button class="btn-secondary" type="button" onclick="exportPublishSnapshot()">Download Publish File</button>
                     <a class="btn-secondary" href="quiz.html">Preview Quiz</a>
                     <a class="btn-secondary" href="coding-practice.html">Preview Practice</a>
                     <a class="btn-secondary" href="exam-center.html">Preview Exam</a>
@@ -2822,13 +2824,46 @@
                 certificates: readJSON("certificates", []),
                 exportedAt: new Date().toISOString()
             };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            downloadAdminFile(JSON.stringify(data, null, 2), `asg_admin_export_${Date.now()}.json`, "application/json");
+        }
+
+        function getPublishableAdminData() {
+            return {
+                quizCatalog: asgGetQuizCatalog(),
+                quizQuestions: asgGetQuizQuestions(true),
+                codingChallenges: asgGetCodingChallenges(true),
+                courses: asgGetCourses(true),
+                blogPosts: asgGetBlogPosts(true),
+                projectShowcase: asgGetProjectShowcase(true),
+                roadmapItems: asgGetRoadmapItems(true),
+                videoPlaylists: asgGetVideoPlaylists(true),
+                videoLibrary: asgGetVideoLibrary(true),
+                resourceLibrary: asgGetResourceLibrary(true),
+                studentAnnouncement: asgGetStudentAnnouncement()
+            };
+        }
+
+        function downloadAdminFile(contents, fileName, mimeType) {
+            const blob = new Blob([contents], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `asg_admin_export_${Date.now()}.json`;
+            link.download = fileName;
+            link.hidden = true;
+            document.body.appendChild(link);
             link.click();
-            URL.revokeObjectURL(url);
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+        }
+
+        function exportPublishSnapshot() {
+            const snapshot = {
+                version: Date.now(),
+                publishedAt: new Date().toISOString(),
+                data: getPublishableAdminData()
+            };
+            const contents = `// Public ASG Tech learning-data snapshot.\n// Replace this file in the repository to publish admin course/topic/quiz/coding content for every device.\nwindow.ASG_PUBLISHED_LEARNING_DATA = ${JSON.stringify(snapshot, null, 4)};\n`;
+            downloadAdminFile(contents, "published-learning-data.js", "application/javascript");
         }
 
         function refreshDashboard() {
