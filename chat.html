@@ -4,212 +4,209 @@
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Chat | ASG Tech</title>
+    <title>Live Chat | ASG Tech Community</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .chat-room {
-            background: white;
-            border-radius: 12px;
-            height: 500px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-        
-        .chat-message {
-            margin: 0.5rem 0;
-            padding: 0.5rem;
-            border-radius: 8px;
-            max-width: 80%;
-        }
-        
-        .message-mine {
-            background: #0066cc;
-            color: white;
-            margin-left: auto;
-        }
-        
-        .message-other {
-            background: #f0f0f0;
-        }
-        
-        .chat-input-area {
-            display: flex;
-            padding: 1rem;
-            border-top: 1px solid #eaeaea;
-        }
-        
-        .online-users {
-            background: #f5f7fa;
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-        }
-        
-        .online-user {
-            display: inline-block;
-            margin: 0.25rem;
-            padding: 0.25rem 0.75rem;
-            background: white;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-    </style>
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
-<body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
-            </div>
-        </div>
-    </nav>
+<body class="asg-community-page">
+    <nav></nav>
 
-    <main>
-        <h1>💬 Live Student Chat</h1>
-        <p>Ask questions, help others, learn together!</p>
-
-        <div class="online-users" id="onlineUsers">
-            <strong>🟢 Online Now:</strong> Loading...
-        </div>
-
-        <div class="chat-room">
-            <div class="chat-messages" id="chatMessages">
-                <div class="chat-message message-other">
-                    <strong>System:</strong> Welcome to the live chat! Be respectful and help others.
+    <main class="asg-community-shell">
+        <section class="asg-page-hero asg-community-hero">
+            <div>
+                <div class="asg-eyebrow">Community</div>
+                <h1>Live Chat</h1>
+                <p>Use chat for quick coordination, study check-ins, and short doubts. Move deeper answers to Ask Doubt or Forum.</p>
+                <div class="asg-community-actions">
+                    <a class="btn-primary" href="#chatInput">Join chat</a>
+                    <a class="btn-secondary" href="questions.html">Ask doubt</a>
+                    <a class="btn-secondary" href="forum.html">Forum</a>
                 </div>
             </div>
-            
-            <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Type your message..." class="chat-input" style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;">
-                <button onclick="sendMessage()" style="margin-left: 0.5rem; padding: 0.75rem 1.5rem;">Send ➤</button>
+            <div class="asg-hero-metrics">
+                <div><strong id="chatMessageCount">0</strong><span>Messages</span></div>
+                <div><strong id="chatOnlineCount">0</strong><span>Online</span></div>
+                <div><strong>Live</strong><span>Room</span></div>
             </div>
-        </div>
+        </section>
+
+        <section class="asg-community-nav" aria-label="Community sections">
+            <a href="questions.html"><span>Ask Doubt</span><strong>Structured help</strong></a>
+            <a href="forum.html"><span>Forum</span><strong>Threads and replies</strong></a>
+            <a class="active" href="chat.html"><span>Live Chat</span><strong>Quick discussion</strong></a>
+        </section>
+
+        <section class="asg-community-chat-layout">
+            <aside class="asg-live-panel asg-community-guide">
+                <div class="asg-question-head">
+                    <span>Room status</span>
+                    <small>Local live room</small>
+                </div>
+                <h2>Online now</h2>
+                <div class="asg-community-online" id="onlineUsers"></div>
+                <div class="asg-community-note">
+                    Keep chat short. For detailed code or project questions, create a public forum thread.
+                </div>
+                <div class="asg-community-quick-prompts">
+                    <button type="button" onclick="quickMessage('Can someone review my approach?')">Review approach</button>
+                    <button type="button" onclick="quickMessage('I am stuck on a Python error.')">Python error</button>
+                    <button type="button" onclick="quickMessage('Who wants to study for 30 minutes?')">Study sprint</button>
+                </div>
+            </aside>
+
+            <section class="asg-live-panel asg-community-chat">
+                <div class="asg-ai-chat-head">
+                    <div>
+                        <h2>Student room</h2>
+                        <p id="chatStatus">Messages are stored in this browser for the local community demo.</p>
+                    </div>
+                    <span class="asg-ai-status-dot">Live</span>
+                </div>
+                <div class="asg-community-chat-messages" id="chatMessages" aria-live="polite"></div>
+                <form class="asg-community-chat-form" onsubmit="event.preventDefault(); sendMessage();">
+                    <input class="form-input" id="chatName" type="text" placeholder="Your name" required>
+                    <textarea class="form-textarea" id="chatInput" rows="2" placeholder="Type a helpful message..." required onkeydown="handleChatKey(event)"></textarea>
+                    <button class="btn-primary" type="submit">Send</button>
+                </form>
+            </section>
+        </section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">🐙 GitHub</a>
-                <a href="#">💼 LinkedIn</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Learn together in real-time</p>
+        <p class="copyright">ASG Tech Institute. Quick help, respectful conversation.</p>
     </footer>
 
     <script>
-        let userName = localStorage.getItem('userName') || 'Student';
-        let userId = localStorage.getItem('userId') || Date.now();
-        
-        // Load messages
-        let messages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-        
-        function loadMessages() {
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = messages.map(msg => `
-                <div class="chat-message ${msg.userId === userId ? 'message-mine' : 'message-other'}">
-                    <strong>${msg.userName}:</strong> ${msg.text}<br>
-                    <small style="font-size: 0.7rem;">${new Date(msg.time).toLocaleTimeString()}</small>
-                </div>
-            `).join('');
+        const chatStorageKey = "chatMessages";
+        const onlineStorageKey = "onlineUsers";
+        const chatUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+        const localUserId = localStorage.getItem("asgChatUserId") || `chat_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        localStorage.setItem("asgChatUserId", localUserId);
+
+        const starterMessages = [
+            {
+                id: "system_welcome",
+                text: "Welcome to ASG Live Chat. Keep it respectful, specific, and useful for other learners.",
+                userName: "ASG Community",
+                userId: "system",
+                time: Date.now() - 60000 * 30
+            }
+        ];
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function readMessages() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(chatStorageKey) || "[]");
+                return Array.isArray(stored) ? stored : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeMessages(messages) {
+            localStorage.setItem(chatStorageKey, JSON.stringify(messages.slice(-120)));
+        }
+
+        function getMessages() {
+            const stored = readMessages();
+            return stored.length ? stored : starterMessages;
+        }
+
+        function renderMessages() {
+            const messages = getMessages();
+            const container = document.getElementById("chatMessages");
+            container.innerHTML = messages.map((message) => {
+                const mine = String(message.userId) === String(localUserId);
+                const system = String(message.userId) === "system";
+                return `
+                    <article class="asg-community-message ${mine ? "mine" : ""} ${system ? "system" : ""}">
+                        <div>
+                            <strong>${escapeHtml(message.userName || "Student")}</strong>
+                            <small>${new Date(message.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small>
+                        </div>
+                        <p>${escapeHtml(message.text)}</p>
+                    </article>
+                `;
+            }).join("");
             container.scrollTop = container.scrollHeight;
+            document.getElementById("chatMessageCount").textContent = messages.length;
         }
-        
+
         function sendMessage() {
-            const input = document.getElementById('chatInput');
+            const input = document.getElementById("chatInput");
+            const name = document.getElementById("chatName").value.trim() || "Student";
             const text = input.value.trim();
-            if(!text) return;
-            
-            const message = {
+            if (!text) return;
+
+            const messages = readMessages();
+            messages.push({
                 id: Date.now(),
-                text: text,
-                userName: userName,
-                userId: userId,
+                text,
+                userName: name,
+                userId: localUserId,
                 time: Date.now()
-            };
-            
-            messages.push(message);
-            if(messages.length > 100) messages = messages.slice(-100);
-            localStorage.setItem('chatMessages', JSON.stringify(messages));
-            
-            input.value = '';
-            loadMessages();
-        }
-        
-        // Update online users
-        function updateOnlineUsers() {
-            let online = JSON.parse(localStorage.getItem('onlineUsers') || '{}');
-            online[userId] = {name: userName, time: Date.now()};
-            localStorage.setItem('onlineUsers', JSON.stringify(online));
-            
-            // Remove old users
-            const now = Date.now();
-            let active = {};
-            Object.keys(online).forEach(id => {
-                if(now - online[id].time < 60000) {
-                    active[id] = online[id];
-                }
             });
-            localStorage.setItem('onlineUsers', JSON.stringify(active));
-            
-            const userList = Object.values(active);
-            document.getElementById('onlineUsers').innerHTML = `
-                <strong>🟢 Online Now (${userList.length}):</strong> 
-                ${userList.map(u => `<span class="online-user">${u.name}</span>`).join('')}
-            `;
-        }
-        
-        // Auto refresh
-        setInterval(() => {
-            messages = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-            loadMessages();
+            writeMessages(messages);
+            input.value = "";
+            localStorage.setItem("userName", name);
             updateOnlineUsers();
-        }, 3000);
-        
-        // Enter key to send
-        document.getElementById('chatInput').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') sendMessage();
-        });
-        
-        // Set user name
-        const name = prompt('Enter your name for chat:', 'Student');
-        if(name) {
-            userName = name;
-            localStorage.setItem('userName', userName);
+            renderMessages();
         }
-        
+
+        function quickMessage(text) {
+            document.getElementById("chatInput").value = text;
+            document.getElementById("chatInput").focus();
+        }
+
+        function handleChatKey(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function readOnlineUsers() {
+            try {
+                return JSON.parse(localStorage.getItem(onlineStorageKey) || "{}") || {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function updateOnlineUsers() {
+            const name = document.getElementById("chatName").value.trim() || "Student";
+            const online = readOnlineUsers();
+            online[localUserId] = { name, time: Date.now() };
+            const active = {};
+            Object.keys(online).forEach((id) => {
+                if (Date.now() - Number(online[id].time || 0) < 90000) active[id] = online[id];
+            });
+            localStorage.setItem(onlineStorageKey, JSON.stringify(active));
+            const users = Object.values(active);
+            document.getElementById("chatOnlineCount").textContent = users.length;
+            document.getElementById("onlineUsers").innerHTML = users.length
+                ? users.map((user) => `<span>${escapeHtml(user.name || "Student")}</span>`).join("")
+                : `<p>No active students yet.</p>`;
+        }
+
+        document.getElementById("chatName").value = (chatUser && chatUser.name) || localStorage.getItem("userName") || "Student";
+        renderMessages();
         updateOnlineUsers();
-        loadMessages();
-        
-        // Update online status every 30 seconds
-        setInterval(updateOnlineUsers, 30000);
+        window.addEventListener("storage", (event) => {
+            if (event.key === chatStorageKey) renderMessages();
+            if (event.key === onlineStorageKey) updateOnlineUsers();
+        });
+        window.setInterval(() => {
+            renderMessages();
+            updateOnlineUsers();
+        }, 5000);
     </script>
 </body>
 </html>

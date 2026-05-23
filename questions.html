@@ -4,332 +4,262 @@
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Q&A | ASG Tech</title>
+    <title>Ask Doubt | ASG Tech Community</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<script>
-    // Ensure UI updates after page loads
-    setTimeout(() => {
-        if(typeof updateUIForUser === 'function') {
-            updateUIForUser();
-        }
-    }, 100);
-</script>
-<body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">📚 ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">🏠 Home</a>
-                <a href="blog.html">📝 Blog</a>
-                <a href="projects.html">💻 Projects</a>
-                <a href="courses.html">💰 Courses</a>
-                <a href="forum.html">🗣️ Forum</a>
-                <a href="videos.html">📹 Videos</a>
-                <a href="resources.html">🎁 Resources</a>
-                <a href="roadmap.html">🗺️ Roadmap</a>
-                <a href="quiz.html">📝 Quiz</a>
-                <a href="about.html">📖 About</a>
+<body class="asg-community-page">
+    <nav></nav>
+
+    <main class="asg-community-shell">
+        <section class="asg-page-hero asg-community-hero">
+            <div>
+                <div class="asg-eyebrow">Community</div>
+                <h1>Ask Doubt</h1>
+                <p>Share the exact blocker, context, and what you have tried. Clear questions get faster and better answers.</p>
+                <div class="asg-community-actions">
+                    <a class="btn-primary" href="#askForm">Ask a doubt</a>
+                    <a class="btn-secondary" href="forum.html">Open forum</a>
+                    <a class="btn-secondary" href="chat.html">Live chat</a>
+                </div>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <div class="search-container">
-            <input type="text" class="search-box" placeholder="🔍 Search tutorials, projects, resources... (Try: Python, ML, PINNs)">
-            <div class="search-results" style="display: none;"></div>
-        </div>
-        <h1>💬 Student Questions & Answers</h1>
-        <p>Stuck somewhere? Ask me anything about Data Science, ML, or IIT life.</p>
-
-        <div class="ask-form">
-            <h3>📝 Ask your question</h3>
-            <form onsubmit="submitQuestion(event)">
-                <input type="text" id="questionName" placeholder="Your name" class="form-input" required>
-                <input type="email" id="questionEmail" placeholder="Your email (so I can reply)" class="form-input" required>
-                <textarea id="questionText" rows="4" placeholder="Write your question here..." class="form-textarea" required></textarea>
-                <button type="submit" class="btn-primary">Submit Question →</button>
-            </form>
-
-            <div id="submitMessage" style="margin-top: 1rem;"></div>
-
-            <script>
-            function submitQuestion(event) {
-                event.preventDefault();
-                
-                const name = document.getElementById('questionName').value;
-                const email = document.getElementById('questionEmail').value;
-                const question = document.getElementById('questionText').value;
-                
-                // Save question to localStorage
-                let questions = JSON.parse(localStorage.getItem('studentQuestions') || '[]');
-                questions.push({
-                    id: Date.now(),
-                    name: name,
-                    email: email,
-                    question: question,
-                    date: new Date().toISOString(),
-                    answered: false,
-                    answer: null
-                });
-                localStorage.setItem('studentQuestions', JSON.stringify(questions));
-                
-                // Show success message
-                const msgDiv = document.getElementById('submitMessage');
-                msgDiv.innerHTML = '✅ Question submitted successfully! I will answer within 24 hours.';
-                msgDiv.style.color = '#28a745';
-                msgDiv.style.padding = '1rem';
-                msgDiv.style.background = '#e8f5e9';
-                msgDiv.style.borderRadius = '8px';
-                
-                // Clear form
-                document.getElementById('questionName').value = '';
-                document.getElementById('questionEmail').value = '';
-                document.getElementById('questionText').value = '';
-                
-                // Also send email notification (optional - using mailto)
-                window.location.href = `mailto:your-email@example.com?subject=New Question from ${name}&body=Question: ${question}%0A%0AFrom: ${name} (${email})`;
-                
-                setTimeout(() => {
-                    msgDiv.innerHTML = '';
-                }, 5000);
-            }
-
-            // Display existing questions and answers
-            function displayQuestions() {
-                let questions = JSON.parse(localStorage.getItem('studentQuestions') || '[]');
-                const qaContainer = document.querySelector('.qa-list') || document.createElement('div');
-                
-                if(!document.querySelector('.qa-list')) {
-                    const container = document.createElement('div');
-                    container.className = 'qa-list';
-                    document.querySelector('main').appendChild(container);
-                }
-                
-                const container = document.querySelector('.qa-list');
-                const unanswered = questions.filter(q => !q.answered).slice(-5);
-                const answered = questions.filter(q => q.answered).slice(-5);
-                
-                container.innerHTML = `
-                    <h2>📋 Recent Questions</h2>
-                    ${unanswered.map(q => `
-                        <div class="qa-item">
-                            <div class="question">
-                                <strong>Q: ${q.question}</strong>
-                                <p class="asked-by">— ${q.name}, asked on ${new Date(q.date).toLocaleDateString()}</p>
-                            </div>
-                            <div class="answer" style="color: #ff9800;">
-                                ⏳ Awaiting answer...
-                            </div>
-                        </div>
-                    `).join('')}
-                    
-                    <h2>✅ Answered Questions</h2>
-                    ${answered.map(q => `
-                        <div class="qa-item">
-                            <div class="question">
-                                <strong>Q: ${q.question}</strong>
-                                <p class="asked-by">— ${q.name}</p>
-                            </div>
-                            <div class="answer">
-                                <strong>A:</strong> ${q.answer}
-                            </div>
-                        </div>
-                    `).join('')}
-                `;
-            }
-
-            displayQuestions();
-            </script>
-        </div>
-
-        <h2>Recent Questions & Answers</h2>
-
-        <div class="qa-item">
-            <div class="question">
-                <strong>Q: How do I start ML without a math background?</strong>
-                <p class="asked-by">— Rohan, BCA student</p>
+            <div class="asg-hero-metrics">
+                <div><strong id="doubtOpenCount">0</strong><span>Open</span></div>
+                <div><strong id="doubtAnsweredCount">0</strong><span>Answered</span></div>
+                <div><strong>24h</strong><span>Target reply</span></div>
             </div>
-            <div class="answer">
-                <strong>A:</strong> You don't need advanced math to start! Learn basic statistics (mean, median, variance) and linear algebra (vectors, matrices) as you go. Start with Andrew Ng's course - he explains the math intuitively. You got this!
-            </div>
-        </div>
+        </section>
 
-        <div class="qa-item">
-            <div class="question">
-                <strong>Q: Which laptop should I buy for Data Science?</strong>
-                <p class="asked-by">— Priya, 2nd year</p>
-            </div>
-            <div class="answer">
-                <strong>A:</strong> Any laptop with 8GB RAM (16GB preferred) and i5/Ryzen 5 works. You don't need expensive laptops - Google Colab gives free GPU for training models. Save your money for courses instead!
-            </div>
-        </div>
+        <section class="asg-community-nav" aria-label="Community sections">
+            <a class="active" href="questions.html"><span>Ask Doubt</span><strong>Structured help</strong></a>
+            <a href="forum.html"><span>Forum</span><strong>Threads and replies</strong></a>
+            <a href="chat.html"><span>Live Chat</span><strong>Quick discussion</strong></a>
+        </section>
 
-        <div class="qa-item">
-            <div class="question">
-                <strong>Q: How to get research opportunities at IIT?</strong>
-                <p class="asked-by">— Amit, 3rd year</p>
-            </div>
-            <div class="answer">
-                <strong>A:</strong> Cold email professors with: 1) Why you're interested in THEIR research 2) What skills you have 3) One specific paper of theirs you read. Most professors reply if you show genuine interest. Start early!
-            </div>
-        </div>
+        <section class="asg-community-layout">
+            <article class="asg-live-panel asg-community-composer" id="askForm">
+                <div class="asg-question-head">
+                    <span>New doubt</span>
+                    <small>Make it easy to answer</small>
+                </div>
+                <h2>Describe your blocker</h2>
+                <form class="asg-community-form" onsubmit="submitDoubt(event)">
+                    <div class="asg-community-form-grid">
+                        <label>
+                            <span>Name</span>
+                            <input class="form-input" id="doubtName" type="text" placeholder="Your name" required>
+                        </label>
+                        <label>
+                            <span>Email</span>
+                            <input class="form-input" id="doubtEmail" type="email" placeholder="you@example.com" required>
+                        </label>
+                    </div>
+                    <div class="asg-community-form-grid">
+                        <label>
+                            <span>Topic</span>
+                            <select class="form-input" id="doubtTopic">
+                                <option>Python</option>
+                                <option>Machine Learning</option>
+                                <option>Data Science</option>
+                                <option>Projects</option>
+                                <option>Career</option>
+                                <option>Course Access</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Priority</span>
+                            <select class="form-input" id="doubtPriority">
+                                <option>Normal</option>
+                                <option>Urgent</option>
+                                <option>Conceptual</option>
+                                <option>Code review</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label>
+                        <span>Question</span>
+                        <textarea class="form-textarea" id="doubtQuestion" rows="5" placeholder="What are you trying to do, what happened, and where are you stuck?" required></textarea>
+                    </label>
+                    <label>
+                        <span>What you tried</span>
+                        <textarea class="form-textarea" id="doubtContext" rows="3" placeholder="Paste error message, code summary, or steps you already tried."></textarea>
+                    </label>
+                    <div class="asg-community-submit-row">
+                        <button class="btn-primary" type="submit">Submit Doubt</button>
+                        <p id="doubtSubmitMessage" aria-live="polite"></p>
+                    </div>
+                </form>
+            </article>
 
-        <div class="qa-note">
-            <p>📧 Want your question answered? Submit above! I reply within 48 hours.</p>
-        </div>
+            <aside class="asg-live-panel asg-community-guide">
+                <div class="asg-question-head">
+                    <span>Answer faster</span>
+                    <small>Question checklist</small>
+                </div>
+                <h2>Good doubt format</h2>
+                <ul class="asg-community-checklist">
+                    <li>Explain your goal in one sentence.</li>
+                    <li>Include the exact error or confusing line.</li>
+                    <li>Show what you already tried.</li>
+                    <li>Ask one clear question at a time.</li>
+                </ul>
+                <div class="asg-community-note">
+                    Public, searchable questions help every student learn from the answer.
+                </div>
+            </aside>
+        </section>
+
+        <section class="asg-community-board">
+            <div class="asg-section-header">
+                <div>
+                    <span class="asg-eyebrow">Doubt desk</span>
+                    <h2>Recent questions</h2>
+                </div>
+                <div class="asg-community-filter">
+                    <button class="active" type="button" onclick="setDoubtFilter('all', this)">All</button>
+                    <button type="button" onclick="setDoubtFilter('open', this)">Open</button>
+                    <button type="button" onclick="setDoubtFilter('answered', this)">Answered</button>
+                </div>
+            </div>
+            <div class="asg-community-list" id="doubtList"></div>
+        </section>
     </main>
 
     <footer>
-        <div class="footer-content">
-            <div>
-                <h4>ASG Tech Institute</h4>
-                <p>Practical coding and AI training</p>
-            </div>
-            <div class="social">
-                <a href="https://github.com/007arjungangwar">GitHub</a>
-                <a href="#">LinkedIn</a>
-                <a href="#">Twitter</a>
-            </div>
-        </div>
-        <p class="copyright">© 2024 | Free resources for students</p>
-        <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem;">
-            👥 Live Visitors: <span id="visitorCount">0</span> | 
-            📅 Today's Visitors: <span id="todayCount">0</span>
-        </div>
-
-        <script>
-        // Simple visitor counter
-        let visitorId = localStorage.getItem('visitorId');
-        if(!visitorId) {
-            visitorId = 'visitor_' + Date.now() + '_' + Math.random();
-            localStorage.setItem('visitorId', visitorId);
-        }
-
-        // Track active visitors
-        let activeVisitors = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-        activeVisitors[visitorId] = Date.now();
-        localStorage.setItem('activeVisitors', JSON.stringify(activeVisitors));
-
-        // Count active visitors (last 5 minutes)
-        function updateCounters() {
-            const now = Date.now();
-            let active = JSON.parse(localStorage.getItem('activeVisitors') || '{}');
-            let count = 0;
-            Object.keys(active).forEach(id => {
-                if(now - active[id] < 300000) { // 5 minutes
-                    count++;
-                } else {
-                    delete active[id];
-                }
-            });
-            localStorage.setItem('activeVisitors', JSON.stringify(active));
-            document.getElementById('visitorCount').innerHTML = count;
-            
-            // Today's visitors
-            const today = new Date().toDateString();
-            let todayVisitors = JSON.parse(localStorage.getItem('todayVisitors') || '{}');
-            if(!todayVisitors[today]) {
-                todayVisitors[today] = new Set();
-            }
-            todayVisitors[today].add(visitorId);
-            localStorage.setItem('todayVisitors', JSON.stringify(todayVisitors));
-            document.getElementById('todayCount').innerHTML = todayVisitors[today].size;
-        }
-
-        setInterval(updateCounters, 60000);
-        updateCounters();
-        </script>
+        <p class="copyright">ASG Tech Institute. Ask clearly, learn together.</p>
     </footer>
-<script>
-// Simple search functionality
-const searchBox = document.querySelector('.search-box');
-const resultsDiv = document.querySelector('.search-results');
 
-const content = [
-    { title: "How to Start Learning Python", url: "posts/python-beginners-guide.html", category: "Blog" },
-    { title: "What is Machine Learning?", url: "posts/what-is-ml.html", category: "Blog" },
-    { title: "What are PINNs?", url: "posts/pinns-explained.html", category: "Blog" },
-    { title: "PINNs for Richards' Equation", url: "projects.html", category: "Project" },
-    { title: "Python Cheat Sheet", url: "resources.html", category: "Resource" },
-    { title: "ML Algorithms Mind Map", url: "resources.html", category: "Resource" },
-    { title: "Data Science Roadmap", url: "roadmap.html", category: "Guide" }
-];
+    <script>
+        const doubtStorageKey = "studentQuestions";
+        let activeDoubtFilter = "all";
 
-searchBox.addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    if (query.length < 2) {
-        resultsDiv.style.display = 'none';
-        return;
-    }
-    
-    const matches = content.filter(item => 
-        item.title.toLowerCase().includes(query)
-    );
-    
-    if (matches.length > 0) {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = matches.map(match => `
-            <div class="search-result-item" onclick="window.location.href='${match.url}'">
-                <strong>${match.title}</strong><br>
-                <small style="color: #666;">${match.category}</small>
-            </div>
-        `).join('');
-    } else {
-        resultsDiv.style.display = 'block';
-        resultsDiv.innerHTML = '<div class="search-result-item">No results found</div>';
-    }
-});
+        const sampleDoubts = [
+            {
+                id: "sample_ml_math",
+                name: "Rohan",
+                email: "",
+                topic: "Machine Learning",
+                priority: "Conceptual",
+                question: "How do I start machine learning without a strong math background?",
+                context: "I know Python basics but statistics feels difficult.",
+                date: new Date(Date.now() - 86400000 * 2).toISOString(),
+                answered: true,
+                answer: "Start with intuition first: mean, variance, vectors, and simple graphs. Then learn linear regression and classification with small datasets. Add the math gradually as you build projects."
+            },
+            {
+                id: "sample_laptop",
+                name: "Priya",
+                email: "",
+                topic: "Data Science",
+                priority: "Normal",
+                question: "Which laptop is enough for data science practice?",
+                context: "I want to avoid overspending.",
+                date: new Date(Date.now() - 86400000).toISOString(),
+                answered: true,
+                answer: "An i5/Ryzen 5 class laptop with 8GB RAM works for learning. Prefer 16GB if possible. Use Google Colab for GPU-heavy model training."
+            }
+        ];
 
-// Hide results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!searchBox.contains(e.target)) {
-        resultsDiv.style.display = 'none';
-    }
-});
-</script>
-<button class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</button>
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
-<script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (document.body.classList.contains('dark-mode')) {
-        btn.innerHTML = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        btn.innerHTML = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
+        function readDoubts() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(doubtStorageKey) || "[]");
+                return Array.isArray(stored) ? stored : [];
+            } catch (error) {
+                return [];
+            }
+        }
 
-// Load dark mode preference
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    document.querySelector('.dark-mode-toggle').innerHTML = '☀️';
-}
-</script>
-<a href="questions.html" class="help-btn">💬</a>
+        function writeDoubts(doubts) {
+            localStorage.setItem(doubtStorageKey, JSON.stringify(doubts));
+        }
 
-<div class="help-popup" id="helpPopup">
-    <h4>Need help? 🙋‍♂️</h4>
-    <p>Go to the <a href="questions.html">Q&A page</a> to ask your question. I reply within 24 hours!</p>
-    <button onclick="closeHelp()" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem;">Close</button>
-</div>
+        function getDisplayDoubts() {
+            const stored = readDoubts();
+            return [...stored, ...sampleDoubts].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        }
 
-<script>
-const helpBtn = document.querySelector('.help-btn');
-const helpPopup = document.getElementById('helpPopup');
+        function submitDoubt(event) {
+            event.preventDefault();
+            const doubts = readDoubts();
+            const doubt = {
+                id: Date.now(),
+                name: document.getElementById("doubtName").value.trim(),
+                email: document.getElementById("doubtEmail").value.trim(),
+                topic: document.getElementById("doubtTopic").value,
+                priority: document.getElementById("doubtPriority").value,
+                question: document.getElementById("doubtQuestion").value.trim(),
+                context: document.getElementById("doubtContext").value.trim(),
+                date: new Date().toISOString(),
+                answered: false,
+                answer: ""
+            };
 
-helpBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    helpPopup.classList.toggle('active');
-    setTimeout(() => helpPopup.classList.remove('active'), 5000);
-});
+            doubts.push(doubt);
+            writeDoubts(doubts);
+            event.target.reset();
+            document.getElementById("doubtSubmitMessage").textContent = "Doubt submitted. It is now visible in the community queue.";
+            renderDoubts();
+        }
 
-function closeHelp() {
-    helpPopup.classList.remove('active');
-}
-</script>
+        function setDoubtFilter(filter, button) {
+            activeDoubtFilter = filter;
+            document.querySelectorAll(".asg-community-filter button").forEach((item) => item.classList.remove("active"));
+            button.classList.add("active");
+            renderDoubts();
+        }
+
+        function renderDoubts() {
+            const doubts = getDisplayDoubts();
+            const open = doubts.filter((item) => !item.answered);
+            const answered = doubts.filter((item) => item.answered);
+            document.getElementById("doubtOpenCount").textContent = open.length;
+            document.getElementById("doubtAnsweredCount").textContent = answered.length;
+
+            const filtered = activeDoubtFilter === "open"
+                ? open
+                : activeDoubtFilter === "answered"
+                    ? answered
+                    : doubts;
+
+            const list = document.getElementById("doubtList");
+            if (!filtered.length) {
+                list.innerHTML = `<div class="asg-empty-state"><h2>No questions yet</h2><p>Ask the first doubt for this filter.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map((doubt) => `
+                <article class="asg-community-card">
+                    <div class="asg-community-card-head">
+                        <span>${escapeHtml(doubt.topic || "General")}</span>
+                        <strong class="${doubt.answered ? "answered" : "open"}">${doubt.answered ? "Answered" : "Open"}</strong>
+                    </div>
+                    <h3>${escapeHtml(doubt.question)}</h3>
+                    ${doubt.context ? `<p>${escapeHtml(doubt.context)}</p>` : ""}
+                    <div class="asg-community-meta">
+                        <span>${escapeHtml(doubt.name || "Student")}</span>
+                        <span>${new Date(doubt.date).toLocaleDateString()}</span>
+                        <span>${escapeHtml(doubt.priority || "Normal")}</span>
+                    </div>
+                    ${doubt.answered ? `<div class="asg-community-answer"><strong>Answer</strong><p>${escapeHtml(doubt.answer)}</p></div>` : ""}
+                </article>
+            `).join("");
+        }
+
+        const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+        if (currentUser) {
+            document.getElementById("doubtName").value = currentUser.name || "";
+            document.getElementById("doubtEmail").value = currentUser.email || "";
+        }
+
+        renderDoubts();
+    </script>
 </body>
 </html>
