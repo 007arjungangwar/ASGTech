@@ -6360,3 +6360,514 @@ body.asg-topic-content-fullscreen .asg-reader-fullscreen-exit:focus-visible,
         display: none;
     }
 }
+
+/* Responsive hardening for mobile and compact desktop */
+html,
+body {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+img,
+video,
+iframe,
+object,
+embed,
+canvas,
+svg {
+    max-width: 100%;
+}
+
+body.has-asg-shell main,
+body.has-asg-shell footer {
+    min-width: 0;
+}
+
+body.has-asg-shell .asg-page-hero,
+body.has-asg-shell .asg-home-hero,
+body.has-asg-shell .asg-live-panel,
+body.has-asg-shell .asg-course-card,
+body.has-asg-shell .asg-resource-card,
+body.has-asg-shell .asg-public-card,
+body.has-asg-shell .asg-admin-command-center,
+body.has-asg-shell .asg-reader-shell {
+    min-width: 0;
+}
+
+.asg-admin-table,
+.asg-progress-table,
+.asg-review-list,
+.asg-run-output-grid,
+.asg-test-preview,
+.asg-topic-coding-workspace,
+.asg-code-workspace,
+.asg-reader-body {
+    min-width: 0;
+}
+
+.asg-admin-table,
+.asg-progress-table,
+.asg-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.asg-admin-table table,
+.asg-progress-table table {
+    min-width: 720px;
+}
+
+@media (max-width: 1180px) {
+    body.has-asg-shell main,
+    body.has-asg-shell footer {
+        padding-left: clamp(18px, 2.6vw, 34px);
+        padding-right: clamp(18px, 2.6vw, 34px);
+    }
+
+    .asg-page-hero,
+    .asg-home-hero {
+        align-items: start;
+    }
+
+    .asg-public-toolbar,
+    .asg-certificate-verify-form,
+    .asg-admin-command-top,
+    .asg-certificate-result-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    :root {
+        --asg-topbar-height: 164px;
+    }
+
+    body.has-asg-shell nav.asg-navbar {
+        position: sticky;
+    }
+
+    .asg-topbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "brand tools"
+            "search search"
+            "account account";
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+    }
+
+    .asg-topbar-left {
+        grid-area: brand;
+        min-width: 0;
+    }
+
+    .asg-topbar-right {
+        grid-area: tools;
+        justify-content: end;
+        min-width: 0;
+    }
+
+    .asg-global-search {
+        grid-area: search;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        order: 0;
+    }
+
+    .asg-auth-area {
+        grid-area: account;
+        justify-content: flex-start;
+        max-width: 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+
+    .asg-top-links {
+        display: none;
+    }
+
+    .asg-sidebar {
+        top: var(--asg-topbar-height);
+        width: min(340px, calc(100vw - 20px));
+        max-width: none;
+        border-radius: 0 8px 8px 0;
+    }
+
+    body.has-asg-shell main,
+    body.has-asg-shell footer {
+        width: 100%;
+        margin-left: 0;
+        padding-left: clamp(14px, 3.8vw, 24px);
+        padding-right: clamp(14px, 3.8vw, 24px);
+    }
+
+    body.has-asg-shell main {
+        padding-top: clamp(18px, 4vw, 28px);
+        padding-bottom: clamp(28px, 6vw, 46px);
+    }
+
+    .asg-breadcrumbs {
+        max-width: 100%;
+        margin-left: 0;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .asg-page-hero,
+    .asg-home-hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: clamp(20px, 5vw, 32px);
+    }
+
+    body.has-asg-shell h1,
+    .asg-page-hero h1,
+    .asg-home-hero h1,
+    .asg-reader-header h2 {
+        font-size: clamp(2rem, 7vw, 3rem);
+        line-height: 1.04;
+    }
+
+    .asg-hero-metrics,
+    .asg-admin-stat-grid,
+    .asg-home-proof,
+    .asg-result-summary,
+    .asg-resource-grid,
+    .resources-grid,
+    .projects-grid,
+    .asg-course-grid,
+    .asg-exam-list-grid,
+    .asg-public-card-grid,
+    .asg-learning-pattern,
+    .asg-analytics-columns,
+    .asg-public-admin-studio {
+        grid-template-columns: 1fr;
+        min-width: 0;
+    }
+
+    .asg-hero-actions,
+    .asg-form-actions,
+    .asg-admin-actions,
+    .asg-item-actions,
+    .asg-resource-filters,
+    .asg-skill-tags {
+        align-items: stretch;
+    }
+
+    .asg-hero-actions a,
+    .asg-card-link,
+    .btn-primary,
+    .btn-secondary,
+    .auth-btn,
+    .enroll-btn {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .asg-topic-tabs,
+    body.asg-lesson-focus .asg-topic-tabs,
+    .asg-admin-tabs,
+    .asg-resource-filters {
+        position: static;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 8px;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .asg-topic-tabs button,
+    body.asg-lesson-focus .asg-topic-tabs button,
+    .asg-admin-tabs button,
+    .asg-resource-filters button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .asg-topic-sidebar,
+    body.asg-lesson-focus .asg-topic-sidebar,
+    .asg-video-playlist,
+    .asg-challenge-list {
+        position: static;
+        max-height: none;
+        width: 100%;
+    }
+
+    .asg-topic-list-scroll {
+        max-height: 42vh;
+    }
+
+    .asg-reader-shell {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .asg-reader-header,
+    body.asg-lesson-focus.asg-topic-rail-collapsed .asg-reader-header,
+    .asg-reader-nav,
+    .asg-auth-layout,
+    .asg-video-library,
+    .asg-topic-coding-layout,
+    .asg-practice-shell,
+    body.asg-assessment-focus .asg-practice-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .asg-reader-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .asg-reader-body {
+        font-size: 1rem;
+        line-height: 1.76;
+    }
+
+    .asg-reader-nav .next {
+        text-align: left;
+    }
+
+    .asg-python-editor {
+        min-height: clamp(360px, 54vh, 620px);
+        font-size: 0.9rem;
+    }
+
+    .asg-code-editor-body {
+        height: clamp(360px, 54vh, 620px);
+    }
+}
+
+@media (max-width: 620px) {
+    :root {
+        --asg-topbar-height: 160px;
+    }
+
+    body {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .asg-topbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "brand tools"
+            "account account"
+            "search search";
+        padding: 9px 12px;
+    }
+
+    .asg-logo {
+        min-width: 0;
+        gap: 8px;
+    }
+
+    .asg-logo-mark {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+    }
+
+    .asg-logo-copy small {
+        display: none;
+    }
+
+    .asg-logo-copy strong {
+        font-size: 0.98rem;
+    }
+
+    .asg-shell-toggle {
+        width: 38px;
+        height: 38px;
+        min-height: 38px;
+    }
+
+    .asg-utility-bar {
+        gap: 6px;
+    }
+
+    .asg-icon-button {
+        min-height: 36px;
+        padding: 0 9px;
+        font-size: 0.8rem;
+    }
+
+    .asg-auth-area {
+        justify-content: flex-start;
+    }
+
+    .asg-login-link,
+    .asg-register-link {
+        flex: 1 1 120px;
+        min-width: 0;
+    }
+
+    .user-dropdown {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        top: calc(var(--asg-topbar-height) - 2px);
+        min-width: 0;
+    }
+
+    .asg-global-search input {
+        min-width: 0;
+        padding-left: 10px;
+        font-size: 0.92rem;
+    }
+
+    .asg-global-search button {
+        min-width: 42px;
+        padding: 0 12px;
+    }
+
+    body.has-asg-shell main,
+    body.has-asg-shell footer {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    body.asg-lesson-focus.asg-topic-content-fullscreen main.asg-topic-page {
+        padding: 0 !important;
+    }
+
+    .asg-page-hero,
+    .asg-home-hero,
+    .asg-live-panel,
+    .asg-admin-command-center,
+    .asg-reader-shell,
+    .card,
+    .resource-card,
+    .project-card,
+    .qa-item {
+        padding: 16px;
+    }
+
+    .asg-home-hero,
+    .asg-page-hero {
+        margin-bottom: 16px;
+    }
+
+    body.has-asg-shell h1,
+    .asg-page-hero h1,
+    .asg-home-hero h1,
+    .asg-reader-header h2 {
+        font-size: clamp(1.75rem, 9vw, 2.45rem);
+    }
+
+    body.has-asg-shell h2 {
+        font-size: clamp(1.2rem, 5vw, 1.55rem);
+    }
+
+    .asg-hero-metrics div,
+    .asg-admin-stat-card,
+    .asg-result-summary div {
+        padding: 13px;
+    }
+
+    .asg-hero-metrics strong,
+    .asg-admin-stat-card strong,
+    .asg-result-summary strong {
+        font-size: 1.45rem;
+    }
+
+    .asg-admin-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .asg-test-row,
+    .asg-test-editor-row,
+    .asg-admin-list-item,
+    .asg-detail-card,
+    .asg-roadmap-card,
+    .asg-topic-check,
+    .asg-certificate-result-card,
+    .asg-public-toolbar {
+        grid-template-columns: 1fr !important;
+    }
+
+    .asg-test-row code,
+    .asg-test-editor-row input,
+    .asg-output-panel pre,
+    .asg-topic-content pre,
+    .asg-reader-body pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .asg-output-panel,
+    .asg-console-output,
+    .asg-return-output {
+        min-width: 0;
+    }
+
+    .asg-run-output-grid {
+        gap: 0.8rem;
+    }
+
+    .asg-reader-meta,
+    .asg-reader-steps {
+        grid-template-columns: 1fr;
+    }
+
+    .asg-reader-body {
+        font-size: 0.98rem;
+    }
+
+    body.asg-topic-content-fullscreen .asg-reader-body,
+    #topicPanel:fullscreen .asg-reader-body {
+        padding: 18px;
+    }
+
+    body.asg-topic-content-fullscreen .asg-topic-coding-layout,
+    #topicPanel:fullscreen .asg-topic-coding-layout {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 420px) {
+    :root {
+        --asg-topbar-height: 160px;
+    }
+
+    .asg-topbar {
+        gap: 8px;
+    }
+
+    .asg-logo-copy strong {
+        max-width: 112px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .asg-icon-button span {
+        max-width: 52px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .asg-breadcrumbs {
+        font-size: 0.78rem;
+        padding: 0.38rem 0.55rem;
+    }
+
+    .asg-page-hero,
+    .asg-home-hero,
+    .asg-live-panel,
+    .asg-admin-command-center {
+        padding: 14px;
+    }
+
+    .asg-sidebar {
+        width: calc(100vw - 14px);
+    }
+
+    .asg-topic-link {
+        grid-template-columns: 1fr;
+    }
+}
