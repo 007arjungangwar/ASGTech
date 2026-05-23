@@ -4,69 +4,188 @@
     <script src="auth-check.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About | ASG Tech</title>
+    <meta name="description" content="Learn about ASG Tech Institute, a structured technology learning portal with lessons, quizzes, coding practice, progress tracking, certificates, and student support.">
+    <title>About | ASG Tech Institute</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">ASG Tech</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="blog.html">Blog</a>
-                <a href="projects.html">Projects</a>
-                <a href="about.html">About</a>
-            </div>
-        </div>
-    </nav>
+<body class="asg-about-page">
+    <nav aria-label="Main navigation"></nav>
 
-    <main>
-        <section class="asg-home-hero">
-            <div class="asg-hero-copy">
-                <div class="asg-eyebrow">About the institute</div>
-                <h1>ASG Tech helps students learn technology with structure.</h1>
+    <main class="asg-about-shell">
+        <section class="asg-about-hero" aria-labelledby="aboutHeroTitle">
+            <div class="asg-about-hero-copy">
+                <div class="asg-eyebrow">Public / About</div>
+                <h1 id="aboutHeroTitle">Technology learning designed around access, structure, and verified progress.</h1>
                 <p class="subtitle">
-                    The portal is designed for practical learning: clear roadmaps, project-based courses,
-                    saved progress, certificates, and student support after registration.
+                    ASG Tech Institute brings lessons, quizzes, coding tasks, projects, certificates, and community
+                    support into one student workspace so learners can move from confusion to consistent practice.
                 </p>
                 <div class="asg-hero-actions">
                     <a class="primary" href="login.html?mode=register">Join as student</a>
-                    <a class="secondary" href="projects.html">See public projects</a>
+                    <a class="secondary" href="courses.html">Explore learning paths</a>
                 </div>
             </div>
 
-            <aside class="asg-portal-panel">
-                <h2>Why the portal requires login</h2>
-                <p>
-                    Student-only pages store personal progress, quiz results, certificates, forum activity,
-                    and chat history. A basic account keeps those features connected to the right learner.
-                </p>
+            <aside class="asg-about-identity" aria-label="ASG Tech learning focus">
+                <img src="ASG Tech Stamp without background.png" alt="ASG Tech Institute stamp">
+                <div>
+                    <span>ASG Tech Institute</span>
+                    <strong>Practical technology education for serious beginners.</strong>
+                    <p>
+                        Built for self-paced students who need clean guidance, measurable practice, and a record of
+                        every important learning milestone.
+                    </p>
+                </div>
             </aside>
         </section>
 
-        <section class="asg-grid">
-            <article class="asg-program-card">
-                <div class="asg-card-kicker">Mission</div>
-                <h3>Make learning less confusing</h3>
-                <p>Students get a guided sequence instead of a messy list of links.</p>
+        <section class="asg-about-proof" aria-label="Learning promise">
+            <article>
+                <span>Access</span>
+                <strong>Simple entry</strong>
+                <p>Public pages stay open, while student tools unlock with a personal learning account.</p>
+            </article>
+            <article>
+                <span>Structure</span>
+                <strong>Topic-by-topic flow</strong>
+                <p>Courses can guide learners through lessons, quizzes, coding tasks, and completion checks.</p>
+            </article>
+            <article>
+                <span>Practice</span>
+                <strong>Build while learning</strong>
+                <p>Coding, projects, and exam practice turn concepts into visible output and confidence.</p>
+            </article>
+            <article>
+                <span>Record</span>
+                <strong>Progress that follows</strong>
+                <p>Student progress, quiz results, certificates, and activity are tied to the right learner.</p>
+            </article>
+        </section>
+
+        <section class="asg-about-section asg-about-mission">
+            <div>
+                <span class="asg-section-kicker">Our Mission</span>
+                <h2>Make technology education easier to start, easier to follow, and harder to abandon.</h2>
+            </div>
+            <p>
+                A learner should not have to search across many disconnected tools just to know what to study next.
+                ASG Tech is shaped around a focused path: clear content, active practice, progress visibility, and
+                help from the community whenever the student gets stuck.
+            </p>
+        </section>
+
+        <section class="asg-about-section">
+            <div class="asg-section-header">
+                <div>
+                    <span class="asg-section-kicker">Learning Model</span>
+                    <h2>One course, one complete learning cycle.</h2>
+                </div>
+                <p>
+                    The course experience is designed to feel professional and predictable, from the first lesson to
+                    the final certificate.
+                </p>
+            </div>
+
+            <div class="asg-about-model" aria-label="ASG Tech learning model">
+                <article>
+                    <span>01</span>
+                    <h3>Roadmap</h3>
+                    <p>Students see where the topic fits and what sequence to follow.</p>
+                </article>
+                <article>
+                    <span>02</span>
+                    <h3>Lesson</h3>
+                    <p>Readable content, PDFs, notes, and videos support focused study.</p>
+                </article>
+                <article>
+                    <span>03</span>
+                    <h3>Quiz</h3>
+                    <p>Knowledge checks confirm the learner understands the core idea.</p>
+                </article>
+                <article>
+                    <span>04</span>
+                    <h3>Coding</h3>
+                    <p>Topic-wise tasks let students write, run, and inspect real output.</p>
+                </article>
+                <article>
+                    <span>05</span>
+                    <h3>Progress</h3>
+                    <p>Completion is calculated from real activity, not from manual shortcuts.</p>
+                </article>
+                <article>
+                    <span>06</span>
+                    <h3>Certificate</h3>
+                    <p>Achievement becomes visible after the required work is completed.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="asg-about-split">
+            <article class="asg-about-panel">
+                <span class="asg-section-kicker">For Students</span>
+                <h2>Everything important stays in one place.</h2>
+                <ul class="asg-about-list">
+                    <li>Course lessons, topic content, quiz practice, and coding tasks.</li>
+                    <li>Saved progress for each learner instead of shared or manual completion.</li>
+                    <li>Community support through doubts, forum discussion, live chat, and AI tutor help.</li>
+                    <li>Certificates and profile records that reflect completed learning activity.</li>
+                </ul>
             </article>
 
-            <article class="asg-program-card">
-                <div class="asg-card-kicker">Method</div>
-                <h3>Learn by building</h3>
-                <p>Courses and projects are arranged so students practice while they learn.</p>
+            <article class="asg-about-panel asg-about-admin-note">
+                <span class="asg-section-kicker">For Admins</span>
+                <h2>Learning operations can stay controlled and transparent.</h2>
+                <p>
+                    Admin views are intended to help manage courses, review student progress, and understand how each
+                    learner is moving through lessons, quizzes, coding work, and certificates.
+                </p>
+                <a class="asg-card-link secondary" href="admin.html">Open admin workspace</a>
             </article>
+        </section>
 
-            <article class="asg-program-card">
-                <div class="asg-card-kicker">Support</div>
-                <h3>Ask, discuss, improve</h3>
-                <p>The Q&A, forum, live chat, and AI assistant give students multiple ways to get help.</p>
-            </article>
+        <section class="asg-about-values" aria-labelledby="aboutValuesTitle">
+            <div class="asg-section-header">
+                <div>
+                    <span class="asg-section-kicker">Education Values</span>
+                    <h2 id="aboutValuesTitle">Professional learning should feel open, clear, and accountable.</h2>
+                </div>
+            </div>
+
+            <div class="asg-about-values-grid">
+                <article>
+                    <h3>Open-minded access</h3>
+                    <p>Students can begin with public information and create an account when they are ready to learn seriously.</p>
+                </article>
+                <article>
+                    <h3>Self-paced discipline</h3>
+                    <p>The platform supports flexible study while still giving students a defined route through the material.</p>
+                </article>
+                <article>
+                    <h3>Evidence of work</h3>
+                    <p>Progress, quiz scores, coding attempts, and certificates should come from completed learning actions.</p>
+                </article>
+                <article>
+                    <h3>Human support</h3>
+                    <p>Doubt solving and community discussion keep the platform from becoming a silent content library.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="asg-about-cta" aria-label="Start learning with ASG Tech">
+            <div>
+                <span class="asg-section-kicker">Start With Structure</span>
+                <h2>Join the workspace and follow a complete learning path.</h2>
+                <p>Register once, then keep your courses, practice, progress, certificates, and community activity connected.</p>
+            </div>
+            <div class="asg-hero-actions">
+                <a class="primary" href="login.html?mode=register">Create student account</a>
+                <a class="secondary" href="projects.html">View public projects</a>
+            </div>
         </section>
     </main>
 
     <footer>
-        <p class="copyright">© 2026 ASG Tech Institute. Practical technology learning for students.</p>
+        <p class="copyright">&copy; 2026 ASG Tech Institute. Practical technology learning for students.</p>
     </footer>
 </body>
 </html>
