@@ -38,7 +38,8 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         const courseUser = getCurrentUser();
-        const course = asgGetCourseById(params.get("course"));
+        let course = asgGetCourseById(params.get("course"));
+        const courseMainShell = document.querySelector("main").innerHTML;
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -79,6 +80,10 @@
                 return;
             }
 
+            if (!document.getElementById("courseHero")) {
+                document.querySelector("main").innerHTML = courseMainShell;
+            }
+
             const progress = asgGetCourseProgress(courseUser, course.id);
             const progressTopic = progress && progress.topicTitle ? progress.topicTitle : "";
             document.title = `${course.title} | ASG Tech`;
@@ -112,6 +117,21 @@
                 `).join("")}
             `;
         }
+
+        function refreshCourseFromStore() {
+            course = asgGetCourseById(params.get("course"));
+            renderCourse();
+        }
+
+        function handleCourseDataUpdate(event) {
+            const key = event.detail ? event.detail.key : event.key;
+            if ([ASG_LEARNING_KEYS.courses, ASG_LEARNING_KEYS.courseProgress].includes(key)) {
+                refreshCourseFromStore();
+            }
+        }
+
+        window.addEventListener("asg:data-updated", handleCourseDataUpdate);
+        window.addEventListener("storage", handleCourseDataUpdate);
 
         renderCourse();
         if (sessionStorage.getItem("asgCourseFullscreen") === "1") {

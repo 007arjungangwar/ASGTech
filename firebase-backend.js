@@ -29,6 +29,20 @@
         "studentAnnouncement"
     ];
 
+    const ASG_CONTENT_FIELD_MAP = [
+        { field: "quizCatalog", storageKey: "asgQuizCatalog" },
+        { field: "quizQuestions", storageKey: "asgQuizQuestions" },
+        { field: "codingChallenges", storageKey: "asgCodingChallenges" },
+        { field: "courses", storageKey: "asgCourses" },
+        { field: "blogPosts", storageKey: "asgBlogPosts" },
+        { field: "projectShowcase", storageKey: "asgProjectShowcase" },
+        { field: "videoPlaylists", storageKey: "asgVideoPlaylists" },
+        { field: "roadmapItems", storageKey: "asgRoadmapItems" },
+        { field: "videoLibrary", storageKey: "asgVideoLibrary" },
+        { field: "resourceLibrary", storageKey: "asgResourceLibrary" },
+        { field: "studentAnnouncement", storageKey: "studentAnnouncement" }
+    ];
+
     const ASG_ACTIVITY_KEYS = [
         "asgQuizAttempts",
         "quizScores",
@@ -60,6 +74,7 @@
     const unsubscribeFns = [];
     const pendingWrites = new Map();
     const missingRemoteKeys = new Set();
+    const LOCAL_CONTENT_BACKUP_KEY = "asgCloudMigrationBackup";
 
     function firebaseModule(serviceName) {
         return `https://www.gstatic.com/firebasejs/${ASG_FIREBASE_SDK_VERSION}/firebase-${serviceName}.js`;
@@ -83,6 +98,48 @@
 
     function readLocalJSON(key, fallback) {
         return parseJSON(localStorage.getItem(key), fallback);
+    }
+
+    function localContentValueHasData(value) {
+        if (Array.isArray(value)) return value.length > 0;
+        if (!value || typeof value !== "object") return value !== null && value !== undefined && value !== "";
+        return Object.keys(value).some((key) => {
+            const item = value[key];
+            if (Array.isArray(item)) return item.length > 0;
+            if (item && typeof item === "object") return Object.keys(item).length > 0;
+            return item !== null && item !== undefined && item !== "";
+        });
+    }
+
+    function createLocalContentBackup(reason = "startup") {
+        const existing = readLocalJSON(LOCAL_CONTENT_BACKUP_KEY, null);
+        const data = {};
+
+        ASG_CONTENT_KEYS.forEach((key) => {
+            const rawValue = localStorage.getItem(key);
+            if (rawValue === null) return;
+            const value = parseJSON(rawValue, null);
+            if (!localContentValueHasData(value)) return;
+            data[key] = value;
+        });
+
+        if (!Object.keys(data).length) return existing;
+
+        const backup = {
+            version: Date.now(),
+            reason,
+            createdAt: new Date().toISOString(),
+            data
+        };
+        const existingSize = existing && existing.data ? Object.keys(existing.data).length : 0;
+        const nextSize = Object.keys(data).length;
+
+        if (!existing || nextSize >= existingSize || reason === "manual") {
+            localStorage.setItem(LOCAL_CONTENT_BACKUP_KEY, JSON.stringify(backup));
+            return backup;
+        }
+
+        return existing;
     }
 
     function writeLocalJSON(key, value) {
@@ -439,6 +496,44 @@
         return true;
     }
 
+    async function publishContentSnapshot(data, options = {}) {
+        const sourceData = data && typeof data === "object" ? data : {};
+        const results = [];
+
+        for (const entry of ASG_CONTENT_FIELD_MAP) {
+            const hasStorageKey = Object.prototype.hasOwnProperty.call(sourceData, entry.storageKey);
+            const hasField = Object.prototype.hasOwnProperty.call(sourceData, entry.field);
+            if (!hasStorageKey && !hasField) continue;
+
+            const value = hasStorageKey ? sourceData[entry.storageKey] : sourceData[entry.field];
+            if (value === undefined || value === null) continue;
+
+            await saveDataKey(entry.storageKey, value);
+            if (options.updateLocal !== false) {
+                localStorage.setItem(entry.storageKey, JSON.stringify(value));
+                window.dispatchEvent(new CustomEvent("asg:data-updated", {
+                    detail: { key: entry.storageKey, value, source: "manual-cloud-publish" }
+                }));
+            }
+            results.push(entry.storageKey);
+        }
+
+        if (results.length) {
+            localStorage.setItem("asgLastCloudPublishAt", new Date().toISOString());
+            createLocalContentBackup("manual");
+        }
+
+        return results;
+    }
+
+    async function publishLocalContentBackup() {
+        const backup = readLocalJSON(LOCAL_CONTENT_BACKUP_KEY, null);
+        if (!backup || !backup.data || typeof backup.data !== "object") {
+            throw new Error("No local admin content backup is available in this browser.");
+        }
+        return publishContentSnapshot(backup.data);
+    }
+
     async function seedMissingRemoteData() {
         const profile = currentProfile || await restoreSession();
         if (!isProfileAdmin(profile)) return;
@@ -608,6 +703,8 @@
         });
     }
 
+    createLocalContentBackup("startup");
+
     window.ASG_BACKEND = {
         config: ASG_FIREBASE_CONFIG,
         ready: loadServices,
@@ -617,6 +714,10 @@
         migrateLocalUser,
         signOut,
         saveDataKey,
+        publishContentSnapshot,
+        publishLocalContentBackup,
+        createLocalContentBackup,
+        getLocalContentBackup: () => readLocalJSON(LOCAL_CONTENT_BACKUP_KEY, null),
         startLearningSync,
         startUsersSync,
         getCurrentProfile: () => currentProfile || getStoredSessionUser(),

@@ -40,13 +40,14 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         const topicUser = getCurrentUser();
-        const course = asgGetCourseById(params.get("course"));
-        const topic = course ? asgGetTopicById(course.id, params.get("topic")) : null;
+        let course = asgGetCourseById(params.get("course"));
+        let topic = course ? asgGetTopicById(course.id, params.get("topic")) : null;
         let activeTopicTab = "content";
         let topicCodingChallenges = course && topic ? asgGetTopicCodingChallenges(course.id, topic.id) : [];
         let activeCodingIndex = 0;
         let topicPyodideInstance = null;
         let topicPyodideLoading = null;
+        const topicMainShell = document.querySelector("main").innerHTML;
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -606,6 +607,10 @@ json.dumps(payload, default=str)
                 return;
             }
 
+            if (!document.getElementById("topicHero")) {
+                document.querySelector("main").innerHTML = topicMainShell;
+            }
+
             document.title = `${topic.title} | ASG Tech`;
             const progress = asgSaveCourseProgress(topicUser, course, topic, activeTopicTab) || asgGetCourseProgress(topicUser, course.id);
             const activeTopics = getActiveTopics();
@@ -648,6 +653,31 @@ json.dumps(payload, default=str)
             document.getElementById("topicPanel").innerHTML = renderLessonContentTab(progress);
             updateLessonProgressState(progress);
         }
+
+        function reloadTopicFromStore() {
+            course = asgGetCourseById(params.get("course"));
+            topic = course ? asgGetTopicById(course.id, params.get("topic")) : null;
+            topicCodingChallenges = course && topic ? asgGetTopicCodingChallenges(course.id, topic.id) : [];
+            if (activeCodingIndex >= topicCodingChallenges.length) activeCodingIndex = 0;
+        }
+
+        function refreshTopicFromStore() {
+            reloadTopicFromStore();
+            renderTopic();
+        }
+
+        function handleTopicDataUpdate(event) {
+            const key = event.detail ? event.detail.key : event.key;
+            const watchedKeys = [
+                ASG_LEARNING_KEYS.courses,
+                ASG_LEARNING_KEYS.codingChallenges,
+                ASG_LEARNING_KEYS.codingSubmissions
+            ];
+            if (watchedKeys.includes(key)) refreshTopicFromStore();
+        }
+
+        window.addEventListener("asg:data-updated", handleTopicDataUpdate);
+        window.addEventListener("storage", handleTopicDataUpdate);
 
         renderTopic();
         sessionStorage.removeItem("asgCourseFullscreen");

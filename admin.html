@@ -35,8 +35,10 @@
                     <p>Focused sections, quick previews, and draft starters for new content.</p>
                 </div>
                 <div class="asg-admin-actions">
+                    <button class="btn-primary" type="button" onclick="publishAdminDataToCloud()">Publish to Cloud</button>
+                    <button class="btn-secondary" type="button" onclick="publishSavedBrowserBackup()">Publish Browser Backup</button>
                     <button class="btn-primary" type="button" onclick="exportAdminData()">Export Data</button>
-                    <button class="btn-secondary" type="button" onclick="exportPublishSnapshot()">Download Publish File</button>
+                    <button class="btn-secondary" type="button" onclick="exportPublishSnapshot()">Download Static Backup</button>
                     <a class="btn-secondary" href="quiz.html">Preview Quiz</a>
                     <a class="btn-secondary" href="coding-practice.html">Preview Practice</a>
                     <a class="btn-secondary" href="exam-center.html">Preview Exam</a>
@@ -2865,8 +2867,82 @@
                 publishedAt: new Date().toISOString(),
                 data: getPublishableAdminData()
             };
-            const contents = `// Public ASG Tech learning-data snapshot.\n// Replace this file in the repository to publish admin course/topic/quiz/coding content for every device.\nwindow.ASG_PUBLISHED_LEARNING_DATA = ${JSON.stringify(snapshot, null, 4)};\n`;
+            const contents = `// Public ASG Tech learning-data fallback snapshot.\n// Firestore is the primary shared backend. Use this file only as a static backup for GitHub Pages.\nwindow.ASG_PUBLISHED_LEARNING_DATA = ${JSON.stringify(snapshot, null, 4)};\n`;
             downloadAdminFile(contents, "published-learning-data.js", "application/javascript");
+        }
+
+        function setCloudSyncStatus(message, isError = false) {
+            const target = document.getElementById("lastSync");
+            if (!target) return;
+            target.textContent = message;
+            target.style.color = isError ? "#b91c1c" : "";
+        }
+
+        async function publishAdminDataToCloud() {
+            if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.publishContentSnapshot !== "function") {
+                alert("Firebase backend is not ready. Please refresh and sign in again.");
+                return;
+            }
+
+            const confirmed = confirm("Publish the admin content currently shown here to Firestore for every device?");
+            if (!confirmed) return;
+
+            setCloudSyncStatus("Publishing current admin content to cloud...");
+            try {
+                if (typeof window.ASG_BACKEND.createLocalContentBackup === "function") {
+                    window.ASG_BACKEND.createLocalContentBackup("manual-before-cloud-publish");
+                }
+                const publishedKeys = await window.ASG_BACKEND.publishContentSnapshot(getPublishableAdminData());
+                refreshDashboard();
+                setCloudSyncStatus(`Cloud published: ${publishedKeys.length} content groups at ${new Date().toLocaleTimeString()}`);
+                alert("Published to Firestore. Other devices will see this content after refresh/sign in.");
+            } catch (error) {
+                console.error(error);
+                setCloudSyncStatus("Cloud publish failed. Check Firebase login/rules.", true);
+                alert(error.message || "Could not publish to Firestore.");
+            }
+        }
+
+        async function publishSavedBrowserBackup() {
+            if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.publishLocalContentBackup !== "function") {
+                alert("Firebase backend is not ready. Please refresh and sign in again.");
+                return;
+            }
+
+            const backup = typeof window.ASG_BACKEND.getLocalContentBackup === "function"
+                ? window.ASG_BACKEND.getLocalContentBackup()
+                : null;
+            const backupKeys = backup && backup.data ? Object.keys(backup.data) : [];
+            if (!backupKeys.length) {
+                alert("No local browser backup was found on this device.");
+                return;
+            }
+
+            const createdAt = backup.createdAt ? new Date(backup.createdAt).toLocaleString() : "this browser";
+            const confirmed = confirm(`Publish the browser backup captured at ${createdAt} to Firestore? This can restore admin edits that were only saved on this device.`);
+            if (!confirmed) return;
+
+            setCloudSyncStatus("Publishing saved browser backup to cloud...");
+            try {
+                const publishedKeys = await window.ASG_BACKEND.publishLocalContentBackup();
+                refreshDashboard();
+                setCloudSyncStatus(`Browser backup published: ${publishedKeys.length} content groups`);
+                alert("Browser backup published to Firestore. Other devices can now receive it.");
+            } catch (error) {
+                console.error(error);
+                setCloudSyncStatus("Browser backup publish failed.", true);
+                alert(error.message || "Could not publish the browser backup.");
+            }
+        }
+
+        function showCloudBackupHint() {
+            const backup = window.ASG_BACKEND && typeof window.ASG_BACKEND.getLocalContentBackup === "function"
+                ? window.ASG_BACKEND.getLocalContentBackup()
+                : null;
+            const backupKeys = backup && backup.data ? Object.keys(backup.data) : [];
+            if (!backupKeys.length) return;
+            const createdAt = backup.createdAt ? new Date(backup.createdAt).toLocaleTimeString() : "ready";
+            setCloudSyncStatus(`Browser backup ready (${backupKeys.length} groups, ${createdAt})`);
         }
 
         function refreshDashboard() {
@@ -2948,6 +3024,7 @@
         resetVideoForm();
         resetResourceForm();
         setAdminSection(localStorage.getItem("asgAdminActiveSection") || "overview", { scroll: false });
+        showCloudBackupHint();
     </script>
 </body>
 </html>
