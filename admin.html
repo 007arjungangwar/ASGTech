@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
-    <script src="firebase-backend.js"></script>
+    <script src="supabase-backend.js"></script>
     <script src="auth-check.js"></script>
     <script src="published-learning-data.js"></script>
     <script src="learning-data.js"></script>
@@ -510,9 +510,9 @@
                         <input id="topicVideoUrl" type="url" placeholder="https://youtu.be/...">
                     </label>
                     <label class="asg-full-field">
-                        <span>Lesson HTML file</span>
-                        <input id="topicContentFile" type="file" accept=".html,.htm,text/html">
-                        <small class="asg-field-hint">Use HTML lessons on the free Firebase plan. Keep images as external URLs; PDF uploads require Firebase Storage on Blaze.</small>
+                        <span>Lesson file</span>
+                        <input id="topicContentFile" type="file" accept=".html,.htm,.pdf,text/html,application/pdf">
+                        <small class="asg-field-hint">HTML lessons save inline. PDFs upload to Supabase Storage and use the shared public file URL.</small>
                     </label>
                     <label class="asg-full-field">
                         <span>Content HTML fallback</span>
@@ -723,6 +723,11 @@
                                 <input id="resourceUrl" type="text" placeholder="courses.html or https://...">
                             </label>
                             <label class="asg-full-field">
+                                <span>PDF file</span>
+                                <input id="resourceFile" type="file" accept=".pdf,application/pdf">
+                                <small class="asg-field-hint">Optional. Uploading a PDF replaces the URL with a Supabase Storage link.</small>
+                            </label>
+                            <label class="asg-full-field">
                                 <span>Description</span>
                                 <textarea id="resourceDescription" rows="3" placeholder="Describe why this resource is useful."></textarea>
                             </label>
@@ -821,7 +826,21 @@
             }
 
             if (/pdf$/i.test(file.name) || file.type === "application/pdf") {
-                throw new Error("PDF uploads need Firebase Storage on the Blaze plan. Please upload an HTML lesson file instead.");
+                if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.uploadFile !== "function") {
+                    throw new Error("Supabase Storage is not ready. Check your Supabase setup and try again.");
+                }
+                const courseId = document.getElementById("topicCourse").value || "course";
+                const upload = await window.ASG_BACKEND.uploadFile(file, {
+                    folder: `course-content/${courseId}`
+                });
+                return {
+                    contentType: "pdf",
+                    contentFileName: file.name,
+                    contentDataUrl: "",
+                    contentUrl: upload.url,
+                    contentStoragePath: upload.path,
+                    content: ""
+                };
             }
 
             return {
@@ -2667,12 +2686,44 @@
             document.getElementById("resourceCategory").value = "";
             document.getElementById("resourceFormat").value = "";
             document.getElementById("resourceUrl").value = "";
+            document.getElementById("resourceFile").value = "";
             document.getElementById("resourceActionLabel").value = "Open Resource";
             document.getElementById("resourceStatus").value = "active";
             document.getElementById("resourceDescription").value = "";
         }
 
-        function saveResourceItem() {
+        async function uploadSelectedResourceFile(existing = null) {
+            const file = document.getElementById("resourceFile").files[0];
+            if (!file) {
+                return {
+                    fileName: existing ? existing.fileName || "" : "",
+                    storagePath: existing ? existing.storagePath || "" : "",
+                    storageBucket: existing ? existing.storageBucket || "" : "",
+                    url: ""
+                };
+            }
+
+            if (!/pdf$/i.test(file.name) && file.type !== "application/pdf") {
+                throw new Error("Please choose a PDF file for this resource.");
+            }
+
+            if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.uploadFile !== "function") {
+                throw new Error("Supabase Storage is not ready. Check your Supabase setup and try again.");
+            }
+
+            const upload = await window.ASG_BACKEND.uploadFile(file, {
+                folder: "resources"
+            });
+
+            return {
+                fileName: upload.fileName,
+                storagePath: upload.path,
+                storageBucket: upload.bucket,
+                url: upload.url
+            };
+        }
+
+        async function saveResourceItem() {
             const editId = document.getElementById("resourceEditId").value;
             const title = document.getElementById("resourceTitle").value.trim();
             if (!title) {
@@ -2681,14 +2732,25 @@
             }
 
             const existing = adminResourceLibrary.find((item) => item.id === editId);
+            let fileUpload = {};
+            try {
+                fileUpload = await uploadSelectedResourceFile(existing);
+            } catch (error) {
+                alert(error.message || "Could not upload the selected PDF.");
+                return;
+            }
+
             const item = {
                 id: editId || asgSlugify(title, "resource"),
                 title,
                 category: document.getElementById("resourceCategory").value.trim() || "Learning",
                 format: document.getElementById("resourceFormat").value.trim() || "Guide",
                 description: document.getElementById("resourceDescription").value.trim(),
-                url: document.getElementById("resourceUrl").value.trim(),
+                url: fileUpload.url || document.getElementById("resourceUrl").value.trim(),
                 actionLabel: document.getElementById("resourceActionLabel").value.trim() || "Open Resource",
+                fileName: fileUpload.fileName || (existing ? existing.fileName || "" : ""),
+                storagePath: fileUpload.storagePath || (existing ? existing.storagePath || "" : ""),
+                storageBucket: fileUpload.storageBucket || (existing ? existing.storageBucket || "" : ""),
                 status: document.getElementById("resourceStatus").value,
                 order: existing ? existing.order : adminResourceLibrary.length + 1,
                 updatedAt: new Date().toISOString()
@@ -2709,6 +2771,7 @@
             document.getElementById("resourceCategory").value = item.category;
             document.getElementById("resourceFormat").value = item.format;
             document.getElementById("resourceUrl").value = item.url;
+            document.getElementById("resourceFile").value = "";
             document.getElementById("resourceActionLabel").value = item.actionLabel;
             document.getElementById("resourceStatus").value = item.status;
             document.getElementById("resourceDescription").value = item.description;
@@ -2867,7 +2930,7 @@
                 publishedAt: new Date().toISOString(),
                 data: getPublishableAdminData()
             };
-            const contents = `// Public ASG Tech learning-data fallback snapshot.\n// Firestore is the primary shared backend. Use this file only as a static backup for GitHub Pages.\nwindow.ASG_PUBLISHED_LEARNING_DATA = ${JSON.stringify(snapshot, null, 4)};\n`;
+            const contents = `// Public ASG Tech learning-data fallback snapshot.\n// Supabase is the primary shared backend. Use this file only as a static backup for GitHub Pages.\nwindow.ASG_PUBLISHED_LEARNING_DATA = ${JSON.stringify(snapshot, null, 4)};\n`;
             downloadAdminFile(contents, "published-learning-data.js", "application/javascript");
         }
 
@@ -2880,11 +2943,11 @@
 
         async function publishAdminDataToCloud() {
             if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.publishContentSnapshot !== "function") {
-                alert("Firebase backend is not ready. Please refresh and sign in again.");
+                alert("Supabase backend is not ready. Please refresh and sign in again.");
                 return;
             }
 
-            const confirmed = confirm("Publish the admin content currently shown here to Firestore for every device?");
+            const confirmed = confirm("Publish the admin content currently shown here to Supabase for every device?");
             if (!confirmed) return;
 
             setCloudSyncStatus("Publishing current admin content to cloud...");
@@ -2895,17 +2958,17 @@
                 const publishedKeys = await window.ASG_BACKEND.publishContentSnapshot(getPublishableAdminData());
                 refreshDashboard();
                 setCloudSyncStatus(`Cloud published: ${publishedKeys.length} content groups at ${new Date().toLocaleTimeString()}`);
-                alert("Published to Firestore. Other devices will see this content after refresh/sign in.");
+                alert("Published to Supabase. Other devices will see this content after refresh/sign in.");
             } catch (error) {
                 console.error(error);
-                setCloudSyncStatus("Cloud publish failed. Check Firebase login/rules.", true);
-                alert(error.message || "Could not publish to Firestore.");
+                setCloudSyncStatus("Cloud publish failed. Check Supabase login/policies.", true);
+                alert(error.message || "Could not publish to Supabase.");
             }
         }
 
         async function publishSavedBrowserBackup() {
             if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.publishLocalContentBackup !== "function") {
-                alert("Firebase backend is not ready. Please refresh and sign in again.");
+                alert("Supabase backend is not ready. Please refresh and sign in again.");
                 return;
             }
 
@@ -2919,7 +2982,7 @@
             }
 
             const createdAt = backup.createdAt ? new Date(backup.createdAt).toLocaleString() : "this browser";
-            const confirmed = confirm(`Publish the browser backup captured at ${createdAt} to Firestore? This can restore admin edits that were only saved on this device.`);
+            const confirmed = confirm(`Publish the browser backup captured at ${createdAt} to Supabase? This can restore admin edits that were only saved on this device.`);
             if (!confirmed) return;
 
             setCloudSyncStatus("Publishing saved browser backup to cloud...");
@@ -2927,7 +2990,7 @@
                 const publishedKeys = await window.ASG_BACKEND.publishLocalContentBackup();
                 refreshDashboard();
                 setCloudSyncStatus(`Browser backup published: ${publishedKeys.length} content groups`);
-                alert("Browser backup published to Firestore. Other devices can now receive it.");
+                alert("Browser backup published to Supabase. Other devices can now receive it.");
             } catch (error) {
                 console.error(error);
                 setCloudSyncStatus("Browser backup publish failed.", true);

@@ -1090,7 +1090,7 @@ function asgWriteJSON(key, value) {
     window.dispatchEvent(new CustomEvent("asg:data-updated", { detail: { key, value } }));
     if (!ASG_LEARNING_SEEDING_DEFAULTS && window.ASG_BACKEND && typeof window.ASG_BACKEND.saveDataKey === "function") {
         window.ASG_BACKEND.saveDataKey(key, value).catch((error) => {
-            console.warn(`Could not save ${key} to Firebase.`, error);
+            console.warn(`Could not save ${key} to Supabase.`, error);
         });
     }
 }
@@ -2523,6 +2523,9 @@ function asgNormalizeResourceItem(item, index) {
         description: String(item.description || "Add the resource description from admin.").trim(),
         url: String(item.url || "").trim(),
         actionLabel: String(item.actionLabel || "Open Resource").trim(),
+        fileName: String(item.fileName || "").trim(),
+        storagePath: String(item.storagePath || "").trim(),
+        storageBucket: String(item.storageBucket || "").trim(),
         status: item.status === "draft" ? "draft" : "active",
         order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
         updatedAt: item.updatedAt || new Date().toISOString()

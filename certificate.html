@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="firebase-backend.js"></script>
+    <script src="supabase-backend.js"></script>
     <script src="auth-check.js"></script>
     <script src="published-learning-data.js"></script>
     <script src="learning-data.js"></script>
@@ -800,7 +800,7 @@
             localStorage.setItem("asgCertificateRequests", JSON.stringify(requests));
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.saveDataKey === "function") {
                 window.ASG_BACKEND.saveDataKey("asgCertificateRequests", requests).catch((error) => {
-                    console.warn("Could not sync certificate request to Firebase.", error);
+                    console.warn("Could not sync certificate request to Supabase.", error);
                 });
             }
             alert("Your certificate download request has been saved for admin review.");
