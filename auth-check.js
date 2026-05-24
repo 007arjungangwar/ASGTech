@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v46",
+    cacheName: "asg-tech-v47",
     publicPages: [
         "",
         "index.html",
@@ -36,7 +36,8 @@ const ASG_AUTH = {
         "exam-result.html"
     ],
     adminPages: [
-        "admin.html"
+        "admin.html",
+        "admin-guide.html"
     ]
 };
 
@@ -243,7 +244,8 @@ function navigationGroups(user) {
             title: "Admin",
             description: "Manage content and students",
             items: [
-                adminLink("Dashboard", "admin.html")
+                adminLink("Dashboard", "admin.html"),
+                adminLink("Content Guide", "admin-guide.html")
             ]
         });
     }
@@ -288,7 +290,8 @@ function findWorkspaceItem(page, user = getCurrentUser()) {
         "exam.html": { label: "Exam", page: "exam.html", section: "Practice", sectionPage: "exam-center.html" },
         "exam-result.html": { label: "Exam Result", page: "exam-result.html", section: "Practice", sectionPage: "exam-center.html" },
         "profile.html": { label: "Profile", page: "profile.html", section: "Account", sectionPage: "profile.html" },
-        "admin.html": { label: "Dashboard", page: "admin.html", section: "Admin", sectionPage: "admin.html" }
+        "admin.html": { label: "Dashboard", page: "admin.html", section: "Admin", sectionPage: "admin.html" },
+        "admin-guide.html": { label: "Content Guide", page: "admin-guide.html", section: "Admin", sectionPage: "admin.html" }
     };
 
     return fallback[current] || null;

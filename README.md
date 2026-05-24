@@ -33,6 +33,7 @@ GitHub Pages serves only HTML, CSS, and JavaScript. Supabase is the source of tr
 | `index.html` | Public home/overview page |
 | `login.html` | Login, register, and password reset UI |
 | `admin.html` | Admin dashboard for courses, topics, quizzes, videos, resources, announcements, and users |
+| `admin-guide.html` | Admin-only content upload plan and AI prompt templates |
 | `auth-check.js` | Shared navigation shell, top header, left sidebar, auth guard, theme, service worker refresh |
 | `learning-data.js` | Course/content models, local cache helpers, student progress helpers, and save functions |
 | `supabase-backend.js` | Supabase Auth, REST database sync, realtime listeners, Storage uploads |
@@ -243,10 +244,11 @@ Use this workflow when adding new content:
 
 1. Login as admin.
 2. Open `admin.html`.
-3. Add or edit courses, topics, PDFs, HTML lessons, YouTube links, quizzes, videos, resources, or announcements.
-4. Watch the sync text near the admin command area.
-5. Confirm it says Supabase saved the content.
-6. Open the website on another browser/device and refresh.
+3. Open `admin-guide.html` if you need the upload map or prompt templates.
+4. Add or edit courses, topics, PDFs, HTML lessons, YouTube links, quizzes, videos, resources, or announcements.
+5. Watch the sync text near the admin command area.
+6. Confirm it says Supabase saved the content.
+7. Open the website on another browser/device and refresh.
 
 The content should appear from Supabase, not from the original admin browser.
 

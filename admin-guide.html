@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Content Guide | ASG Tech</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="supabase-backend.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="published-learning-data.js"></script>
+    <script src="learning-data.js"></script>
+</head>
+<body>
+    <nav></nav>
+
+    <main class="asg-admin-guide-page">
+        <section class="asg-page-hero">
+            <div>
+                <div class="asg-eyebrow">Admin guide</div>
+                <h1>Content Upload Plan</h1>
+                <p>Use this guide when you add courses, PDFs, HTML lessons, YouTube links, quiz questions, coding challenges, resources, and announcements.</p>
+            </div>
+            <div class="asg-hero-metrics">
+                <div><strong>1</strong><span>Create</span></div>
+                <div><strong>2</strong><span>Save</span></div>
+                <div><strong>3</strong><span>Verify</span></div>
+            </div>
+        </section>
+
+        <section class="asg-live-panel">
+            <div class="asg-section-header">
+                <div>
+                    <h2>Quick Map</h2>
+                    <p>Choose the correct admin section before uploading content.</p>
+                </div>
+                <a class="btn-primary" href="admin.html">Open Admin Dashboard</a>
+            </div>
+            <div class="asg-guide-grid">
+                <article>
+                    <span>Courses</span>
+                    <h3>Course title and topic lessons</h3>
+                    <p>Admin Dashboard > Courses > Course & Topic Builder.</p>
+                    <small>Use this for course names, topic list, lesson HTML/PDF, topic quiz HTML, and topic YouTube links.</small>
+                </article>
+                <article>
+                    <span>Assessments</span>
+                    <h3>Quiz and coding questions</h3>
+                    <p>Admin Dashboard > Assessments.</p>
+                    <small>Create quiz sets, multiple-choice questions, coding challenges, and exam practice.</small>
+                </article>
+                <article>
+                    <span>Library</span>
+                    <h3>PDF resources and video library</h3>
+                    <p>Admin Dashboard > Library.</p>
+                    <small>Upload PDF resources to Supabase Storage and add YouTube lessons to playlists.</small>
+                </article>
+                <article>
+                    <span>Overview</span>
+                    <h3>Announcement and monitoring</h3>
+                    <p>Admin Dashboard > Overview.</p>
+                    <small>Post student announcements, check sync status, users, progress, and activity.</small>
+                </article>
+            </div>
+        </section>
+
+        <section class="asg-guide-layout">
+            <article class="asg-live-panel">
+                <h2>Course Upload Workflow</h2>
+                <ol class="asg-guide-steps">
+                    <li><strong>Create course shell:</strong> Go to <em>Courses</em>, fill course title, price, summary, welcome note, and cheat sheet, then save course.</li>
+                    <li><strong>Add topic:</strong> Select the course, add topic title, status, and YouTube lesson URL if available.</li>
+                    <li><strong>Add lesson file:</strong> Upload an HTML file or PDF file. HTML saves inside the course data. PDF uploads to Supabase Storage.</li>
+                    <li><strong>Add fallback HTML:</strong> If you do not upload a file, paste lesson HTML in the content fallback field.</li>
+                    <li><strong>Add topic quiz:</strong> Upload quiz HTML or paste quiz HTML in the topic quiz field.</li>
+                    <li><strong>Save topic:</strong> Watch the admin status. It should show that Supabase saved the course data.</li>
+                    <li><strong>Verify:</strong> Open Courses in another browser/device and refresh with the latest site link.</li>
+                </ol>
+            </article>
+
+            <article class="asg-live-panel">
+                <h2>Rules For Reliable Uploads</h2>
+                <ul class="asg-community-checklist">
+                    <li>Use PDF for downloadable notes, worksheets, cheatsheets, and long reading material.</li>
+                    <li>Use HTML for interactive-looking lessons, structured pages, code examples, and topic explanations.</li>
+                    <li>Use YouTube links for video lessons; do not upload video files to Supabase for now.</li>
+                    <li>After every save, check the Supabase saved message near the admin command center.</li>
+                    <li>Use Publish Browser Backup only for recovery of old local content.</li>
+                    <li>Use Publish to Cloud when you want to push the full visible admin content snapshot.</li>
+                </ul>
+            </article>
+        </section>
+
+        <section class="asg-live-panel">
+            <div class="asg-section-header">
+                <div>
+                    <h2>AI Prompt Templates</h2>
+                    <p>Use these prompts when creating course content, quizzes, and coding questions.</p>
+                </div>
+            </div>
+
+            <div class="asg-guide-prompt-grid">
+                <article>
+                    <h3>HTML Lesson Prompt</h3>
+                    <p>Use this when you want HTML for a course topic.</p>
+                    <pre><code>Create an ASG Tech course lesson as a clean HTML fragment.
+
+Topic: [TOPIC NAME]
+Level: [Beginner / Intermediate / Advanced]
+Course: [COURSE NAME]
+Goal: [WHAT STUDENT SHOULD LEARN]
+
+Rules:
+- Return only HTML fragment, not full html/head/body.
+- Do not include script tags.
+- Use semantic headings, paragraphs, lists, tables, and code blocks.
+- Include: learning objectives, explanation, worked example, common mistakes, practice task, short recap.
+- Keep it mobile friendly.
+- Escape code examples inside pre/code blocks.
+- Make the tone practical for students.
+- Add a final "Next step" section.
+</code></pre>
+                </article>
+
+                <article>
+                    <h3>Topic Quiz HTML Prompt</h3>
+                    <p>Use this for a quiz block inside a topic.</p>
+                    <pre><code>Create a short HTML quiz fragment for this lesson.
+
+Topic: [TOPIC NAME]
+Level: [LEVEL]
+Question count: 5
+
+Rules:
+- Return only HTML fragment.
+- Do not include scripts.
+- Use h2, ol, li, details, summary.
+- Each question should have 4 options.
+- Put answer and explanation inside a details block.
+- Include practical examples, not only definitions.
+</code></pre>
+                </article>
+
+                <article>
+                    <h3>Coding Challenge Prompt</h3>
+                    <p>Use this for Admin > Assessments > Coding challenge.</p>
+                    <pre><code>Create a Python coding challenge for ASG Tech.
+
+Topic: [TOPIC NAME]
+Level: [Beginner / Intermediate / Advanced]
+Function name must be: solution
+
+Return these fields:
+Title:
+Topic:
+Difficulty:
+Problem statement:
+Input format:
+Output format:
+Constraints:
+Starter code:
+Test cases:
+- input:
+  expected:
+- input:
+  expected:
+Explanation:
+
+Rules:
+- The starter code must define solution(...).
+- Include 4 to 6 test cases.
+- Include at least one edge case.
+- Avoid external libraries unless the topic requires it.
+- Keep beginner tasks simple and practical.
+</code></pre>
+                </article>
+
+                <article>
+                    <h3>Quiz Question Prompt</h3>
+                    <p>Use this for Admin > Assessments > Quiz question.</p>
+                    <pre><code>Create multiple-choice quiz questions for ASG Tech.
+
+Topic: [TOPIC NAME]
+Level: [LEVEL]
+Number of questions: [COUNT]
+
+For each question return:
+Title:
+Prompt:
+Option A:
+Option B:
+Option C:
+Option D:
+Correct option:
+Explanation:
+
+Rules:
+- Only one correct answer.
+- Explanations should teach the concept.
+- Avoid trick questions.
+- Include practical coding or data examples when possible.
+</code></pre>
+                </article>
+
+                <article>
+                    <h3>YouTube Lesson Plan Prompt</h3>
+                    <p>Use this before recording or linking a video lesson.</p>
+                    <pre><code>Create a YouTube lesson plan for ASG Tech.
+
+Topic: [TOPIC NAME]
+Level: [LEVEL]
+Duration target: [10/20/30 minutes]
+
+Return:
+Video title:
+Short description:
+Timeline:
+Demo idea:
+Practice task:
+Pinned comment:
+Student outcome:
+
+Rules:
+- Keep the lesson practical.
+- Include one demo and one practice task.
+- Make the title searchable.
+</code></pre>
+                </article>
+
+                <article>
+                    <h3>PDF Resource Prompt</h3>
+                    <p>Use this for downloadable notes or worksheets.</p>
+                    <pre><code>Create content for a downloadable PDF resource.
+
+Topic: [TOPIC NAME]
+Resource type: [Notes / Worksheet / Cheat sheet / Checklist]
+Level: [LEVEL]
+
+Include:
+Title
+Purpose
+Key concepts
+Examples
+Practice questions
+Answer key
+Revision checklist
+
+Rules:
+- Keep it printable.
+- Use short sections.
+- Add clear headings.
+- Make practice questions useful for self-study.
+</code></pre>
+                </article>
+            </div>
+        </section>
+
+        <section class="asg-guide-layout">
+            <article class="asg-live-panel">
+                <h2>Weekly Admin Content Plan</h2>
+                <ol class="asg-guide-steps">
+                    <li>Choose one main course topic for the week.</li>
+                    <li>Create one HTML lesson for the topic.</li>
+                    <li>Add one PDF notes/resource file.</li>
+                    <li>Add one YouTube lesson link.</li>
+                    <li>Add 5 quiz questions.</li>
+                    <li>Add 1 coding challenge.</li>
+                    <li>Publish an announcement telling students what is new.</li>
+                    <li>Check from another device after saving.</li>
+                </ol>
+            </article>
+
+            <article class="asg-live-panel">
+                <h2>Before You Finish</h2>
+                <ul class="asg-community-checklist">
+                    <li>Course title is clear.</li>
+                    <li>Topic title is short and searchable.</li>
+                    <li>PDF opens after upload.</li>
+                    <li>HTML lesson does not contain script tags.</li>
+                    <li>YouTube link opens in the student page.</li>
+                    <li>Quiz/coding challenge has correct answers and test cases.</li>
+                    <li>Supabase save status confirms the update.</li>
+                    <li>New browser/device can see the content.</li>
+                </ul>
+            </article>
+        </section>
+    </main>
+
+    <footer>
+        <p class="copyright">ASG Tech Institute. Admin content guide.</p>
+    </footer>
+</body>
+</html>
