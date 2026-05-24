@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v50",
+    cacheName: "asg-tech-v51",
     publicPages: [
         "",
         "index.html",
@@ -344,7 +344,7 @@ function applyThemePreference() {
         themeMeta.name = "theme-color";
         document.head.appendChild(themeMeta);
     }
-    themeMeta.content = theme === "dark" ? "#0b1020" : "#f6f8fc";
+    themeMeta.content = theme === "dark" ? "#0b1020" : "#f5edda";
 
     let schemeMeta = document.querySelector("meta[name='color-scheme']");
     if (!schemeMeta) {

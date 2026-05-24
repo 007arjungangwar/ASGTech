@@ -8694,3 +8694,271 @@ body.asg-theme-dark.has-asg-shell .asg-course-label {
         animation-iteration-count: 1 !important;
     }
 }
+
+/* Kindle-style reading theme and unified dark surfaces */
+:root {
+    --asg-bg: #f5edda;
+    --asg-surface: #fff8e8;
+    --asg-surface-raised: #fffaf0;
+    --asg-surface-soft: #efe3c5;
+    --asg-surface-tint: #fbf1d6;
+    --asg-ink: #24180d;
+    --asg-muted: #6d5d45;
+    --asg-border: #decda7;
+    --asg-primary: #0f766e;
+    --asg-primary-dark: #0b5f59;
+    --asg-blue: #315a9f;
+    --asg-violet: #6d5dfc;
+    --asg-accent: #b7791f;
+    --asg-success: #15803d;
+    --asg-danger: #b91c1c;
+    --asg-shadow: 0 22px 56px rgba(83, 63, 30, 0.13);
+    --asg-card-shadow: 0 14px 34px rgba(83, 63, 30, 0.09);
+    --asg-focus-ring: 0 0 0 4px rgba(183, 121, 31, 0.18);
+}
+
+body.has-asg-shell,
+body.asg-auth-page {
+    background:
+        linear-gradient(180deg, rgba(238, 224, 191, 0.88), rgba(245, 237, 218, 0) 380px),
+        var(--asg-bg);
+    color: var(--asg-ink);
+}
+
+body.has-asg-shell nav.asg-navbar,
+body.asg-auth-page nav.asg-navbar {
+    background: color-mix(in srgb, var(--asg-surface) 94%, transparent);
+    border-color: color-mix(in srgb, var(--asg-border) 86%, transparent);
+}
+
+body.has-asg-shell .asg-sidebar {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--asg-surface-raised) 96%, transparent), color-mix(in srgb, var(--asg-surface-tint) 96%, transparent));
+}
+
+body.has-asg-shell :where(
+    .asg-page-hero,
+    .asg-home-hero,
+    .asg-live-panel,
+    .asg-course-card,
+    .asg-program-card,
+    .asg-policy-card,
+    .asg-home-course-card,
+    .asg-exam-card,
+    .asg-quiz-card,
+    .asg-public-card,
+    .asg-resource-card,
+    .asg-roadmap-card,
+    .asg-about-identity,
+    .asg-about-panel,
+    .asg-about-connect,
+    .asg-about-cta,
+    .asg-about-proof article,
+    .asg-about-model article,
+    .asg-about-values-grid article,
+    .asg-dashboard-preview,
+    .asg-next-action-card,
+    .asg-feature-row article,
+    .asg-progress-category,
+    .asg-reader-shell,
+    .asg-topic-sidebar,
+    .asg-video-playlist,
+    .asg-video-item,
+    .asg-admin-command-center,
+    .asg-admin-generator,
+    .asg-admin-stat-card,
+    .asg-admin-status,
+    .asg-question-block,
+    .asg-review-item,
+    .asg-admin-list-item,
+    .asg-activity-item,
+    .asg-detail-card,
+    .asg-empty-state,
+    .asg-proctor-card,
+    .asg-social-link,
+    .asg-auth-page .auth-container,
+    .asg-auth-page .auth-card,
+    .asg-auth-page .auth-form
+) {
+    background: var(--asg-surface-raised);
+    border-color: var(--asg-border);
+}
+
+body.has-asg-shell :where(.asg-page-hero, .asg-home-hero, .asg-about-connect, .asg-about-cta) {
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--asg-surface-raised) 96%, transparent), color-mix(in srgb, var(--asg-surface-soft) 58%, transparent)),
+        var(--asg-surface);
+}
+
+body.has-asg-shell :where(
+    .asg-hero-metrics div,
+    .asg-home-proof div,
+    .asg-preview-progress,
+    .asg-preview-stack div,
+    .asg-editor-toolbar,
+    .asg-challenge-button,
+    .asg-topic-link,
+    .asg-course-card-meta span,
+    .asg-course-topic-chips span,
+    .asg-test-row,
+    .asg-test-editor-row,
+    .asg-option-choice
+) {
+    background: var(--asg-surface-tint);
+    border-color: var(--asg-border);
+}
+
+body.has-asg-shell .asg-site-footer {
+    background: var(--asg-surface);
+    border-color: var(--asg-border);
+}
+
+body.has-asg-shell .asg-social-link:hover {
+    background: var(--asg-surface-soft);
+}
+
+body.asg-auth-page .auth-container,
+body.asg-auth-page .asg-auth-card-top,
+body.asg-auth-page .auth-tab.active,
+body.asg-auth-page .demo-credentials {
+    background: var(--asg-surface-raised);
+    border-color: var(--asg-border);
+}
+
+body.asg-auth-page .auth-tab,
+body.asg-auth-page .auth-input {
+    background: var(--asg-surface-tint);
+    border-color: var(--asg-border);
+    color: var(--asg-ink);
+}
+
+body.asg-auth-page .auth-input:focus {
+    background: var(--asg-surface-raised);
+    box-shadow: var(--asg-focus-ring);
+}
+
+body.asg-theme-dark {
+    --asg-bg: #0b1020;
+    --asg-surface: #111827;
+    --asg-surface-raised: #172033;
+    --asg-surface-soft: #1f2a44;
+    --asg-surface-tint: #141d31;
+    --asg-ink: #f3f7fb;
+    --asg-muted: #b8c3d4;
+    --asg-border: #334155;
+    --asg-primary: #2dd4bf;
+    --asg-primary-dark: #99f6e4;
+    --asg-blue: #93c5fd;
+    --asg-violet: #c4b5fd;
+    --asg-accent: #fbbf24;
+    --asg-success: #86efac;
+    --asg-danger: #f87171;
+    --asg-shadow: 0 24px 62px rgba(0, 0, 0, 0.34);
+    --asg-card-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+    --asg-focus-ring: 0 0 0 4px rgba(45, 212, 191, 0.18);
+}
+
+body.asg-theme-dark.has-asg-shell {
+    background:
+        linear-gradient(180deg, rgba(31, 42, 68, 0.76), rgba(11, 16, 32, 0) 360px),
+        var(--asg-bg);
+}
+
+body.asg-theme-dark.has-asg-shell :where(
+    nav.asg-navbar,
+    .asg-sidebar,
+    .asg-site-footer,
+    .asg-page-hero,
+    .asg-home-hero,
+    .asg-live-panel,
+    .asg-course-card,
+    .asg-program-card,
+    .asg-policy-card,
+    .asg-home-course-card,
+    .asg-exam-card,
+    .asg-quiz-card,
+    .asg-public-card,
+    .asg-resource-card,
+    .asg-roadmap-card,
+    .asg-about-identity,
+    .asg-about-panel,
+    .asg-about-connect,
+    .asg-about-cta,
+    .asg-about-proof article,
+    .asg-about-model article,
+    .asg-about-values-grid article,
+    .asg-dashboard-preview,
+    .asg-next-action-card,
+    .asg-feature-row article,
+    .asg-progress-category,
+    .asg-reader-shell,
+    .asg-topic-sidebar,
+    .asg-video-playlist,
+    .asg-video-item,
+    .asg-admin-command-center,
+    .asg-admin-generator,
+    .asg-admin-stat-card,
+    .asg-admin-status,
+    .asg-question-block,
+    .asg-review-item,
+    .asg-admin-list-item,
+    .asg-activity-item,
+    .asg-detail-card,
+    .asg-empty-state,
+    .asg-proctor-card,
+    .asg-social-link,
+    .asg-social-link.detailed,
+    .asg-auth-page .auth-container,
+    .asg-auth-page .auth-card,
+    .asg-auth-page .auth-form
+) {
+    background: var(--asg-surface-raised) !important;
+    border-color: var(--asg-border);
+    color: var(--asg-ink);
+}
+
+body.asg-theme-dark.has-asg-shell :where(
+    .asg-hero-metrics div,
+    .asg-home-proof div,
+    .asg-preview-progress,
+    .asg-preview-stack div,
+    .asg-editor-toolbar,
+    .asg-challenge-button,
+    .asg-topic-link,
+    .asg-course-card-meta span,
+    .asg-course-topic-chips span,
+    .asg-test-row,
+    .asg-test-editor-row,
+    .asg-option-choice,
+    .asg-breadcrumbs,
+    .asg-notification-panel,
+    .asg-user-dropdown,
+    .user-dropdown
+) {
+    background: var(--asg-surface-tint) !important;
+    border-color: var(--asg-border);
+    color: var(--asg-ink);
+}
+
+body.asg-theme-dark.has-asg-shell .asg-footer-connect,
+body.asg-theme-dark.has-asg-shell .asg-social-links,
+body.asg-theme-dark.has-asg-shell .asg-about-social-grid {
+    background: transparent !important;
+}
+
+body.asg-theme-dark.has-asg-shell .asg-social-link:hover {
+    background: var(--asg-surface-soft) !important;
+}
+
+body.asg-theme-dark.has-asg-shell .asg-social-medium .asg-social-mark,
+body.asg-theme-dark.has-asg-shell .asg-social-x .asg-social-mark {
+    background: #0b1020;
+    color: #e5e7eb;
+    border: 1px solid var(--asg-border);
+}
+
+body.asg-theme-dark.has-asg-shell :where(input, textarea, select, .asg-global-search) {
+    background: #0f172a !important;
+    color: var(--asg-ink);
+    border-color: var(--asg-border);
+}
