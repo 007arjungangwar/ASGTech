@@ -16,3 +16,9 @@ Use this once before publishing the GitHub Pages site.
 After this, admin content, YouTube links, student activity, and uploaded PDFs are served from Supabase instead of one browser's local storage.
 
 If old students were created before Supabase, they were browser-local accounts. They can appear in the admin dashboard as legacy users, but they should create/reset Supabase accounts to log in from every device.
+
+## Emergency Fixes
+
+If new devices cannot see content and `site_data` is empty, run `supabase-seed-content.sql` in the Supabase SQL Editor.
+
+If password reset emails do not arrive, run `supabase-admin-recovery.sql`, then register again with `arjungangwariitpkd@gmail.com` and a new password.
