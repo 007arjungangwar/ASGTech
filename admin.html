@@ -3046,6 +3046,25 @@
             }
         }
 
+        function handleBackendStatus(event) {
+            const detail = event.detail || {};
+            if (!detail || detail.provider !== "supabase") return;
+
+            if (detail.status === "syncing" && detail.key) {
+                setCloudSyncStatus(`Saving ${detail.key} to Supabase...`);
+                return;
+            }
+
+            if (detail.status === "synced" && detail.key) {
+                setCloudSyncStatus(`Supabase saved ${detail.key} at ${new Date().toLocaleTimeString()}`);
+                return;
+            }
+
+            if (detail.status === "sync-error") {
+                setCloudSyncStatus(`Supabase sync failed${detail.key ? ` for ${detail.key}` : ""}.`, true);
+            }
+        }
+
         function refreshDashboard() {
             adminQuizCatalog = asgGetQuizCatalog();
             quizQuestions = asgGetQuizQuestions(true);
@@ -3110,6 +3129,7 @@
         }
 
         window.addEventListener("asg:data-updated", handleAdminDataUpdate);
+        window.addEventListener("asg:backend-status", handleBackendStatus);
         window.addEventListener("storage", handleAdminDataUpdate);
 
         if (adminAccessGranted) {

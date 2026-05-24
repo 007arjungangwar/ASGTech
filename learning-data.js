@@ -1089,8 +1089,19 @@ function asgWriteJSON(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
     window.dispatchEvent(new CustomEvent("asg:data-updated", { detail: { key, value } }));
     if (!ASG_LEARNING_SEEDING_DEFAULTS && window.ASG_BACKEND && typeof window.ASG_BACKEND.saveDataKey === "function") {
+        window.dispatchEvent(new CustomEvent("asg:backend-status", {
+            detail: { status: "syncing", key, provider: window.ASG_BACKEND.provider || "supabase" }
+        }));
         window.ASG_BACKEND.saveDataKey(key, value).catch((error) => {
             console.warn(`Could not save ${key} to Supabase.`, error);
+            window.dispatchEvent(new CustomEvent("asg:backend-status", {
+                detail: {
+                    status: "sync-error",
+                    key,
+                    provider: window.ASG_BACKEND.provider || "supabase",
+                    error: error.message || String(error)
+                }
+            }));
         });
     }
 }
