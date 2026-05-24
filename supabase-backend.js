@@ -52,7 +52,8 @@
 
     const ASG_ADMIN_KEYS = [
         "asgExamRetakePermissions",
-        "asgCertificatePermissions"
+        "asgCertificatePermissions",
+        "asgLegacyUsers"
     ];
 
     const ASG_SYNC_KEYS = [...ASG_CONTENT_KEYS, ...ASG_ACTIVITY_KEYS, ...ASG_ADMIN_KEYS];
@@ -184,7 +185,7 @@
     }
 
     function isProfileAdmin(profile) {
-        return Boolean(profile && (profile.role === "admin" || isAdminEmail(profile.email)));
+        return Boolean(profile && isAdminEmail(profile.email));
     }
 
     function cleanClone(value) {
@@ -228,6 +229,64 @@
         window.dispatchEvent(new CustomEvent("asg:data-updated", {
             detail: { key: "users", value: nextUsers, source: "supabase" }
         }));
+    }
+
+    function sanitizeLegacyUser(user) {
+        const email = normalizeEmail(user && user.email);
+        if (!email) return null;
+        return {
+            id: String(user.id || email),
+            name: String(user.name || localNameFromEmail(email)).trim(),
+            email,
+            role: isAdminEmail(email) ? "admin" : "student",
+            joinDate: toIsoDate(user.joinDate || user.createdAt) || "",
+            lastSeenAt: toIsoDate(user.lastSeenAt || user.updatedAt) || "",
+            provider: user.provider === "supabase" ? "supabase" : "legacy-local"
+        };
+    }
+
+    function mergeUserLists(primaryUsers, secondaryUsers) {
+        const byEmail = new Map();
+        [...(secondaryUsers || []), ...(primaryUsers || [])].forEach((user) => {
+            const sanitized = sanitizeLegacyUser(user);
+            if (!sanitized) return;
+            byEmail.set(sanitized.email, sanitized);
+        });
+        return [...byEmail.values()].sort((left, right) => {
+            if (left.role !== right.role) return left.role === "admin" ? -1 : 1;
+            return String(left.name || left.email).localeCompare(String(right.name || right.email));
+        });
+    }
+
+    function cacheLegacyUsers(users, sync = false) {
+        const legacyUsers = mergeUserLists(users, []);
+        localStorage.setItem("asgLegacyUsers", JSON.stringify(legacyUsers));
+        window.dispatchEvent(new CustomEvent("asg:data-updated", {
+            detail: { key: "asgLegacyUsers", value: legacyUsers, source: "legacy-users" }
+        }));
+        if (sync && currentProfile && isProfileAdmin(currentProfile)) {
+            saveDataKey("asgLegacyUsers", legacyUsers).catch((error) => {
+                console.warn("Could not sync legacy users to Supabase.", error);
+            });
+        }
+        return legacyUsers;
+    }
+
+    function captureLegacyUsers(remoteUsers = []) {
+        const localUsers = readLocalJSON("users", []);
+        const existingLegacyUsers = readLocalJSON("asgLegacyUsers", []);
+        const remoteEmails = new Set((remoteUsers || []).map((user) => normalizeEmail(user.email)).filter(Boolean));
+        const localOnlyUsers = Array.isArray(localUsers)
+            ? localUsers.filter((user) => {
+                const email = normalizeEmail(user && user.email);
+                return email && !remoteEmails.has(email);
+            })
+            : [];
+        const nextLegacyUsers = mergeUserLists(existingLegacyUsers, localOnlyUsers)
+            .filter((user) => !remoteEmails.has(normalizeEmail(user.email)));
+        const changed = JSON.stringify(nextLegacyUsers) !== JSON.stringify(mergeUserLists(existingLegacyUsers, []));
+        if (changed) return cacheLegacyUsers(nextLegacyUsers, true);
+        return nextLegacyUsers;
     }
 
     function slugSegment(value, fallback = "file") {
@@ -307,7 +366,7 @@
             existing = profileResult.data;
         }
 
-        const role = existing.role === "admin" || initialData.role === "admin" || isAdminEmail(email) ? "admin" : "student";
+        const role = isAdminEmail(email) ? "admin" : "student";
         const profile = {
             id: supabaseUser.id,
             name: String(initialData.name || existing.name || metadata.name || metadata.full_name || localNameFromEmail(email)).trim(),
@@ -387,6 +446,26 @@
         });
         if (error) throw error;
         authReadyPromise = Promise.resolve(profileFromSupabaseUser(data.user));
+        return authReadyPromise;
+    }
+
+    async function requestPasswordReset(email) {
+        const services = await loadServices();
+        const currentPath = `${window.location.origin}${window.location.pathname}`;
+        const redirectTo = `${currentPath}?mode=reset-password`;
+        const { error } = await services.client.auth.resetPasswordForEmail(normalizeEmail(email), {
+            redirectTo
+        });
+        if (error) throw error;
+        return true;
+    }
+
+    async function updatePassword(password) {
+        const services = await loadServices();
+        const { data, error } = await services.client.auth.updateUser({ password });
+        if (error) throw error;
+        const user = data && data.user ? data.user : null;
+        authReadyPromise = Promise.resolve(user ? profileFromSupabaseUser(user) : restoreSession());
         return authReadyPromise;
     }
 
@@ -781,10 +860,12 @@
             joinDate: toIsoDate(row.join_date) || "",
             lastSeenAt: toIsoDate(row.updated_at) || ""
         })).filter((user) => user.email);
+        const legacyUsers = captureLegacyUsers(users);
+        const visibleUsers = mergeUserLists(users, legacyUsers);
 
-        localStorage.setItem("users", JSON.stringify(users));
+        localStorage.setItem("users", JSON.stringify(visibleUsers));
         window.dispatchEvent(new CustomEvent("asg:data-updated", {
-            detail: { key: "users", value: users, source: "supabase" }
+            detail: { key: "users", value: visibleUsers, source: "supabase" }
         }));
     }
 
@@ -872,6 +953,8 @@
         ready: loadServices,
         restoreSession,
         signIn,
+        requestPasswordReset,
+        updatePassword,
         register,
         migrateLocalUser,
         signOut,

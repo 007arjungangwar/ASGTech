@@ -84,6 +84,7 @@
                         <input type="password" id="loginPassword" placeholder="Enter your password" class="auth-input" autocomplete="current-password">
                     </label>
                     <button class="auth-btn" type="button" onclick="login()">Login</button>
+                    <button class="asg-link-button" type="button" onclick="showPasswordResetRequest()">Forgot password?</button>
                     <div id="loginError" class="error-msg"></div>
 
                 </div>
@@ -111,6 +112,37 @@
                     <button class="auth-btn" type="button" onclick="register()">Create account</button>
                     <div id="regError" class="error-msg"></div>
                     <div id="regSuccess" class="success-msg"></div>
+                </div>
+
+                <div id="passwordResetRequestForm" class="auth-form">
+                    <h2>Reset password</h2>
+                    <p>Enter your email and Supabase will send a password reset link.</p>
+
+                    <label class="asg-auth-field">
+                        <span>Email address</span>
+                        <input type="email" id="resetEmail" placeholder="you@example.com" class="auth-input" autocomplete="email">
+                    </label>
+                    <button class="auth-btn" type="button" onclick="requestPasswordReset()">Send reset link</button>
+                    <button class="asg-link-button" type="button" onclick="switchTab('login')">Back to login</button>
+                    <div id="resetError" class="error-msg"></div>
+                    <div id="resetSuccess" class="success-msg"></div>
+                </div>
+
+                <div id="passwordUpdateForm" class="auth-form">
+                    <h2>Create new password</h2>
+                    <p>Use a new password for this Supabase account.</p>
+
+                    <label class="asg-auth-field">
+                        <span>New password</span>
+                        <input type="password" id="newPassword" placeholder="Minimum 6 characters" class="auth-input" autocomplete="new-password">
+                    </label>
+                    <label class="asg-auth-field">
+                        <span>Confirm password</span>
+                        <input type="password" id="newPasswordConfirm" placeholder="Repeat password" class="auth-input" autocomplete="new-password">
+                    </label>
+                    <button class="auth-btn" type="button" onclick="updatePassword()">Update password</button>
+                    <div id="updatePasswordError" class="error-msg"></div>
+                    <div id="updatePasswordSuccess" class="success-msg"></div>
                 </div>
 
                 <div class="asg-auth-card-note">
@@ -145,21 +177,20 @@
             return users;
         }
 
-        function switchTab(tab) {
-            const loginForm = document.getElementById("loginForm");
-            const registerForm = document.getElementById("registerForm");
+        function showAuthForm(formId, activeTab = "") {
+            document.querySelectorAll(".auth-form").forEach((form) => {
+                form.classList.toggle("active", form.id === formId);
+            });
             const tabs = document.querySelectorAll(".auth-tab");
+            tabs[0].classList.toggle("active", activeTab === "login");
+            tabs[1].classList.toggle("active", activeTab === "register");
+        }
 
+        function switchTab(tab) {
             if (tab === "login") {
-                loginForm.classList.add("active");
-                registerForm.classList.remove("active");
-                tabs[0].classList.add("active");
-                tabs[1].classList.remove("active");
+                showAuthForm("loginForm", "login");
             } else {
-                loginForm.classList.remove("active");
-                registerForm.classList.add("active");
-                tabs[0].classList.remove("active");
-                tabs[1].classList.add("active");
+                showAuthForm("registerForm", "register");
             }
         }
 
@@ -187,9 +218,83 @@
             }
             if (message.toLowerCase().includes("already registered") || message.toLowerCase().includes("already been registered")) return "This email is already registered. Please login.";
             if (message.toLowerCase().includes("email not confirmed")) return "Please confirm your email, then sign in.";
+            if (message.toLowerCase().includes("password")) return message;
             if (message.toLowerCase().includes("rate limit")) return "Too many attempts. Please wait a few minutes and try again.";
             if (message.toLowerCase().includes("failed to fetch") || message.toLowerCase().includes("network")) return "Network issue. Please check your connection and try again.";
             return `Could not connect to Supabase right now${code ? ` (${code})` : ""}. Please try again.`;
+        }
+
+        function isPasswordRecoveryMode() {
+            const search = new URLSearchParams(window.location.search);
+            const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+            return search.get("mode") === "reset-password" || hash.get("type") === "recovery";
+        }
+
+        function showPasswordResetRequest() {
+            document.getElementById("resetEmail").value = document.getElementById("loginEmail").value.trim().toLowerCase();
+            document.getElementById("resetError").textContent = "";
+            document.getElementById("resetSuccess").textContent = "";
+            showAuthForm("passwordResetRequestForm");
+        }
+
+        async function requestPasswordReset() {
+            const email = document.getElementById("resetEmail").value.trim().toLowerCase();
+            const error = document.getElementById("resetError");
+            const success = document.getElementById("resetSuccess");
+            error.textContent = "";
+            success.textContent = "";
+
+            if (!email) {
+                error.textContent = "Please enter your email address.";
+                return;
+            }
+
+            if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.requestPasswordReset !== "function") {
+                error.textContent = "Supabase password reset is not ready. Please refresh and try again.";
+                return;
+            }
+
+            try {
+                await window.ASG_BACKEND.requestPasswordReset(email);
+                success.textContent = "Password reset link sent. Check your email inbox.";
+            } catch (resetError) {
+                error.textContent = formatBackendAuthError(resetError);
+            }
+        }
+
+        async function updatePassword() {
+            const password = document.getElementById("newPassword").value;
+            const confirm = document.getElementById("newPasswordConfirm").value;
+            const error = document.getElementById("updatePasswordError");
+            const success = document.getElementById("updatePasswordSuccess");
+            error.textContent = "";
+            success.textContent = "";
+
+            if (password.length < 6) {
+                error.textContent = "Password must be at least 6 characters.";
+                return;
+            }
+
+            if (password !== confirm) {
+                error.textContent = "Passwords do not match.";
+                return;
+            }
+
+            if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.updatePassword !== "function") {
+                error.textContent = "Supabase password update is not ready. Please refresh and try again.";
+                return;
+            }
+
+            try {
+                const user = await window.ASG_BACKEND.updatePassword(password);
+                setCurrentUser(user);
+                success.textContent = "Password updated. Opening your workspace...";
+                setTimeout(() => {
+                    window.location.href = safeNextFor(user);
+                }, 700);
+            } catch (updateError) {
+                error.textContent = formatBackendAuthError(updateError);
+            }
         }
 
         async function login() {
@@ -323,11 +428,13 @@
 
         const mode = new URLSearchParams(window.location.search).get("mode");
         if (mode === "register") switchTab("register");
+        if (isPasswordRecoveryMode()) showAuthForm("passwordUpdateForm");
 
         (async function redirectSignedInUser() {
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
                 await window.ASG_BACKEND.restoreSession();
             }
+            if (isPasswordRecoveryMode()) return;
             const currentUser = sessionStorage.getItem("currentUser");
             if (currentUser) {
                 const user = JSON.parse(currentUser);

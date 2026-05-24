@@ -896,7 +896,27 @@
         }
 
         function getUsers() {
-            return readJSON("users", []);
+            const users = readJSON("users", []);
+            const legacyUsers = readJSON("asgLegacyUsers", []);
+            const byEmail = new Map();
+            [...legacyUsers, ...users].forEach((user) => {
+                const email = String(user.email || "").trim().toLowerCase();
+                if (!email) return;
+                byEmail.set(email, {
+                    id: user.id || email,
+                    name: user.name || email.split("@")[0],
+                    email,
+                    role: email === "arjungangwariitpkd@gmail.com" ? "admin" : "student",
+                    joinDate: user.joinDate || "",
+                    lastSeenAt: user.lastSeenAt || "",
+                    provider: user.provider || "supabase"
+                });
+            });
+            return [...byEmail.values()];
+        }
+
+        function getLegacyUsers() {
+            return readJSON("asgLegacyUsers", []);
         }
 
         function getStudents() {
@@ -1279,6 +1299,7 @@
 
         function renderStats() {
             const users = getUsers();
+            const legacyUsers = getLegacyUsers();
             const students = getStudents();
             const attempts = asgGetQuizAttempts();
             const codingSubmissions = asgGetCodingSubmissions();
@@ -1300,6 +1321,7 @@
             const stats = [
                 { label: "Registered users", value: users.length },
                 { label: "Students", value: students.length },
+                { label: "Legacy browser users", value: legacyUsers.length },
                 { label: "Quiz sets", value: adminQuizCatalog.length },
                 { label: "Active quiz questions", value: activeQuiz },
                 { label: "Active coding challenges", value: activeCoding },
@@ -1503,7 +1525,7 @@
                                 <tr>
                                     <td>
                                         <strong>${escapeHtml(student.name)}</strong>
-                                        <small>${escapeHtml(student.email)}</small>
+                                        <small>${escapeHtml(student.email)}${student.provider === "legacy-local" ? " | legacy local" : ""}</small>
                                     </td>
                                     <td>${percentage(progress.progressPercent)}</td>
                                     <td>${percentage(progress.bestQuiz)} (${progress.quizAttempts} attempts)</td>
@@ -2887,6 +2909,7 @@
                 resourceLibrary: asgGetResourceLibrary(true),
                 certificatePermissions: asgGetCertificatePermissions(),
                 certificateRequests: readJSON("asgCertificateRequests", []),
+                legacyUsers: getLegacyUsers(),
                 studentQuestions: readJSON("studentQuestions", []),
                 forumTopics: readJSON("forumTopics", []),
                 certificates: readJSON("certificates", []),
@@ -3063,6 +3086,7 @@
                 ASG_LEARNING_KEYS.certificatePermissions,
                 ASG_LEARNING_KEYS.studentAnnouncement,
                 "users",
+                "asgLegacyUsers",
                 "studentQuestions",
                 "asgCertificateRequests"
             ];

@@ -30,6 +30,18 @@ as $$
     ]::text[];
 $$;
 
+create or replace function public.asg_admin_data_keys()
+returns text[]
+language sql
+immutable
+as $$
+    select array[
+        'asgExamRetakePermissions',
+        'asgCertificatePermissions',
+        'asgLegacyUsers'
+    ]::text[];
+$$;
+
 create table if not exists public.profiles (
     id uuid primary key references auth.users(id) on delete cascade,
     name text not null default '',
@@ -66,14 +78,7 @@ stable
 security definer
 set search_path = public
 as $$
-    select
-        lower(coalesce(auth.jwt() ->> 'email', '')) = any(public.asg_admin_emails())
-        or exists (
-            select 1
-            from public.profiles
-            where id = auth.uid()
-              and role = 'admin'
-        );
+    select lower(coalesce(auth.jwt() ->> 'email', '')) = any(public.asg_admin_emails());
 $$;
 
 create or replace function public.asg_handle_new_user()
@@ -117,6 +122,12 @@ for each row execute function public.asg_handle_new_user();
 alter table public.profiles enable row level security;
 alter table public.site_data enable row level security;
 alter table public.user_activity enable row level security;
+
+update public.profiles
+set role = 'student',
+    updated_at = now()
+where role = 'admin'
+  and lower(email) <> all(public.asg_admin_emails());
 
 grant usage on schema public to anon, authenticated;
 grant select on public.site_data to anon, authenticated;
@@ -175,7 +186,7 @@ create policy "Admins can read all site data"
 on public.site_data
 for select
 to authenticated
-using (public.asg_is_admin());
+using (public.asg_is_admin() and (key = any(public.asg_public_content_keys()) or key = any(public.asg_admin_data_keys())));
 
 drop policy if exists "Admins can write site data" on public.site_data;
 create policy "Admins can write site data"
