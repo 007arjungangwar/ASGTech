@@ -1117,6 +1117,17 @@ function asgGetPublishedLearningData() {
     };
 }
 
+function asgValueHasLearningData(value) {
+    if (Array.isArray(value)) return value.length > 0;
+    if (!value || typeof value !== "object") return value !== null && value !== undefined && value !== "";
+    return Object.keys(value).some((key) => {
+        const item = value[key];
+        if (Array.isArray(item)) return item.length > 0;
+        if (item && typeof item === "object") return Object.keys(item).length > 0;
+        return item !== null && item !== undefined && item !== "";
+    });
+}
+
 function asgApplyPublishedLearningData() {
     const published = asgGetPublishedLearningData();
     if (!published) return false;
@@ -1128,6 +1139,8 @@ function asgApplyPublishedLearningData() {
         if (!Object.prototype.hasOwnProperty.call(published.data, entry.field)) return;
         const value = published.data[entry.field];
         if (value === undefined || value === null) return;
+        const localValue = asgReadJSON(entry.storageKey, null);
+        if (asgValueHasLearningData(localValue)) return;
         localStorage.setItem(entry.storageKey, JSON.stringify(value));
     });
 

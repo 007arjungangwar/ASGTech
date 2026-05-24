@@ -723,6 +723,30 @@
         seedMissingRemoteData();
     }
 
+    async function getCloudContentStatus() {
+        const services = await loadServices();
+        const { data, error } = await services.client
+            .from("site_data")
+            .select("key,updated_at,updated_by")
+            .in("key", ASG_CONTENT_KEYS);
+
+        if (error) throw error;
+
+        const rows = Array.isArray(data) ? data : [];
+        const publishedKeys = rows.map((row) => row.key).filter(Boolean);
+        return {
+            provider: "supabase",
+            totalKeys: ASG_CONTENT_KEYS.length,
+            publishedKeys,
+            missingKeys: ASG_CONTENT_KEYS.filter((key) => !publishedKeys.includes(key)),
+            latestUpdatedAt: rows
+                .map((row) => toIsoDate(row.updated_at))
+                .filter(Boolean)
+                .sort()
+                .pop() || ""
+        };
+    }
+
     async function startLearningSync() {
         if (learningSyncStarted) return;
         learningSyncStarted = true;
@@ -961,6 +985,7 @@
         saveDataKey,
         publishContentSnapshot,
         publishLocalContentBackup,
+        getCloudContentStatus,
         createLocalContentBackup,
         getLocalContentBackup: () => readLocalJSON(LOCAL_CONTENT_BACKUP_KEY, null),
         startLearningSync,

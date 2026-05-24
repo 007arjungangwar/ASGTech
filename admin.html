@@ -3031,6 +3031,21 @@
             setCloudSyncStatus(`Browser backup ready (${backupKeys.length} groups, ${createdAt})`);
         }
 
+        async function showCloudPublishStatus() {
+            if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.getCloudContentStatus !== "function") return;
+            try {
+                const status = await window.ASG_BACKEND.getCloudContentStatus();
+                if (!status.publishedKeys.length) {
+                    setCloudSyncStatus("Supabase cloud is empty. Use Publish Browser Backup or Publish to Cloud.", true);
+                    return;
+                }
+                const latest = status.latestUpdatedAt ? new Date(status.latestUpdatedAt).toLocaleString() : "ready";
+                setCloudSyncStatus(`Supabase has ${status.publishedKeys.length}/${status.totalKeys} content groups (${latest})`);
+            } catch (error) {
+                console.warn("Could not check Supabase content status.", error);
+            }
+        }
+
         function refreshDashboard() {
             adminQuizCatalog = asgGetQuizCatalog();
             quizQuestions = asgGetQuizQuestions(true);
@@ -3112,6 +3127,7 @@
         resetResourceForm();
         setAdminSection(localStorage.getItem("asgAdminActiveSection") || "overview", { scroll: false });
         showCloudBackupHint();
+        showCloudPublishStatus();
     </script>
 </body>
 </html>
