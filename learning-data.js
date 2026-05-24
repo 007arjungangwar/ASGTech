@@ -1212,10 +1212,13 @@ function asgHighlightPythonCode(value) {
         "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
         "try", "while", "with", "yield"
     ]);
+    const controlKeywords = new Set(["if", "elif", "else", "for", "while", "try", "except", "finally", "with", "break", "continue"]);
+    const declarationKeywords = new Set(["def", "class", "lambda", "return", "yield", "import", "from", "as"]);
+    const constants = new Set(["True", "False", "None"]);
     const builtins = new Set([
         "abs", "all", "any", "bool", "dict", "enumerate", "filter", "float", "int", "len", "list",
         "map", "max", "min", "print", "range", "reversed", "round", "set", "sorted", "str", "sum",
-        "tuple", "type", "zip"
+        "tuple", "type", "zip", "input", "open", "Exception", "ValueError"
     ]);
     const operators = new Set(["=", "+", "-", "*", "/", "%", "==", "!=", "<=", ">=", "<", ">", ":", ".", ",", "(", ")", "[", "]", "{", "}", "->"]);
     const tokenPattern = /(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|@\w+|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][A-Za-z0-9_]*\b|==|!=|<=|>=|->|[-+*/%=<>:.,()[\]{}])/g;
@@ -1236,6 +1239,9 @@ function asgHighlightPythonCode(value) {
         else if (token.startsWith("\"") || token.startsWith("'")) className = "tok-string";
         else if (token.startsWith("@")) className = "tok-decorator";
         else if (/^\d/.test(token)) className = "tok-number";
+        else if (constants.has(token)) className = "tok-constant";
+        else if (controlKeywords.has(token)) className = "tok-control";
+        else if (declarationKeywords.has(token)) className = "tok-declaration";
         else if (keywords.has(token)) className = "tok-keyword";
         else if (builtins.has(token)) className = "tok-builtin";
         else if (previousDeclaration && previousDeclaration[1] === "class") className = "tok-class";
