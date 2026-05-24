@@ -769,10 +769,10 @@
 
     <script>
         const adminUser = getCurrentUser();
+        const adminAccessGranted = Boolean(adminUser && adminUser.role === "admin");
         if (!adminUser || adminUser.role !== "admin") {
             alert("Access denied. Please login as an admin.");
             window.location.href = "login.html?next=admin.html";
-            throw new Error("Admin access required.");
         }
 
         let quizQuestions = [];
@@ -3112,22 +3112,24 @@
         window.addEventListener("asg:data-updated", handleAdminDataUpdate);
         window.addEventListener("storage", handleAdminDataUpdate);
 
-        loadAnnouncement();
-        refreshDashboard();
-        resetQuizForm();
-        resetCodingForm();
-        resetQuizCatalogForm();
-        resetBlogForm();
-        resetProjectForm();
-        resetCourseForm();
-        resetTopicForm();
-        resetRoadmapForm();
-        resetVideoPlaylistForm();
-        resetVideoForm();
-        resetResourceForm();
-        setAdminSection(localStorage.getItem("asgAdminActiveSection") || "overview", { scroll: false });
-        showCloudBackupHint();
-        showCloudPublishStatus();
+        if (adminAccessGranted) {
+            loadAnnouncement();
+            refreshDashboard();
+            resetQuizForm();
+            resetCodingForm();
+            resetQuizCatalogForm();
+            resetBlogForm();
+            resetProjectForm();
+            resetCourseForm();
+            resetTopicForm();
+            resetRoadmapForm();
+            resetVideoPlaylistForm();
+            resetVideoForm();
+            resetResourceForm();
+            setAdminSection(localStorage.getItem("asgAdminActiveSection") || "overview", { scroll: false });
+            showCloudBackupHint();
+            showCloudPublishStatus();
+        }
     </script>
 </body>
 </html>

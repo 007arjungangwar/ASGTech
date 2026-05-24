@@ -200,6 +200,106 @@
         return Number.isNaN(date.getTime()) ? "" : date.toISOString();
     }
 
+    function getProjectRef(config) {
+        try {
+            return new URL(config.url).hostname.split(".")[0] || "";
+        } catch (error) {
+            return "";
+        }
+    }
+
+    function getStoredAccessToken(config) {
+        const projectRef = getProjectRef(config);
+        const preferredKey = projectRef ? `sb-${projectRef}-auth-token` : "";
+        const possibleKeys = [
+            preferredKey,
+            ...Object.keys(localStorage).filter((key) => key.startsWith("sb-") && key.endsWith("-auth-token"))
+        ].filter(Boolean);
+
+        for (const key of possibleKeys) {
+            const session = parseJSON(localStorage.getItem(key), null);
+            const expiresAt = Number(session && (session.expires_at || (session.currentSession && session.currentSession.expires_at)) || 0);
+            if (expiresAt && expiresAt < Math.floor(Date.now() / 1000) + 60) continue;
+            const accessToken = session && (session.access_token || (session.currentSession && session.currentSession.access_token));
+            if (accessToken) return accessToken;
+        }
+
+        return "";
+    }
+
+    function timeoutAfter(ms, message) {
+        return new Promise((_, reject) => {
+            setTimeout(() => reject(new Error(message)), ms);
+        });
+    }
+
+    async function getSessionAccessToken(services) {
+        const storedToken = getStoredAccessToken(services.config);
+        if (storedToken) return storedToken;
+
+        try {
+            const result = await Promise.race([
+                services.client.auth.getSession(),
+                timeoutAfter(6000, "Supabase session lookup timed out.")
+            ]);
+            return result && result.data && result.data.session ? result.data.session.access_token || "" : "";
+        } catch (error) {
+            return "";
+        }
+    }
+
+    function parseRestResponse(text) {
+        if (!text) return null;
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            return text;
+        }
+    }
+
+    async function restRequest(path, options = {}) {
+        const services = options.services || await loadServices();
+        const { config } = services;
+        const token = await getSessionAccessToken(services);
+        const headers = {
+            apikey: config.anonKey,
+            Authorization: `Bearer ${token || config.anonKey}`,
+            ...(options.headers || {})
+        };
+
+        const method = options.method || "GET";
+        const init = { method, headers };
+        if (Object.prototype.hasOwnProperty.call(options, "body")) {
+            headers["Content-Type"] = "application/json";
+            init.body = JSON.stringify(options.body);
+        }
+        if (options.prefer) {
+            headers.Prefer = options.prefer;
+        }
+
+        const response = await Promise.race([
+            fetch(`${config.url}/rest/v1/${path}`, init),
+            timeoutAfter(options.timeout || 15000, `Supabase REST request timed out: ${path}`)
+        ]);
+        const body = parseRestResponse(await response.text());
+
+        if (!response.ok) {
+            const message = body && typeof body === "object" && body.message
+                ? body.message
+                : `Supabase request failed with status ${response.status}.`;
+            const error = new Error(message);
+            error.status = response.status;
+            error.details = body;
+            throw error;
+        }
+
+        return body;
+    }
+
+    function restInFilter(values) {
+        return `in.(${values.map((value) => String(value).replace(/[(),]/g, "")).join(",")})`;
+    }
+
     function localNameFromEmail(email) {
         const name = normalizeEmail(email).split("@")[0] || "Student";
         return name
@@ -351,19 +451,18 @@
 
     async function profileFromSupabaseUser(supabaseUser, initialData = {}) {
         const services = await loadServices();
-        const { client } = services;
         const metadata = supabaseUser.user_metadata || {};
         const email = normalizeEmail(supabaseUser.email || initialData.email);
         let existing = {};
 
-        const profileResult = await client
-            .from("profiles")
-            .select("id,name,email,role,join_date,updated_at")
-            .eq("id", supabaseUser.id)
-            .maybeSingle();
-
-        if (!profileResult.error && profileResult.data) {
-            existing = profileResult.data;
+        try {
+            const rows = await restRequest(
+                `profiles?select=id,name,email,role,join_date,updated_at&id=eq.${encodeURIComponent(supabaseUser.id)}`,
+                { services }
+            );
+            if (Array.isArray(rows) && rows[0]) existing = rows[0];
+        } catch (error) {
+            console.warn("Could not read Supabase user profile.", error);
         }
 
         const role = isAdminEmail(email) ? "admin" : "student";
@@ -376,17 +475,22 @@
             provider: "supabase"
         };
 
-        const upsertResult = await client.from("profiles").upsert({
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            role: profile.role,
-            join_date: profile.joinDate,
-            updated_at: new Date().toISOString()
-        }, { onConflict: "id" });
-
-        if (upsertResult.error) {
-            console.warn("Could not update Supabase user profile.", upsertResult.error);
+        try {
+            await restRequest("profiles?on_conflict=id", {
+                services,
+                method: "POST",
+                prefer: "resolution=merge-duplicates",
+                body: {
+                    id: profile.id,
+                    name: profile.name,
+                    email: profile.email,
+                    role: profile.role,
+                    join_date: profile.joinDate,
+                    updated_at: new Date().toISOString()
+                }
+            });
+        } catch (error) {
+            console.warn("Could not update Supabase user profile.", error);
         }
 
         currentProfile = profile;
@@ -585,20 +689,23 @@
     async function saveUserActivityKey(key, value, profile) {
         const services = await loadServices();
         const cleanedValue = filterActivityForProfile(key, value, profile);
-        const { error } = await services.client.from("user_activity").upsert({
-            user_id: profile.id,
-            key,
-            value: cleanedValue,
-            updated_at: new Date().toISOString(),
-            updated_by: {
-                uid: profile.id || "",
-                name: profile.name || "",
-                email: profile.email || "",
-                role: profile.role || ""
+        await restRequest("user_activity?on_conflict=user_id,key", {
+            services,
+            method: "POST",
+            prefer: "resolution=merge-duplicates",
+            body: {
+                user_id: profile.id,
+                key,
+                value: cleanedValue,
+                updated_at: new Date().toISOString(),
+                updated_by: {
+                    uid: profile.id || "",
+                    name: profile.name || "",
+                    email: profile.email || "",
+                    role: profile.role || ""
+                }
             }
-        }, { onConflict: "user_id,key" });
-
-        if (error) throw error;
+        });
         pendingWrites.delete(key);
         dispatchBackendStatus("synced", { key });
         return true;
@@ -617,19 +724,22 @@
 
         const services = await loadServices();
         const cleanedValue = cleanClone(value);
-        const { error } = await services.client.from("site_data").upsert({
-            key,
-            value: cleanedValue,
-            updated_at: new Date().toISOString(),
-            updated_by: {
-                uid: profile.id || "",
-                name: profile.name || "",
-                email: profile.email || "",
-                role: profile.role || ""
+        await restRequest("site_data?on_conflict=key", {
+            services,
+            method: "POST",
+            prefer: "resolution=merge-duplicates",
+            body: {
+                key,
+                value: cleanedValue,
+                updated_at: new Date().toISOString(),
+                updated_by: {
+                    uid: profile.id || "",
+                    name: profile.name || "",
+                    email: profile.email || "",
+                    role: profile.role || ""
+                }
             }
-        }, { onConflict: "key" });
-
-        if (error) throw error;
+        });
         pendingWrites.delete(key);
         dispatchBackendStatus("synced", { key });
         return true;
@@ -691,12 +801,10 @@
 
     async function loadSiteDataRows(keysToSync) {
         const services = await loadServices();
-        const { data, error } = await services.client
-            .from("site_data")
-            .select("key,value,updated_at,updated_by")
-            .in("key", keysToSync);
-
-        if (error) throw error;
+        const data = await restRequest(
+            `site_data?select=key,value,updated_at,updated_by&key=${restInFilter(keysToSync)}`,
+            { services }
+        );
 
         const seen = new Set();
         (data || []).forEach((row) => {
@@ -725,12 +833,10 @@
 
     async function getCloudContentStatus() {
         const services = await loadServices();
-        const { data, error } = await services.client
-            .from("site_data")
-            .select("key,updated_at,updated_by")
-            .in("key", ASG_CONTENT_KEYS);
-
-        if (error) throw error;
+        const data = await restRequest(
+            `site_data?select=key,updated_at,updated_by&key=${restInFilter(ASG_CONTENT_KEYS)}`,
+            { services }
+        );
 
         const rows = Array.isArray(data) ? data : [];
         const publishedKeys = rows.map((row) => row.key).filter(Boolean);
@@ -824,15 +930,12 @@
     }
 
     async function reloadActivityRows(profile, services) {
-        const query = services.client
-            .from("user_activity")
-            .select("user_id,key,value,updated_at,updated_by");
-        const result = isProfileAdmin(profile)
-            ? await query
-            : await query.eq("user_id", profile.id);
-
-        if (result.error) throw result.error;
-        aggregateActivityRows(result.data || [], profile);
+        const filter = isProfileAdmin(profile) ? "" : `&user_id=eq.${encodeURIComponent(profile.id)}`;
+        const rows = await restRequest(
+            `user_activity?select=user_id,key,value,updated_at,updated_by${filter}`,
+            { services }
+        );
+        aggregateActivityRows(rows || [], profile);
     }
 
     function scheduleActivityReload(profile, services) {
@@ -869,12 +972,10 @@
     }
 
     async function reloadUsers(services) {
-        const { data, error } = await services.client
-            .from("profiles")
-            .select("id,name,email,role,join_date,updated_at")
-            .order("updated_at", { ascending: false });
-
-        if (error) throw error;
+        const data = await restRequest(
+            "profiles?select=id,name,email,role,join_date,updated_at&order=updated_at.desc",
+            { services }
+        );
 
         const users = (data || []).map((row) => ({
             id: row.id,

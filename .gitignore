@@ -1,2 +1,4 @@
 .edge-test-profile/
 .supabase-temp/
+.debug-screenshots/
+test-results/
