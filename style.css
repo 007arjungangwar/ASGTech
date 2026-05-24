@@ -8370,14 +8370,14 @@ body.has-asg-shell textarea::placeholder {
     padding-bottom: 1.35rem;
 }
 
-.asg-course-card-footer .btn-primary {
-    white-space: nowrap;
+.asg-course-card-footer.compact {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }
 
-.asg-course-start-note {
-    color: var(--asg-muted);
-    font-size: 0.88rem;
-    font-weight: 700;
+.asg-course-card-footer .btn-primary {
+    white-space: nowrap;
 }
 
 .asg-code-editor-shell {
@@ -8422,6 +8422,7 @@ body.has-asg-shell textarea::placeholder {
     font-family: var(--asg-font-mono);
     font-size: 0.96rem;
     line-height: 1.68;
+    font-variant-ligatures: none;
 }
 
 .asg-code-gutter {
@@ -8430,10 +8431,23 @@ body.has-asg-shell textarea::placeholder {
 
 .asg-code-highlight {
     color: #dbeafe;
+    z-index: 1;
 }
 
 .asg-enhanced-python-editor {
-    caret-color: #ffffff;
+    z-index: 2;
+    color: rgba(255, 255, 255, 0.04);
+    caret-color: #fef08a;
+    text-shadow: none;
+}
+
+.asg-enhanced-python-editor:focus {
+    box-shadow: inset 0 0 0 2px rgba(125, 211, 252, 0.34);
+}
+
+.asg-enhanced-python-editor::selection {
+    background: rgba(125, 211, 252, 0.28);
+    color: rgba(255, 255, 255, 0.12);
 }
 
 .asg-code-editor-statusbar {

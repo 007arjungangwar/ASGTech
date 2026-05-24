@@ -47,6 +47,7 @@
         let activeCodingIndex = 0;
         let topicPyodideInstance = null;
         let topicPyodideLoading = null;
+        let lastTopicDataSignature = "";
         const topicMainShell = document.querySelector("main").innerHTML;
 
         function escapeHtml(value) {
@@ -113,6 +114,39 @@
 
         function topicHref(item) {
             return `topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(item.id)}`;
+        }
+
+        function getTopicDataSignature() {
+            if (!course || !topic) return "";
+            return JSON.stringify({
+                courseId: course.id,
+                courseTitle: course.title,
+                courseSummary: course.summary,
+                topicId: topic.id,
+                topicTitle: topic.title,
+                topicStatus: topic.status,
+                contentType: topic.contentType || "",
+                content: topic.content || "",
+                contentUrl: topic.contentUrl || "",
+                contentDataUrl: topic.contentDataUrl || "",
+                quizHtml: topic.quizHtml || "",
+                quizRenderMode: topic.quizRenderMode || "",
+                videoUrl: topic.videoUrl || "",
+                topics: getActiveTopics().map((item) => ({
+                    id: item.id,
+                    title: item.title,
+                    status: item.status,
+                    order: item.order
+                })),
+                coding: topicCodingChallenges.map((item) => ({
+                    id: item.id,
+                    title: item.title,
+                    difficulty: item.difficulty,
+                    prompt: item.prompt,
+                    starterCode: item.starterCode,
+                    tests: item.tests
+                }))
+            });
         }
 
         function renderReaderNav() {
@@ -651,6 +685,7 @@ json.dumps(payload, default=str)
                 <a class="asg-topic-back-link" href="courses.html">Back to courses</a>
             `;
             document.getElementById("topicPanel").innerHTML = renderLessonContentTab(progress);
+            lastTopicDataSignature = getTopicDataSignature();
             updateLessonProgressState(progress);
         }
 
@@ -663,6 +698,11 @@ json.dumps(payload, default=str)
 
         function refreshTopicFromStore() {
             reloadTopicFromStore();
+            const nextSignature = getTopicDataSignature();
+            if (nextSignature && nextSignature === lastTopicDataSignature) {
+                updateLessonProgressState(asgGetCourseProgress(topicUser, course.id));
+                return;
+            }
             renderTopic();
         }
 
@@ -673,7 +713,9 @@ json.dumps(payload, default=str)
                 ASG_LEARNING_KEYS.codingChallenges,
                 ASG_LEARNING_KEYS.codingSubmissions
             ];
-            if (watchedKeys.includes(key)) refreshTopicFromStore();
+            if (!watchedKeys.includes(key)) return;
+            if (key === ASG_LEARNING_KEYS.codingSubmissions && activeTopicTab !== "coding") return;
+            refreshTopicFromStore();
         }
 
         window.addEventListener("asg:data-updated", handleTopicDataUpdate);

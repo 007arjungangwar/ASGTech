@@ -162,8 +162,11 @@
     }
 
     function writeLocalJSON(key, value, source = "supabase") {
-        localStorage.setItem(key, JSON.stringify(value));
+        const serialized = JSON.stringify(value);
+        if (localStorage.getItem(key) === serialized) return false;
+        localStorage.setItem(key, serialized);
         window.dispatchEvent(new CustomEvent("asg:data-updated", { detail: { key, value, source } }));
+        return true;
     }
 
     function getStoredSessionUser() {

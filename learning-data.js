@@ -1085,8 +1085,26 @@ function asgReadJSON(key, fallback) {
     return asgParseJSON(localStorage.getItem(key), fallback);
 }
 
+function asgSameJSON(left, right) {
+    return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function asgStripProgressVolatileFields(value) {
+    if (Array.isArray(value)) return value.map(asgStripProgressVolatileFields);
+    if (!value || typeof value !== "object") return value;
+
+    return Object.keys(value).reduce((cleaned, key) => {
+        if (key === "updatedAt") return cleaned;
+        cleaned[key] = asgStripProgressVolatileFields(value[key]);
+        return cleaned;
+    }, {});
+}
+
 function asgWriteJSON(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    const serialized = JSON.stringify(value);
+    if (localStorage.getItem(key) === serialized) return false;
+
+    localStorage.setItem(key, serialized);
     window.dispatchEvent(new CustomEvent("asg:data-updated", { detail: { key, value } }));
     if (!ASG_LEARNING_SEEDING_DEFAULTS && window.ASG_BACKEND && typeof window.ASG_BACKEND.saveDataKey === "function") {
         window.dispatchEvent(new CustomEvent("asg:backend-status", {
@@ -1104,6 +1122,7 @@ function asgWriteJSON(key, value) {
             }));
         });
     }
+    return true;
 }
 
 function asgClone(value) {
@@ -2265,7 +2284,8 @@ function asgGetCourseProgress(user, courseId = "") {
 function asgSaveCourseProgress(user, course, topic, tab = "content", options = {}) {
     if (!course || !topic) return null;
     const progress = asgReadJSON(ASG_LEARNING_KEYS.courseProgress, {});
-    const existing = progress[asgGetCourseProgressKey(user, course.id)] || {};
+    const progressKey = asgGetCourseProgressKey(user, course.id);
+    const existing = progress[progressKey] || {};
     const topicStatusById = { ...(existing.topicStatusById || {}) };
     const currentStatus = { ...(topicStatusById[topic.id] || {}) };
     const normalizedTab = String(tab || "content");
@@ -2282,7 +2302,11 @@ function asgSaveCourseProgress(user, course, topic, tab = "content", options = {
     topicStatusById[topic.id] = currentStatus;
 
     const record = asgBuildCourseProgressRecord(user, course, { ...existing, topicStatusById }, topic, normalizedTab);
-    progress[asgGetCourseProgressKey(user, course.id)] = record;
+    if (existing && asgSameJSON(asgStripProgressVolatileFields(existing), asgStripProgressVolatileFields(record))) {
+        return existing;
+    }
+
+    progress[progressKey] = record;
     asgWriteJSON(ASG_LEARNING_KEYS.courseProgress, progress);
     return record;
 }
