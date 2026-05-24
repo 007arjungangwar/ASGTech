@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v45",
+    cacheName: "asg-tech-v46",
     publicPages: [
         "",
         "index.html",
@@ -835,6 +835,15 @@ window.addEventListener("storage", function(event) {
 });
 
 async function initializeASGPortal() {
+    const page = getCurrentPage();
+    const hasCachedUser = Boolean(getCurrentUser());
+    const isPublicPage = ASG_AUTH.publicPages.includes(page);
+
+    if (isPublicPage || hasCachedUser) {
+        keepServiceWorkerFresh();
+        updateUIForUser();
+    }
+
     if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
         await window.ASG_BACKEND.restoreSession();
     }
