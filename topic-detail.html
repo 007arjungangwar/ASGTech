@@ -390,7 +390,7 @@ json.dumps(payload, default=str)
                     <div><span>Score</span><strong>${percentage}%</strong></div>
                     <p>${savedSubmission ? "Coding progress saved for this topic." : "Run completed."}</p>
                 </div>
-                ${payload.error ? `<pre class="asg-error-output">${escapeHtml(payload.error)}</pre>` : ""}
+                ${payload.error ? asgRenderPythonError(payload.error) : ""}
                 <div class="asg-run-output-grid">
                     <section class="asg-console-output">
                         <h3>Console output</h3>
@@ -473,7 +473,7 @@ json.dumps(payload, default=str)
                 const status = document.getElementById("topicCodingEngineStatus");
                 if (status) status.textContent = "Python engine failed to load.";
                 const output = document.getElementById("topicCodingOutput");
-                if (output) output.innerHTML = `<h3>Run output</h3><pre class="asg-error-output">${escapeHtml(error.message || error)}</pre>`;
+                if (output) output.innerHTML = `<h3>Run output</h3>${asgRenderPythonError(error.message || error)}`;
             } finally {
                 button.disabled = false;
                 button.textContent = "Run Coding Test";

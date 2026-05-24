@@ -98,21 +98,40 @@
             document.getElementById("courseGrid").innerHTML = courses.map((course) => {
                 const progress = asgGetCourseProgress(courseUser, course.id);
                 const hasProgress = Boolean(progress && progress.topicId);
+                const activeTopics = course.topics.filter((topic) => topic.status !== "draft");
+                const previewTopics = activeTopics.slice(0, 4);
+                const progressPercent = Math.min(Number(progress && progress.progressPercent || 0), 100);
                 return `
-                    <article class="asg-course-card">
-                        <div>
-                            <div class="asg-question-head">
-                                <span>${escapeHtml(course.price)}</span>
-                                <small>${course.topics.length} topics</small>
+                    <article class="asg-course-card asg-course-brochure">
+                        <div class="asg-course-card-top">
+                            <div>
+                                <span class="asg-course-label">${escapeHtml(course.price)}</span>
+                                <h2>${escapeHtml(course.title)}</h2>
                             </div>
-                            <h2>${escapeHtml(course.title)}</h2>
-                            <p>${escapeHtml(course.summary)}</p>
-                            ${hasProgress ? `
-                                <div class="asg-mini-progress"><span style="width: ${Math.min(progress.progressPercent || 0, 100)}%"></span></div>
-                                <p class="asg-progress-note">Continue from ${escapeHtml(progress.topicTitle)}.</p>
-                            ` : ""}
+                            <strong>${activeTopics.length}</strong>
                         </div>
-                        <button class="btn-primary" type="button" onclick="openCourse('${escapeHtml(course.id)}')">${hasProgress ? "Continue Learning" : "Start Learning"}</button>
+                        <p>${escapeHtml(course.summary)}</p>
+                        <div class="asg-course-card-meta">
+                            <span>${activeTopics.length} lessons</span>
+                            <span>${hasProgress ? `${progressPercent}% complete` : "New enrollment"}</span>
+                            <span>PDF, HTML, video</span>
+                        </div>
+                        ${previewTopics.length ? `
+                            <div class="asg-course-topic-chips">
+                                ${previewTopics.map((topic) => `<span>${escapeHtml(topic.title)}</span>`).join("")}
+                            </div>
+                        ` : ""}
+                        <div class="asg-course-card-footer">
+                            ${hasProgress ? `
+                                <div>
+                                    <div class="asg-mini-progress"><span style="width: ${progressPercent}%"></span></div>
+                                    <p class="asg-progress-note">Continue from ${escapeHtml(progress.topicTitle)}.</p>
+                                </div>
+                            ` : `
+                                <div class="asg-course-start-note">Start with the first active topic and keep progress synced to your account.</div>
+                            `}
+                            <button class="btn-primary" type="button" onclick="openCourse('${escapeHtml(course.id)}')">${hasProgress ? "Continue Learning" : "Start Learning"}</button>
+                        </div>
                     </article>
                 `;
             }).join("") || `

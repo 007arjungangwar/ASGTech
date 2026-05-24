@@ -401,7 +401,7 @@ json.dumps(payload, default=str)
                     <div><span>Score</span><strong>${percentage}%</strong></div>
                     <p>Run saved to your progress.</p>
                 </div>
-                ${payload.error ? `<pre class="asg-error-output">${escapeHtml(payload.error)}</pre>` : ""}
+                ${payload.error ? asgRenderPythonError(payload.error) : ""}
                 <div class="asg-run-output-grid">
                     <section class="asg-console-output">
                         <h3>Console output</h3>
@@ -485,7 +485,7 @@ json.dumps(payload, default=str)
                     renderRunResult(payload);
                     return savedSubmission;
                 }
-                document.getElementById("runOutput").innerHTML = `<h3>Run output</h3><pre class="asg-error-output">${escapeHtml(error.message || error)}</pre>`;
+                document.getElementById("runOutput").innerHTML = `<h3>Run output</h3>${asgRenderPythonError(error.message || error)}`;
                 return null;
             } finally {
                 runButton.disabled = false;

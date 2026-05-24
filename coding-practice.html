@@ -380,9 +380,7 @@ json.dumps(payload, default=str)
         function renderRunResult(payload, savedSubmission) {
             const output = document.getElementById("runOutput");
             const percentage = payload.total ? Math.round((payload.passed / payload.total) * 100) : 0;
-            const errorBlock = payload.error
-                ? `<pre class="asg-error-output">${escapeHtml(payload.error)}</pre>`
-                : "";
+            const errorBlock = payload.error ? asgRenderPythonError(payload.error) : "";
             const stdoutBlock = payload.stdout || payload.setupStdout
                 ? `<pre>${escapeHtml(payload.stdout || payload.setupStdout)}</pre>`
                 : `<p>No printed output.</p>`;
@@ -463,7 +461,7 @@ json.dumps(payload, default=str)
                 document.getElementById("engineStatus").textContent = "Python engine failed to load.";
                 document.getElementById("runOutput").innerHTML = `
                     <h3>Run output</h3>
-                    <pre class="asg-error-output">${escapeHtml(error.message || error)}</pre>
+                    ${asgRenderPythonError(error.message || error)}
                     <p>The browser needs internet access the first time it loads the Python engine.</p>
                 `;
             } finally {

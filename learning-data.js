@@ -1196,18 +1196,51 @@ function asgHighlightPythonCode(value) {
     const builtins = new Set([
         "abs", "all", "any", "bool", "dict", "enumerate", "filter", "float", "int", "len", "list",
         "map", "max", "min", "print", "range", "reversed", "round", "set", "sorted", "str", "sum",
-        "tuple", "zip"
+        "tuple", "type", "zip"
     ]);
-    const tokenPattern = /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][A-Za-z0-9_]*\b)/g;
+    const operators = new Set(["=", "+", "-", "*", "/", "%", "==", "!=", "<=", ">=", "<", ">", ":", ".", ",", "(", ")", "[", "]", "{", "}", "->"]);
+    const tokenPattern = /(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|@\w+|\b\d+(?:\.\d+)?\b|\b[A-Za-z_][A-Za-z0-9_]*\b|==|!=|<=|>=|->|[-+*/%=<>:.,()[\]{}])/g;
+    let html = "";
+    let cursor = 0;
 
-    return asgEscapeCodeHtml(value).replace(tokenPattern, (token) => {
-        if (token.startsWith("#")) return `<span class="tok-comment">${token}</span>`;
-        if (token.startsWith("\"") || token.startsWith("'")) return `<span class="tok-string">${token}</span>`;
-        if (/^\d/.test(token)) return `<span class="tok-number">${token}</span>`;
-        if (keywords.has(token)) return `<span class="tok-keyword">${token}</span>`;
-        if (builtins.has(token)) return `<span class="tok-builtin">${token}</span>`;
+    String(value || "").replace(tokenPattern, (token, offset) => {
+        const raw = String(value || "");
+        html += asgEscapeCodeHtml(raw.slice(cursor, offset));
+
+        const escaped = asgEscapeCodeHtml(token);
+        const before = raw.slice(0, offset);
+        const after = raw.slice(offset + token.length);
+        const previousDeclaration = before.match(/\b(def|class)\s+$/);
+        let className = "";
+
+        if (token.startsWith("#")) className = "tok-comment";
+        else if (token.startsWith("\"") || token.startsWith("'")) className = "tok-string";
+        else if (token.startsWith("@")) className = "tok-decorator";
+        else if (/^\d/.test(token)) className = "tok-number";
+        else if (keywords.has(token)) className = "tok-keyword";
+        else if (builtins.has(token)) className = "tok-builtin";
+        else if (previousDeclaration && previousDeclaration[1] === "class") className = "tok-class";
+        else if (previousDeclaration && previousDeclaration[1] === "def") className = "tok-function";
+        else if (/^\s*\(/.test(after)) className = "tok-function";
+        else if (operators.has(token)) className = "tok-operator";
+
+        html += className ? `<span class="${className}">${escaped}</span>` : escaped;
+        cursor = offset + token.length;
         return token;
     });
+
+    html += asgEscapeCodeHtml(String(value || "").slice(cursor));
+    return html;
+}
+
+function asgGetEditorCursorPosition(editor) {
+    const value = editor.value || "";
+    const before = value.slice(0, editor.selectionStart || 0);
+    const lines = before.split("\n");
+    return {
+        line: lines.length,
+        column: lines[lines.length - 1].length + 1
+    };
 }
 
 function asgRefreshPythonEditor(editor) {
@@ -1216,12 +1249,17 @@ function asgRefreshPythonEditor(editor) {
     if (!shell) return;
     const code = shell.querySelector(".asg-code-highlight");
     const gutter = shell.querySelector(".asg-code-gutter");
+    const position = shell.querySelector("[data-editor-position]");
     const value = editor.value || "";
     const lineCount = Math.max(value.split("\n").length, 1);
 
     if (code) code.innerHTML = `${asgHighlightPythonCode(value)}\n`;
     if (gutter) {
         gutter.innerHTML = Array.from({ length: lineCount }, (_, index) => `<span>${index + 1}</span>`).join("");
+    }
+    if (position) {
+        const cursorPosition = asgGetEditorCursorPosition(editor);
+        position.textContent = `Ln ${cursorPosition.line}, Col ${cursorPosition.column}`;
     }
     asgSyncPythonEditorScroll(editor);
 }
@@ -1248,10 +1286,16 @@ function asgEnhancePythonEditor(editor) {
         <div class="asg-code-editor-chrome">
             <span></span><span></span><span></span>
             <strong>Python</strong>
+            <em>solution.py</em>
         </div>
         <div class="asg-code-editor-body">
             <div class="asg-code-gutter" aria-hidden="true"></div>
             <pre class="asg-code-highlight" aria-hidden="true"></pre>
+        </div>
+        <div class="asg-code-editor-statusbar">
+            <span data-editor-position>Ln 1, Col 1</span>
+            <span>Spaces: 4</span>
+            <span>Pyodide runtime</span>
         </div>
     `;
 
@@ -1265,8 +1309,25 @@ function asgEnhancePythonEditor(editor) {
 
     editor.addEventListener("input", () => asgRefreshPythonEditor(editor));
     editor.addEventListener("scroll", () => asgSyncPythonEditorScroll(editor));
+    editor.addEventListener("click", () => asgRefreshPythonEditor(editor));
+    editor.addEventListener("keyup", () => asgRefreshPythonEditor(editor));
+    editor.addEventListener("select", () => asgRefreshPythonEditor(editor));
     asgRefreshPythonEditor(editor);
     asgSyncPythonEditorScroll(editor);
+}
+
+function asgRenderPythonError(error) {
+    const message = String(error || "").trim() || "Unknown Python runtime error.";
+    const firstLine = message.split("\n").find(Boolean) || "Python error";
+    return `
+        <div class="asg-diagnostic-panel" role="alert">
+            <div class="asg-diagnostic-head">
+                <span>Error diagnostic</span>
+                <strong>${asgEscapeCodeHtml(firstLine)}</strong>
+            </div>
+            <pre class="asg-error-output">${asgEscapeCodeHtml(message)}</pre>
+        </div>
+    `;
 }
 
 function asgGetQuizCatalog() {

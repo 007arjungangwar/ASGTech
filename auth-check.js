@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v47",
+    cacheName: "asg-tech-v48",
     publicPages: [
         "",
         "index.html",
@@ -336,6 +336,23 @@ function applyThemePreference() {
     const theme = localStorage.getItem("asgTheme") || "light";
     document.body.classList.toggle("asg-theme-dark", theme === "dark");
     document.body.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+
+    let themeMeta = document.querySelector("meta[name='theme-color']");
+    if (!themeMeta) {
+        themeMeta = document.createElement("meta");
+        themeMeta.name = "theme-color";
+        document.head.appendChild(themeMeta);
+    }
+    themeMeta.content = theme === "dark" ? "#0b1020" : "#f6f8fc";
+
+    let schemeMeta = document.querySelector("meta[name='color-scheme']");
+    if (!schemeMeta) {
+        schemeMeta = document.createElement("meta");
+        schemeMeta.name = "color-scheme";
+        document.head.appendChild(schemeMeta);
+    }
+    schemeMeta.content = "light dark";
 }
 
 function toggleThemeMode() {
