@@ -246,6 +246,32 @@
                 <div class="asg-table-wrap" id="examRetakePermissions"></div>
             </article>
 
+            <article class="asg-live-panel asg-admin-wide" data-admin-section="assessments">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Coding Exam Catalog</h2>
+                        <p>Create or rename coding exam subjects. Add questions in the Coding Practice Builder below.</p>
+                    </div>
+                    <button class="btn-secondary" type="button" onclick="resetCodingExamSubjectForm()">New Coding Exam</button>
+                </div>
+                <form class="asg-admin-form asg-builder-grid" onsubmit="event.preventDefault(); saveCodingExamSubject();">
+                    <input id="codingExamSubjectEdit" type="hidden">
+                    <label>
+                        <span>Subject</span>
+                        <input id="codingExamSubject" type="text" placeholder="Python">
+                    </label>
+                    <label class="asg-full-field">
+                        <span>Starter question title</span>
+                        <input id="codingExamStarterTitle" type="text" placeholder="Python Starter Question">
+                    </label>
+                    <div class="asg-form-actions asg-full-field">
+                        <button class="btn-primary" type="submit">Save Coding Exam</button>
+                        <button class="btn-secondary" type="button" onclick="resetCodingExamSubjectForm()">Clear</button>
+                    </div>
+                </form>
+                <div class="asg-admin-list compact" id="codingExamSubjectList"></div>
+            </article>
+
             <article class="asg-live-panel" data-admin-section="overview">
                 <div class="asg-section-header">
                     <div>
@@ -399,7 +425,8 @@
                     </label>
                     <label>
                         <span>Topic</span>
-                        <input id="codingTopic" type="text" placeholder="Python, Machine Learning, or Pandas">
+                        <input id="codingTopic" type="text" list="codingExamTopicOptions" placeholder="Python, Machine Learning, or Pandas">
+                        <datalist id="codingExamTopicOptions"></datalist>
                     </label>
                     <label>
                         <span>Placement</span>
@@ -2009,11 +2036,97 @@
         }
 
         function getCodingExamTopics() {
-            const topics = [...new Set(codingChallenges
-                .filter((challenge) => !challenge.courseId && !challenge.topicId)
-                .map((challenge) => challenge.topic)
-                .filter(Boolean))];
+            const topics = asgGetCodingExamSubjects(true)
+                .map((subject) => subject.topic)
+                .filter(Boolean);
             return topics.length ? topics : ["Python", "Machine Learning", "Pandas"];
+        }
+
+        function resetCodingExamSubjectForm(topic = "") {
+            document.getElementById("codingExamSubjectEdit").value = topic;
+            document.getElementById("codingExamSubject").value = topic;
+            document.getElementById("codingExamStarterTitle").value = topic ? `${topic} Starter Question` : "";
+        }
+
+        function createStarterCodingChallenge(topic, title) {
+            return {
+                id: asgCreateId("coding_exam"),
+                title: title || `${topic} Starter Question`,
+                topic,
+                scope: "global",
+                courseId: "",
+                courseTitle: "",
+                topicId: "",
+                topicTitle: "",
+                difficulty: "Beginner",
+                prompt: `Create a function named solution for the ${topic} coding exam. Return the sum of two numbers.`,
+                starterCode: "def solution(a, b):\n    # return the sum of a and b\n    pass\n",
+                tests: [
+                    { args: [3, 5], expected: 8 },
+                    { args: [10, 20], expected: 30 }
+                ],
+                status: "active",
+                order: codingChallenges.length + 1
+            };
+        }
+
+        function saveCodingExamSubject() {
+            const editTopic = document.getElementById("codingExamSubjectEdit").value.trim();
+            const topic = document.getElementById("codingExamSubject").value.trim();
+            const starterTitle = document.getElementById("codingExamStarterTitle").value.trim();
+            if (!topic) {
+                alert("Add a coding exam subject.");
+                return;
+            }
+
+            let nextChallenges = codingChallenges;
+            if (editTopic) {
+                nextChallenges = nextChallenges.map((challenge) => (
+                    !challenge.courseId && !challenge.topicId && String(challenge.topic || "").toLowerCase() === editTopic.toLowerCase()
+                        ? { ...challenge, topic }
+                        : challenge
+                ));
+            }
+
+            const hasGlobalQuestion = nextChallenges.some((challenge) => (
+                !challenge.courseId &&
+                !challenge.topicId &&
+                String(challenge.topic || "").toLowerCase() === topic.toLowerCase()
+            ));
+            if (!hasGlobalQuestion) {
+                nextChallenges = [...nextChallenges, createStarterCodingChallenge(topic, starterTitle)];
+            }
+
+            asgSaveCodingChallenges(nextChallenges);
+            resetCodingExamSubjectForm();
+            refreshDashboard();
+        }
+
+        function renderCodingExamSubjects() {
+            const target = document.getElementById("codingExamSubjectList");
+            const topicOptions = document.getElementById("codingExamTopicOptions");
+            if (topicOptions) {
+                topicOptions.innerHTML = asgGetCodingExamSubjects(true)
+                    .map((subject) => `<option value="${escapeHtml(subject.topic)}"></option>`)
+                    .join("");
+            }
+            if (!target) return;
+            const subjects = asgGetCodingExamSubjects(true);
+            target.innerHTML = subjects.map((subject, index) => {
+                const topicValue = escapeHtml(JSON.stringify(subject.topic));
+                return `
+                <article class="asg-admin-list-item">
+                    <div>
+                        <span class="asg-item-kicker">${subject.activeCount} active | ${subject.totalCount} total questions</span>
+                        <h3>${index + 1}. ${escapeHtml(subject.topic)} Coding Exam</h3>
+                    </div>
+                    <div class="asg-item-actions">
+                        <button class="asg-link-button" type="button" onclick="resetCodingExamSubjectForm(${topicValue})">Edit Subject</button>
+                        <a class="asg-link-button" href="coding-exam.html?topic=${encodeURIComponent(subject.topic)}">Preview</a>
+                    </div>
+                </article>
+            `;
+            }).join("") || `<div class="asg-empty-state"><h2>No coding exams</h2><p>Create a subject to add the first coding exam.</p></div>`;
         }
 
         function getSelectedRetakeExam(studentId, type) {
@@ -2043,7 +2156,7 @@
         }
 
         function renderExamRetakePermissions() {
-            const students = getStudents();
+            const students = getStudentsByName();
             const target = document.getElementById("examRetakePermissions");
             const codingTopics = getCodingExamTopics();
             if (!students.length) {
@@ -2052,6 +2165,7 @@
             }
 
             target.innerHTML = `
+                <div class="asg-admin-table-scroll" aria-label="Exam retake access table">
                 <table class="asg-admin-table">
                     <thead>
                         <tr>
@@ -2102,6 +2216,7 @@
                         }).join("")}
                     </tbody>
                 </table>
+                </div>
             `;
         }
 
@@ -3422,6 +3537,7 @@
             renderCertificatePermissions();
             renderCourseAccessRequests();
             renderExamRetakePermissions();
+            renderCodingExamSubjects();
             renderQuizCatalog();
             renderQuizQuestions();
             renderCodingChallenges();
@@ -3475,6 +3591,7 @@
             refreshDashboard();
             resetQuizForm();
             resetCodingForm();
+            resetCodingExamSubjectForm();
             resetQuizCatalogForm();
             resetBlogForm();
             resetProjectForm();

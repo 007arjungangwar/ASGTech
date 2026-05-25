@@ -25,7 +25,7 @@ const ASG_LEARNING_KEYS = {
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 12;
+const ASG_LEARNING_DATA_VERSION = 13;
 const ASG_CERTIFICATE_PROGRESS_REQUIRED = 70;
 let ASG_LEARNING_SEEDING_DEFAULTS = false;
 
@@ -1777,6 +1777,28 @@ function asgSaveCodingChallenges(challenges) {
 
 function asgGetTopicCodingChallenges(courseId, topicId, includeDrafts = false) {
     return asgGetCodingChallenges(includeDrafts, { courseId, topicId });
+}
+
+function asgGetCodingExamSubjects(includeDrafts = false) {
+    const challenges = asgGetCodingChallenges(includeDrafts, { globalOnly: true });
+    const subjects = new Map();
+    challenges.forEach((challenge) => {
+        const topic = String(challenge.topic || "").trim();
+        if (!topic) return;
+        const key = topic.toLowerCase();
+        const current = subjects.get(key) || {
+            topic,
+            totalCount: 0,
+            activeCount: 0
+        };
+        current.totalCount += 1;
+        if (challenge.status !== "draft") current.activeCount += 1;
+        subjects.set(key, current);
+    });
+
+    return [...subjects.values()].sort((left, right) => (
+        left.topic.localeCompare(right.topic, undefined, { sensitivity: "base" })
+    ));
 }
 
 function asgSaveCodingSubmission(submission) {

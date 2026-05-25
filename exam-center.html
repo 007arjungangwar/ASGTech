@@ -69,7 +69,7 @@
 
         function updateExamStats() {
             document.getElementById("examQuizCount").textContent = asgGetQuizCatalog().filter((quiz) => quiz.status !== "draft").length;
-            document.getElementById("examCodingCount").textContent = asgGetCodingChallenges(false, { globalOnly: true }).length;
+            document.getElementById("examCodingCount").textContent = asgGetCodingExamSubjects(false).filter((subject) => subject.activeCount > 0).length;
         }
 
         function showExamChoices() {
@@ -105,11 +105,7 @@
         }
 
         function showCodingExams() {
-            const examTopics = ["Python", "Machine Learning", "Pandas"];
-            const challenges = asgGetCodingChallenges(false, { globalOnly: true }).filter((challenge) => (
-                examTopics.some((topic) => topic.toLowerCase() === challenge.topic.toLowerCase())
-            ));
-            const topics = [...new Set(challenges.map((challenge) => challenge.topic))];
+            const subjects = asgGetCodingExamSubjects(false).filter((subject) => subject.activeCount > 0);
             const target = document.getElementById("examList");
             target.hidden = false;
             target.innerHTML = `
@@ -120,16 +116,13 @@
                     </div>
                 </div>
                 <div class="asg-exam-list-grid">
-                    ${topics.map((topic) => {
-                        const count = challenges.filter((challenge) => challenge.topic === topic).length;
-                        return `
-                            <a class="asg-exam-card" href="coding-exam.html?topic=${encodeURIComponent(topic)}">
-                                <span>${escapeHtml(topic)}</span>
-                                <strong>${escapeHtml(topic)} Coding Exam</strong>
-                                <small>${count} questions</small>
+                    ${subjects.map((subject) => `
+                            <a class="asg-exam-card" href="coding-exam.html?topic=${encodeURIComponent(subject.topic)}">
+                                <span>${escapeHtml(subject.topic)}</span>
+                                <strong>${escapeHtml(subject.topic)} Coding Exam</strong>
+                                <small>${subject.activeCount} questions</small>
                             </a>
-                        `;
-                    }).join("")}
+                    `).join("") || `<div class="asg-empty-state"><h2>No coding exams yet</h2><p>Admin can create coding exam subjects from the dashboard.</p></div>`}
                 </div>
             `;
         }

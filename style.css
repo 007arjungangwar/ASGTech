@@ -3863,7 +3863,7 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 }
 
 .asg-admin-table-scroll {
-    max-height: 430px;
+    max-height: min(390px, 52vh);
     overflow: auto;
     border: 1px solid var(--asg-border);
     border-radius: 8px;
