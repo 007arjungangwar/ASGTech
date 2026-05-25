@@ -47,6 +47,7 @@
         "asgCourseProgress",
         "certificates",
         "asgCertificateRequests",
+        "asgCertificateNameLocks",
         "studentQuestions"
     ];
 
@@ -660,7 +661,7 @@
         if (Array.isArray(value)) {
             return value.filter((record) => recordMatchesProfile(record, profile));
         }
-        if (key === "asgCourseProgress" && value && typeof value === "object") {
+        if ((key === "asgCourseProgress" || key === "asgCertificateNameLocks") && value && typeof value === "object") {
             const profileId = String(profile.id || "").toLowerCase();
             const profileEmail = normalizeEmail(profile.email);
             return Object.keys(value).reduce((records, progressKey) => {
@@ -680,7 +681,7 @@
     }
 
     function mergeActivityValue(key, currentValue, nextValue) {
-        if (key === "asgCourseProgress") {
+        if (key === "asgCourseProgress" || key === "asgCertificateNameLocks") {
             return {
                 ...(currentValue && typeof currentValue === "object" && !Array.isArray(currentValue) ? currentValue : {}),
                 ...(nextValue && typeof nextValue === "object" && !Array.isArray(nextValue) ? nextValue : {})
@@ -724,6 +725,34 @@
             }
         });
         pendingWrites.delete(key);
+        dispatchBackendStatus("synced", { key });
+        return true;
+    }
+
+    async function saveUserActivityForUser(key, value, targetUser) {
+        if (!ASG_ACTIVITY_KEY_SET.has(key) || !targetUser || !targetUser.id) return false;
+
+        const profile = currentProfile || await restoreSession();
+        if (!isProfileAdmin(profile)) return false;
+
+        const services = await loadServices();
+        await restRequest("user_activity?on_conflict=user_id,key", {
+            services,
+            method: "POST",
+            prefer: "resolution=merge-duplicates",
+            body: {
+                user_id: targetUser.id,
+                key,
+                value: cleanClone(value),
+                updated_at: new Date().toISOString(),
+                updated_by: {
+                    uid: profile.id || "",
+                    name: profile.name || "",
+                    email: profile.email || "",
+                    role: profile.role || ""
+                }
+            }
+        });
         dispatchBackendStatus("synced", { key });
         return true;
     }
@@ -1101,6 +1130,7 @@
         migrateLocalUser,
         signOut,
         saveDataKey,
+        saveUserActivityForUser,
         publishContentSnapshot,
         publishLocalContentBackup,
         getCloudContentStatus,

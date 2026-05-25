@@ -8813,6 +8813,21 @@ body.has-asg-shell .asg-site-footer {
     border-color: var(--asg-border);
 }
 
+body.has-asg-shell:not(.asg-theme-dark) .asg-site-footer {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--asg-border) 78%, transparent);
+}
+
+body.has-asg-shell:not(.asg-theme-dark) .asg-footer-connect,
+body.has-asg-shell:not(.asg-theme-dark) .asg-social-links {
+    background: transparent;
+}
+
+body.has-asg-shell:not(.asg-theme-dark) .asg-social-link {
+    background: var(--asg-surface-tint);
+    border-color: color-mix(in srgb, var(--asg-border) 82%, var(--asg-accent));
+}
+
 body.has-asg-shell .asg-social-link:hover {
     background: var(--asg-surface-soft);
 }

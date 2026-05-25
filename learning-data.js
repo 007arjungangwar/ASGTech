@@ -17,6 +17,7 @@ const ASG_LEARNING_KEYS = {
     resourceLibrary: "asgResourceLibrary",
     courseProgress: "asgCourseProgress",
     certificatePermissions: "asgCertificatePermissions",
+    certificateNameLocks: "asgCertificateNameLocks",
     studentAnnouncement: "studentAnnouncement",
     publishedDataVersion: "asgPublishedLearningDataVersion",
     dataVersion: "asgLearningDataVersion"
@@ -1496,6 +1497,11 @@ function asgEnsureLearningData() {
         asgWriteJSON(ASG_LEARNING_KEYS.certificatePermissions, {});
     }
 
+    const certificateNameLocks = asgReadJSON(ASG_LEARNING_KEYS.certificateNameLocks, null);
+    if (!certificateNameLocks || typeof certificateNameLocks !== "object" || Array.isArray(certificateNameLocks)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.certificateNameLocks, {});
+    }
+
     const courses = asgReadJSON(ASG_LEARNING_KEYS.courses, null);
     if (!Array.isArray(courses) || (courses.length === 0 && shouldUpgradeDefaults)) {
         asgWriteJSON(ASG_LEARNING_KEYS.courses, asgClone(ASG_DEFAULT_COURSES));
@@ -2072,6 +2078,58 @@ function asgFindCertificateById(value) {
 function asgGetCertificatePermissionKey(user) {
     if (!user) return "guest";
     return String(user.id || user.email || user.name || "guest").toLowerCase();
+}
+
+function asgGetCertificateNameLocks() {
+    asgEnsureLearningData();
+    return asgReadJSON(ASG_LEARNING_KEYS.certificateNameLocks, {});
+}
+
+function asgGetCertificateNameLock(user) {
+    const locks = asgGetCertificateNameLocks();
+    if (!user) return null;
+
+    const candidates = [
+        user.id,
+        user.email,
+        asgGetCertificatePermissionKey(user)
+    ].filter(Boolean).map((value) => String(value).toLowerCase());
+
+    for (const key of candidates) {
+        if (locks[key]) return locks[key];
+    }
+
+    return null;
+}
+
+function asgCanEditCertificateName(user) {
+    if (user && user.role === "admin") return true;
+    return !asgGetCertificateNameLock(user);
+}
+
+function asgSaveCertificateNameLock(user, name, actor = null) {
+    asgEnsureLearningData();
+    if (!user) return null;
+
+    const cleanedName = String(name || "").trim();
+    if (!cleanedName) return null;
+
+    const existing = asgGetCertificateNameLock(user);
+    const actorIsAdmin = actor && actor.role === "admin";
+    if (existing && !actorIsAdmin) return existing;
+
+    const locks = asgReadJSON(ASG_LEARNING_KEYS.certificateNameLocks, {});
+    const key = asgGetCertificatePermissionKey(user);
+    locks[key] = {
+        userId: user.id || "",
+        email: user.email || "",
+        name: cleanedName,
+        lockedAt: existing && existing.lockedAt ? existing.lockedAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: actor ? actor.email || actor.name || "Admin" : user.email || user.name || "Student"
+    };
+    asgWriteJSON(ASG_LEARNING_KEYS.certificateNameLocks, locks);
+    return locks[key];
 }
 
 function asgGetCertificatePermissions() {

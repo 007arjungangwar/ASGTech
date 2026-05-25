@@ -53,6 +53,17 @@
             font: inherit;
         }
 
+        .certificate-command-bar input[readonly] {
+            opacity: 0.78;
+            cursor: not-allowed;
+        }
+
+        .certificate-name-lock-note {
+            color: var(--asg-muted);
+            font-size: 0.78rem;
+            font-weight: 750;
+        }
+
         .certificate-actions {
             display: flex;
             gap: 0.7rem;
@@ -323,11 +334,14 @@
             overflow-wrap: anywhere;
         }
 
-        .certificate-course {
+        .certificate-sheet .certificate-course {
+            width: min(184mm, 100%);
             margin: 4mm 0 2mm;
             color: #143f71;
-            font-size: 6mm;
-            line-height: 1.2;
+            font-size: var(--certificate-course-size, 6mm) !important;
+            line-height: 1.12;
+            overflow-wrap: anywhere;
+            text-wrap: balance;
         }
 
         .certificate-signature {
@@ -506,6 +520,7 @@
             <label>
                 Student name
                 <input type="text" id="studentName" placeholder="Enter your full name" oninput="updateCertificateName()">
+                <small class="certificate-name-lock-note" id="certificateNameLockNote"></small>
             </label>
             <label>
                 Course
@@ -709,6 +724,10 @@
             document.getElementById("studentName").value = certificateUser.name;
         }
 
+        function isCertificateAdmin() {
+            return Boolean(certificateUser && certificateUser.role === "admin");
+        }
+
         function escapeCertificateHtml(value) {
             return String(value ?? "")
                 .replace(/&/g, "&amp;")
@@ -792,10 +811,71 @@
             refreshCertificateAccess();
         }
 
+        function getCertificateNameLock() {
+            return typeof asgGetCertificateNameLock === "function"
+                ? asgGetCertificateNameLock(certificateUser)
+                : null;
+        }
+
+        function getCertificateNameValue() {
+            const lock = getCertificateNameLock();
+            if (lock && lock.name && !isCertificateAdmin()) return lock.name;
+            return document.getElementById("studentName").value.trim() || "Student Name";
+        }
+
+        function fitCertificateCourseTitle() {
+            const title = selectedCertificateCourse.title;
+            const titleLength = title.length;
+            const element = document.getElementById("certCourseName");
+            let size = 6;
+            if (titleLength > 100) size = 3.5;
+            else if (titleLength > 82) size = 3.9;
+            else if (titleLength > 64) size = 4.4;
+            else if (titleLength > 46) size = 5.1;
+            element.style.setProperty("--certificate-course-size", `${size}mm`);
+        }
+
+        function refreshCertificateNameLock() {
+            const input = document.getElementById("studentName");
+            const note = document.getElementById("certificateNameLockNote");
+            const lock = getCertificateNameLock();
+            const lockedForStudent = Boolean(lock && lock.name && !isCertificateAdmin());
+
+            if (lock && lock.name) input.value = lock.name;
+            input.readOnly = lockedForStudent;
+            input.classList.toggle("is-locked", lockedForStudent);
+
+            if (lock && lock.name) {
+                note.textContent = isCertificateAdmin()
+                    ? "Admin can update the locked certificate name."
+                    : "Certificate name is locked. Contact admin for changes.";
+            } else {
+                note.textContent = "Set once before requesting or downloading.";
+            }
+        }
+
+        function lockCertificateNameForAction() {
+            const input = document.getElementById("studentName");
+            const name = input.value.trim();
+            if (!name) {
+                alert("Please enter your certificate name first.");
+                return null;
+            }
+
+            if (typeof asgSaveCertificateNameLock !== "function") return { name };
+
+            const lock = asgSaveCertificateNameLock(certificateUser, name, certificateUser);
+            if (lock && lock.name) input.value = lock.name;
+            refreshCertificateNameLock();
+            updateCertificateName();
+            return lock || { name };
+        }
+
         function updateCertificateName() {
-            const name = document.getElementById("studentName").value.trim() || "Student Name";
+            const name = getCertificateNameValue();
             document.getElementById("certName").textContent = name;
             document.getElementById("certCourseName").textContent = selectedCertificateCourse.title;
+            fitCertificateCourseTitle();
             updateCredentialVerification();
         }
 
@@ -817,7 +897,7 @@
         function buildCredentialRecord() {
             return {
                 certificateId: `ASG-${certificateId}`,
-                name: document.getElementById("studentName").value.trim() || "Student Name",
+                name: getCertificateNameValue(),
                 course: selectedCertificateCourse.title,
                 issued: certificateIssueDate.slice(0, 10)
             };
@@ -875,10 +955,13 @@
 
         function requestCertificateApproval() {
             if (!certificateUser) return;
+            const nameLock = lockCertificateNameForAction();
+            if (!nameLock) return;
+
             const requests = JSON.parse(localStorage.getItem("asgCertificateRequests") || "[]");
             requests.push({
                 userId: certificateUser.id,
-                name: certificateUser.name,
+                name: nameLock.name,
                 email: certificateUser.email,
                 courseId: selectedCertificateCourse.id,
                 course: selectedCertificateCourse.title,
@@ -990,7 +1073,7 @@
         }
 
         function generateCertificate() {
-            const name = document.getElementById("studentName").value.trim();
+            const name = getCertificateNameValue();
             if (!name) {
                 alert("Please enter your name first.");
                 return;
@@ -1002,6 +1085,9 @@
                 refreshCertificateAccess();
                 return;
             }
+
+            const nameLock = lockCertificateNameForAction();
+            if (!nameLock) return;
 
             updateCertificateName();
             const button = document.getElementById("downloadCertificateButton");
@@ -1042,7 +1128,10 @@
                 return;
             }
 
-            const name = document.getElementById("studentName").value.trim() || "Student";
+            const nameLock = lockCertificateNameForAction();
+            if (!nameLock) return;
+
+            const name = getCertificateNameValue();
             const shareUrl = verificationUrl;
             const text = `${name} completed the ${selectedCertificateCourse.title} learning path at ASG Tech Online.`;
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
@@ -1050,18 +1139,21 @@
 
         window.addEventListener("asg:data-updated", (event) => {
             const key = event.detail && event.detail.key;
-            if ([ASG_LEARNING_KEYS.certificatePermissions, ASG_LEARNING_KEYS.courseProgress].includes(key)) {
+            if ([ASG_LEARNING_KEYS.certificatePermissions, ASG_LEARNING_KEYS.courseProgress, ASG_LEARNING_KEYS.certificateNameLocks].includes(key)) {
+                refreshCertificateNameLock();
                 refreshCertificateAccess();
             }
         });
         window.addEventListener("storage", (event) => {
-            if ([ASG_LEARNING_KEYS.certificatePermissions, ASG_LEARNING_KEYS.courseProgress].includes(event.key)) {
+            if ([ASG_LEARNING_KEYS.certificatePermissions, ASG_LEARNING_KEYS.courseProgress, ASG_LEARNING_KEYS.certificateNameLocks].includes(event.key)) {
+                refreshCertificateNameLock();
                 refreshCertificateAccess();
             }
         });
 
         renderCertificateCourseOptions();
         loadCertificateIdentity();
+        refreshCertificateNameLock();
         refreshCertificateAccess();
     </script>
 </body>

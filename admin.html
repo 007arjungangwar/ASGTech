@@ -1663,6 +1663,30 @@
             refreshDashboard();
         }
 
+        function setCertificateNameLock(studentId) {
+            const student = getStudents().find((item) => String(item.id) === String(studentId));
+            if (!student) return;
+
+            const input = document.getElementById(`certificateName_${studentId}`);
+            const name = input ? input.value.trim() : "";
+            if (!name) {
+                alert("Enter the certificate name first.");
+                return;
+            }
+
+            const lock = asgSaveCertificateNameLock(student, name, adminUser);
+            if (lock && window.ASG_BACKEND && typeof window.ASG_BACKEND.saveUserActivityForUser === "function") {
+                window.ASG_BACKEND.saveUserActivityForUser(
+                    ASG_LEARNING_KEYS.certificateNameLocks,
+                    { [asgGetCertificatePermissionKey(student)]: lock },
+                    student
+                ).catch((error) => {
+                    console.warn("Could not sync certificate name lock for student.", error);
+                });
+            }
+            refreshDashboard();
+        }
+
         function renderCertificatePermissions() {
             const students = getStudents();
             const target = document.getElementById("certificatePermissions");
@@ -1676,6 +1700,7 @@
                     <thead>
                         <tr>
                             <th>Student</th>
+                            <th>Certificate Name</th>
                             <th>Progress</th>
                             <th>Request</th>
                             <th>Download Access</th>
@@ -1687,6 +1712,7 @@
                             const bestCourse = asgGetBestCertificateCourseProgress(student);
                             const progressPercent = Number(bestCourse && bestCourse.progressPercent || 0);
                             const permission = asgGetCertificatePermission(student);
+                            const nameLock = asgGetCertificateNameLock(student);
                             const request = getLatestCertificateRequest(student);
                             const allowed = Boolean(permission && permission.allowed);
                             return `
@@ -1694,6 +1720,10 @@
                                     <td>
                                         <strong>${escapeHtml(student.name)}</strong>
                                         <small>${escapeHtml(student.email)}</small>
+                                    </td>
+                                    <td>
+                                        <input id="certificateName_${escapeHtml(student.id)}" type="text" value="${escapeHtml(nameLock && nameLock.name ? nameLock.name : student.name)}">
+                                        <button class="asg-link-button" type="button" onclick="setCertificateNameLock('${student.id}')">Save Name</button>
                                     </td>
                                     <td>${percentage(progressPercent)}${bestCourse ? `<small>${escapeHtml(bestCourse.courseTitle)}</small>` : ""}</td>
                                     <td>${request ? `Requested ${formatDate(request.requestedAt)}${request.course ? `<small>${escapeHtml(request.course)}</small>` : ""}` : "No request"}</td>
@@ -2909,6 +2939,7 @@
                 videoLibrary: asgGetVideoLibrary(true),
                 resourceLibrary: asgGetResourceLibrary(true),
                 certificatePermissions: asgGetCertificatePermissions(),
+                certificateNameLocks: asgGetCertificateNameLocks(),
                 certificateRequests: readJSON("asgCertificateRequests", []),
                 legacyUsers: getLegacyUsers(),
                 studentQuestions: readJSON("studentQuestions", []),
