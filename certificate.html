@@ -335,7 +335,8 @@
         }
 
         .certificate-sheet .certificate-course {
-            width: min(184mm, 100%);
+            width: min(226mm, 100%);
+            max-width: none !important;
             margin: 5mm auto 2mm;
             color: #172033;
             font-family: Georgia, "Times New Roman", serif;
@@ -345,7 +346,7 @@
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
+            text-overflow: clip;
         }
 
         .certificate-signature {
@@ -832,8 +833,8 @@
             const titleLength = title.length;
             const element = document.getElementById("certCourseName");
             let size = 7.8;
-            if (titleLength > 42) size = 6;
-            else if (titleLength > 32) size = 6.8;
+            if (titleLength > 46) size = 6.3;
+            else if (titleLength > 36) size = 6.9;
             element.style.setProperty("--certificate-course-size", `${size}mm`);
         }
 

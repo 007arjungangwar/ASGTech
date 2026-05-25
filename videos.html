@@ -131,8 +131,8 @@
             document.getElementById("videoPlaylist").innerHTML = `
                 <div class="asg-challenge-list-head">
                     <h2>${escapeHtml(activePlaylist.title)}</h2>
-                    <span>${playlistVideos.length} videos</span>
-                    <small>${escapeHtml(activePlaylist.description)}</small>
+                    <span class="asg-playlist-count">${playlistVideos.length} videos</span>
+                    <p class="asg-playlist-description">${escapeHtml(activePlaylist.description)}</p>
                 </div>
                 ${playlistVideos.map((video) => {
                 const videoId = escapeHtml(JSON.stringify(video.id));
