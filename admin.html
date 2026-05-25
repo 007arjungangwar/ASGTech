@@ -428,6 +428,10 @@
                         <input id="codingTopic" type="text" list="codingExamTopicOptions" placeholder="Python, Machine Learning, or Pandas">
                         <datalist id="codingExamTopicOptions"></datalist>
                     </label>
+                    <label class="asg-coding-exam-field">
+                        <span>Coding exam</span>
+                        <select id="codingExamSubjectSelect" onchange="syncCodingTopicFromExam()"></select>
+                    </label>
                     <label>
                         <span>Placement</span>
                         <select id="codingPlacement" onchange="toggleCodingPlacementFields()">
@@ -2224,6 +2228,59 @@
             asgSaveCodingChallenges(nextChallenges);
             resetCodingExamSubjectForm();
             refreshDashboard();
+            document.getElementById("codingPlacement").value = "global";
+            document.getElementById("codingTopic").value = topic;
+            renderCodingExamSubjectPicker(topic);
+            toggleCodingPlacementFields();
+        }
+
+        function deleteCodingExamSubject(topic) {
+            const normalizedTopic = String(topic || "").trim().toLowerCase();
+            if (!normalizedTopic) return;
+            const matchingChallenges = codingChallenges.filter((challenge) => (
+                !challenge.courseId &&
+                !challenge.topicId &&
+                String(challenge.topic || "").trim().toLowerCase() === normalizedTopic
+            ));
+            if (!matchingChallenges.length) return;
+            if (!confirm(`Delete ${topic} Coding Exam and its ${matchingChallenges.length} question(s)?`)) return;
+
+            const currentBuilderTopic = String(document.getElementById("codingTopic").value || "").trim().toLowerCase();
+            asgSaveCodingChallenges(codingChallenges.filter((challenge) => (
+                challenge.courseId ||
+                challenge.topicId ||
+                String(challenge.topic || "").trim().toLowerCase() !== normalizedTopic
+            )));
+            if (String(document.getElementById("codingExamSubjectEdit").value || "").trim().toLowerCase() === normalizedTopic) {
+                resetCodingExamSubjectForm();
+            }
+            refreshDashboard();
+            if (currentBuilderTopic === normalizedTopic) resetCodingForm();
+        }
+
+        function renderCodingExamSubjectPicker(selectedTopic = "") {
+            const select = document.getElementById("codingExamSubjectSelect");
+            if (!select) return;
+            const subjects = asgGetCodingExamSubjects(true);
+            const topics = subjects.map((subject) => subject.topic).filter(Boolean);
+            const selected = String(selectedTopic || "").trim();
+            if (selected && !topics.some((topic) => topic.toLowerCase() === selected.toLowerCase())) {
+                topics.push(selected);
+            }
+
+            select.innerHTML = [
+                `<option value="">Manual/custom coding exam</option>`,
+                ...topics.map((topic) => `<option value="${escapeHtml(topic)}">${escapeHtml(topic)} Coding Exam</option>`)
+            ].join("");
+
+            const matchedTopic = topics.find((topic) => topic.toLowerCase() === selected.toLowerCase());
+            select.value = matchedTopic || "";
+        }
+
+        function syncCodingTopicFromExam() {
+            if (document.getElementById("codingPlacement").value !== "global") return;
+            const selected = document.getElementById("codingExamSubjectSelect").value;
+            if (selected) document.getElementById("codingTopic").value = selected;
         }
 
         function renderCodingExamSubjects() {
@@ -2234,6 +2291,7 @@
                     .map((subject) => `<option value="${escapeHtml(subject.topic)}"></option>`)
                     .join("");
             }
+            renderCodingExamSubjectPicker(document.getElementById("codingTopic") ? document.getElementById("codingTopic").value : "");
             if (!target) return;
             const subjects = asgGetCodingExamSubjects(true);
             target.innerHTML = subjects.map((subject, index) => {
@@ -2247,6 +2305,7 @@
                     <div class="asg-item-actions">
                         <button class="asg-link-button" type="button" onclick="resetCodingExamSubjectForm(${topicValue})">Edit Subject</button>
                         <a class="asg-link-button" href="coding-exam.html?topic=${encodeURIComponent(subject.topic)}">Preview</a>
+                        <button class="asg-link-button danger" type="button" onclick="deleteCodingExamSubject(${topicValue})">Delete</button>
                     </div>
                 </article>
             `;
@@ -2609,7 +2668,11 @@
             document.querySelectorAll(".asg-coding-topic-field").forEach((field) => {
                 field.hidden = placement !== "course-topic";
             });
+            document.querySelectorAll(".asg-coding-exam-field").forEach((field) => {
+                field.hidden = placement !== "global";
+            });
             if (placement === "course-topic") syncCodingTopicFromCourseTopic();
+            if (placement === "global") syncCodingTopicFromExam();
         }
 
         function syncCodingTopicFromCourseTopic() {
@@ -2644,11 +2707,13 @@
         }
 
         function resetCodingForm() {
+            const defaultExamTopic = getCodingExamTopics()[0] || "Python";
             document.getElementById("codingEditId").value = "";
             document.getElementById("codingTitle").value = "";
-            document.getElementById("codingTopic").value = "Python";
+            document.getElementById("codingTopic").value = defaultExamTopic;
             document.getElementById("codingPlacement").value = "global";
             renderCodingCourseOptions(adminCourses[0] ? adminCourses[0].id : "", "");
+            renderCodingExamSubjectPicker(defaultExamTopic);
             toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = "Beginner";
             document.getElementById("codingStatus").value = "active";
@@ -2740,6 +2805,7 @@
             document.getElementById("codingTopic").value = challenge.topic;
             document.getElementById("codingPlacement").value = challenge.courseId && challenge.topicId ? "course-topic" : "global";
             renderCodingCourseOptions(challenge.courseId || (adminCourses[0] ? adminCourses[0].id : ""), challenge.topicId || "");
+            renderCodingExamSubjectPicker(challenge.courseId && challenge.topicId ? "" : challenge.topic);
             toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = challenge.difficulty;
             document.getElementById("codingStatus").value = challenge.status;
