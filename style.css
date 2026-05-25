@@ -3862,6 +3862,23 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     overflow-x: auto;
 }
 
+.asg-admin-table-scroll {
+    max-height: 430px;
+    overflow: auto;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+}
+
+.asg-admin-table-scroll .asg-admin-table {
+    min-width: 900px;
+}
+
+.asg-admin-table-scroll .asg-admin-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
 .asg-admin-table {
     width: 100%;
     border-collapse: collapse;

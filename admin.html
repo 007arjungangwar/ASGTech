@@ -976,6 +976,25 @@
             return getUsers().filter((user) => user.role === "student");
         }
 
+        function sortStudentsByName(students) {
+            return [...students].sort((left, right) => (
+                String(left.name || left.email || "").localeCompare(
+                    String(right.name || right.email || ""),
+                    undefined,
+                    { sensitivity: "base" }
+                )
+            ));
+        }
+
+        function getStudentsByName(search = "") {
+            const normalizedSearch = String(search || "").trim().toLowerCase();
+            return sortStudentsByName(getStudents().filter((student) => {
+                if (!normalizedSearch) return true;
+                const text = `${student.name} ${student.email}`.toLowerCase();
+                return text.includes(normalizedSearch);
+            }));
+        }
+
         function setAdminSection(sectionName, options = {}) {
             const validSections = ["overview", "public", "students", "assessments", "courses", "library"];
             const nextSection = validSections.includes(sectionName) ? sectionName : "overview";
@@ -1546,10 +1565,7 @@
 
         function renderStudentsTable() {
             const search = document.getElementById("studentSearch").value.trim().toLowerCase();
-            const students = getStudents().filter((student) => {
-                const text = `${student.name} ${student.email}`.toLowerCase();
-                return text.includes(search);
-            });
+            const students = getStudentsByName(search);
 
             const table = document.getElementById("studentsTable");
             if (!students.length) {
@@ -1558,6 +1574,7 @@
             }
 
             table.innerHTML = `
+                <div class="asg-admin-table-scroll" aria-label="Registered student progress table">
                 <table class="asg-admin-table">
                     <thead>
                         <tr>
@@ -1593,6 +1610,7 @@
                         }).join("")}
                     </tbody>
                 </table>
+                </div>
             `;
         }
 
@@ -1740,7 +1758,7 @@
         }
 
         function renderCertificatePermissions() {
-            const students = getStudents();
+            const students = getStudentsByName();
             const target = document.getElementById("certificatePermissions");
             if (!students.length) {
                 target.innerHTML = `<div class="asg-empty-state"><h2>No students found</h2><p>Student certificate permissions will appear here.</p></div>`;
@@ -1748,6 +1766,7 @@
             }
 
             target.innerHTML = `
+                <div class="asg-admin-table-scroll" aria-label="Certificate download permissions table">
                 <table class="asg-admin-table">
                     <thead>
                         <tr>
@@ -1789,6 +1808,7 @@
                         }).join("")}
                     </tbody>
                 </table>
+                </div>
             `;
         }
 

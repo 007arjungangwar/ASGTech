@@ -863,12 +863,12 @@
         body.status = "pending";
         body.updated_at = new Date().toISOString();
         try {
-            const rows = await restRequest("course_access_requests", {
+            await restRequest("course_access_requests", {
                 method: "POST",
-                prefer: "return=representation",
+                prefer: "return=minimal",
                 body
             });
-            const saved = Array.isArray(rows) && rows[0] ? rows[0] : body;
+            const saved = await refreshCourseAccessRequest(body.request_token).catch(() => body);
             mergeCourseAccessRequestsLocal(saved);
             dispatchBackendStatus("synced", { key: "asgCourseAccessRequests" });
             return normalizeCourseAccessRequestRecord(saved) || record;
@@ -897,9 +897,10 @@
     async function loadCourseAccessRequests() {
         const profile = currentProfile || await restoreSession();
         if (!isProfileAdmin(profile)) return readLocalJSON("asgCourseAccessRequests", []);
-        const rows = await restRequest(
-            "course_access_requests?select=id,request_token,user_id,name,email,course_id,course_title,price,note,status,requested_at,updated_at,updated_by&order=updated_at.desc"
-        );
+        const rows = await restRequest("rpc/asg_list_course_access_requests", {
+            method: "POST",
+            body: { p_admin_email: profile.email || "" }
+        });
         return mergeCourseAccessRequestsLocal(rows || []);
     }
 
@@ -910,23 +911,14 @@
         if (!normalized || !normalized.requestToken) return null;
 
         const nextStatus = status === "approved" ? "approved" : "revoked";
-        const rows = await restRequest(
-            `course_access_requests?request_token=eq.${encodeURIComponent(normalized.requestToken)}`,
-            {
-                method: "PATCH",
-                prefer: "return=representation",
-                body: {
-                    status: nextStatus,
-                    updated_at: new Date().toISOString(),
-                    updated_by: {
-                        uid: profile.id || "",
-                        name: profile.name || "",
-                        email: profile.email || "",
-                        role: profile.role || ""
-                    }
-                }
+        const rows = await restRequest("rpc/asg_update_course_access_request_status", {
+            method: "POST",
+            body: {
+                p_admin_email: profile.email || "",
+                p_request_token: normalized.requestToken,
+                p_status: nextStatus
             }
-        );
+        });
         const saved = Array.isArray(rows) && rows[0] ? rows[0] : { ...normalized, status: nextStatus };
         mergeCourseAccessRequestsLocal(saved);
         dispatchBackendStatus("synced", { key: "asgCourseAccessRequests" });

@@ -327,6 +327,98 @@ $$;
 
 grant execute on function public.asg_get_course_access_request(text) to anon, authenticated;
 
+create or replace function public.asg_list_course_access_requests(p_admin_email text)
+returns table (
+    id uuid,
+    request_token text,
+    user_id text,
+    name text,
+    email text,
+    course_id text,
+    course_title text,
+    price text,
+    note text,
+    status text,
+    requested_at timestamptz,
+    updated_at timestamptz,
+    updated_by jsonb
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select
+        car.id,
+        car.request_token,
+        car.user_id,
+        car.name,
+        car.email,
+        car.course_id,
+        car.course_title,
+        car.price,
+        car.note,
+        car.status,
+        car.requested_at,
+        car.updated_at,
+        car.updated_by
+    from public.course_access_requests car
+    where lower(coalesce(p_admin_email, '')) = any(public.asg_admin_emails())
+    order by car.updated_at desc, car.requested_at desc;
+$$;
+
+create or replace function public.asg_update_course_access_request_status(
+    p_admin_email text,
+    p_request_token text,
+    p_status text
+)
+returns table (
+    id uuid,
+    request_token text,
+    user_id text,
+    name text,
+    email text,
+    course_id text,
+    course_title text,
+    price text,
+    note text,
+    status text,
+    requested_at timestamptz,
+    updated_at timestamptz,
+    updated_by jsonb
+)
+language sql
+volatile
+security definer
+set search_path = public
+as $$
+    update public.course_access_requests car
+    set
+        status = case when p_status = 'approved' then 'approved' else 'revoked' end,
+        updated_at = now(),
+        updated_by = jsonb_build_object('email', lower(coalesce(p_admin_email, '')), 'role', 'admin')
+    where car.request_token = p_request_token
+      and p_status in ('approved', 'revoked')
+      and lower(coalesce(p_admin_email, '')) = any(public.asg_admin_emails())
+    returning
+        car.id,
+        car.request_token,
+        car.user_id,
+        car.name,
+        car.email,
+        car.course_id,
+        car.course_title,
+        car.price,
+        car.note,
+        car.status,
+        car.requested_at,
+        car.updated_at,
+        car.updated_by;
+$$;
+
+grant execute on function public.asg_list_course_access_requests(text) to anon, authenticated;
+grant execute on function public.asg_update_course_access_request_status(text, text, text) to anon, authenticated;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
     'asg-content',
