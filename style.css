@@ -3799,6 +3799,26 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     gap: 18px;
 }
 
+.asg-admin-layout > .asg-assessment-coding-catalog {
+    order: 10;
+}
+
+.asg-admin-layout > .asg-assessment-coding-builder {
+    order: 20;
+}
+
+.asg-admin-layout > .asg-assessment-quiz-catalog {
+    order: 30;
+}
+
+.asg-admin-layout > .asg-assessment-quiz-builder {
+    order: 40;
+}
+
+.asg-admin-layout > .asg-assessment-retake {
+    order: 50;
+}
+
 .asg-admin-wide {
     grid-column: 1 / -1;
 }
@@ -5517,6 +5537,7 @@ body.asg-theme-dark.has-asg-shell .asg-ai-message {
 .asg-certificate-result-card,
 .asg-analytics-card,
 .asg-analytics-columns > article {
+    min-width: 0;
     padding: 1.1rem;
     border: 1px solid var(--asg-border);
     border-radius: 8px;
@@ -5600,12 +5621,15 @@ body.asg-theme-dark.has-asg-shell .asg-ai-message {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-width: 0;
     gap: 0.8rem;
 }
 
 .asg-insight-row span,
 .asg-insight-row small {
     display: grid;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .asg-insight-row span {
@@ -5622,8 +5646,44 @@ body.asg-theme-dark.has-asg-shell .asg-ai-message {
 
 .asg-insight-row strong {
     white-space: nowrap;
+    min-width: 0;
     color: var(--asg-primary-dark);
     font-size: 0.9rem;
+}
+
+.asg-certificate-readiness-card {
+    grid-column: 1 / -1;
+}
+
+.asg-certificate-readiness-list {
+    max-height: min(360px, 52vh);
+    overflow: auto;
+    padding-right: 0.3rem;
+}
+
+.asg-certificate-readiness-row {
+    align-items: flex-start;
+}
+
+.asg-certificate-readiness-row strong {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.2rem 0.45rem;
+    max-width: min(100%, 640px);
+    white-space: normal;
+    text-align: right;
+    line-height: 1.45;
+}
+
+.asg-certificate-readiness-row strong span {
+    display: inline-flex;
+}
+
+.asg-certificate-readiness-row strong span:not(:first-child)::before {
+    content: "|";
+    margin-right: 0.45rem;
+    color: var(--asg-muted);
 }
 
 .certificate-sheet {

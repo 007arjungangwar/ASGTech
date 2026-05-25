@@ -236,7 +236,7 @@
                 <div class="asg-table-wrap" id="courseAccessRequests"></div>
             </article>
 
-            <article class="asg-live-panel asg-admin-wide" data-admin-section="assessments">
+            <article class="asg-live-panel asg-admin-wide asg-assessment-retake" data-admin-section="assessments">
                 <div class="asg-section-header">
                     <div>
                         <h2>Exam Retake Access</h2>
@@ -246,7 +246,7 @@
                 <div class="asg-table-wrap" id="examRetakePermissions"></div>
             </article>
 
-            <article class="asg-live-panel asg-admin-wide" data-admin-section="assessments">
+            <article class="asg-live-panel asg-admin-wide asg-assessment-coding-catalog" data-admin-section="assessments">
                 <div class="asg-section-header">
                     <div>
                         <h2>Coding Exam Catalog</h2>
@@ -296,7 +296,7 @@
                 </form>
             </article>
 
-            <article class="asg-live-panel asg-admin-wide" data-admin-section="assessments">
+            <article class="asg-live-panel asg-admin-wide asg-assessment-quiz-builder" data-admin-section="assessments">
                 <div class="asg-section-header">
                     <div>
                         <h2>Quiz Builder</h2>
@@ -376,7 +376,7 @@
                 <div class="asg-admin-list" id="quizQuestionList"></div>
             </article>
 
-            <article class="asg-live-panel asg-admin-wide" data-admin-section="assessments">
+            <article class="asg-live-panel asg-admin-wide asg-assessment-quiz-catalog" data-admin-section="assessments">
                 <div class="asg-section-header">
                     <div>
                         <h2>Quiz Exam Catalog</h2>
@@ -408,7 +408,7 @@
                 <div class="asg-admin-list" id="quizCatalogList"></div>
             </article>
 
-            <article class="asg-live-panel asg-admin-wide" data-admin-section="assessments">
+            <article class="asg-live-panel asg-admin-wide asg-assessment-coding-builder" data-admin-section="assessments">
                 <div class="asg-section-header">
                     <div>
                         <h2>Coding Practice Builder</h2>
@@ -1494,7 +1494,7 @@
         }
 
         function renderAnalytics() {
-            const students = getStudents();
+            const students = getStudentsByName();
             const activeStudents = getRecentStudents(students);
             const quizAttempts = asgGetQuizAttempts();
             const codingSubmissions = asgGetCodingSubmissions();
@@ -1556,9 +1556,9 @@
                             `).join("") : `<div class="asg-empty-state"><h2>No weak topics yet</h2><p>Missed quiz answers and low coding runs will appear here.</p></div>`}
                         </div>
                     </article>
-                    <article>
+                    <article class="asg-certificate-readiness-card">
                         <h3>Certificate Readiness</h3>
-                        <div class="asg-insight-list">
+                        <div class="asg-insight-list asg-certificate-readiness-list">
                             ${students.map((student) => {
                                 const bestCourse = asgGetBestCertificateCourseProgress(student);
                                 const progressPercent = Number(bestCourse && bestCourse.progressPercent || 0);
@@ -1567,9 +1567,13 @@
                                     ? (allowed ? "Ready" : "Needs approval")
                                     : "Still learning";
                                 return `
-                                    <div class="asg-insight-row">
+                                    <div class="asg-insight-row asg-certificate-readiness-row">
                                         <span>${escapeHtml(student.name)}<small>${escapeHtml(student.email)}</small></span>
-                                        <strong>${percentage(progressPercent)} | ${escapeHtml(bestCourse ? bestCourse.courseTitle : "No course")} | ${status}</strong>
+                                        <strong>
+                                            <span>${percentage(progressPercent)}</span>
+                                            <span>${escapeHtml(bestCourse ? bestCourse.courseTitle : "No course")}</span>
+                                            <span>${status}</span>
+                                        </strong>
                                     </div>
                                 `;
                             }).join("") || `<div class="asg-empty-state"><h2>No students yet</h2><p>Registered students will appear here.</p></div>`}
