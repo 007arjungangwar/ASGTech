@@ -123,7 +123,7 @@
                 <div class="asg-section-header">
                     <div>
                         <h2>Learning Analytics</h2>
-                        <p>Track active students, quiz averages, weak topics, and certificate readiness from submitted work.</p>
+                        <p>Track active students, quiz averages, weak topics, course purchases, and certificate readiness from submitted work.</p>
                     </div>
                 </div>
                 <div id="adminAnalytics"></div>
@@ -1493,11 +1493,73 @@
                 }));
         }
 
+        function clampAnalyticsPercent(value) {
+            return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+        }
+
+        function ratioPercent(part, total) {
+            return total ? clampAnalyticsPercent((Number(part || 0) / Number(total || 0)) * 100) : 0;
+        }
+
+        function getCourseAccessStatus(row) {
+            if (row && (row.allowed === true || row.status === "approved")) return "approved";
+            if (row && (row.allowed === false || row.status === "revoked")) return "revoked";
+            return "pending";
+        }
+
+        function getCoursePurchaseAnalytics(rows) {
+            const totals = { approved: 0, pending: 0, revoked: 0 };
+            const byCourse = new Map();
+            rows.forEach((row) => {
+                const status = getCourseAccessStatus(row);
+                totals[status] += 1;
+
+                const course = adminCourses.find((item) => String(item.id) === String(row.courseId)) || {};
+                const courseTitle = course.title || row.courseTitle || row.courseId || "Course";
+                const key = String(row.courseId || courseTitle);
+                const current = byCourse.get(key) || {
+                    courseTitle,
+                    total: 0,
+                    approved: 0,
+                    pending: 0,
+                    revoked: 0
+                };
+                current.total += 1;
+                current[status] += 1;
+                byCourse.set(key, current);
+            });
+
+            return {
+                totals,
+                byCourse: [...byCourse.values()].sort((left, right) => (
+                    right.total - left.total ||
+                    left.courseTitle.localeCompare(right.courseTitle, undefined, { sensitivity: "base" })
+                ))
+            };
+        }
+
+        function renderAnalyticsBar(label, value, detail = "", accent = "primary") {
+            const percentValue = clampAnalyticsPercent(value);
+            return `
+                <div class="asg-analytics-bar-row asg-bar-${accent}">
+                    <div class="asg-analytics-bar-head">
+                        <span>${escapeHtml(label)}</span>
+                        <strong>${escapeHtml(detail || `${percentValue}%`)}</strong>
+                    </div>
+                    <div class="asg-analytics-bar-track" aria-hidden="true">
+                        <span style="--asg-bar-value: ${percentValue}%;"></span>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderAnalytics() {
             const students = getStudentsByName();
             const activeStudents = getRecentStudents(students);
             const quizAttempts = asgGetQuizAttempts();
             const codingSubmissions = asgGetCodingSubmissions();
+            const courseAccessRows = getCourseAccessRows();
+            const coursePurchases = getCoursePurchaseAnalytics(courseAccessRows);
             const certificateReady = students.filter((student) => {
                 return asgHasCertificateProgressRequirement(student) && asgCanDownloadCertificate(student);
             });
@@ -1505,8 +1567,19 @@
                 return asgHasCertificateProgressRequirement(student) && !asgCanDownloadCertificate(student);
             });
             const weakTopics = getWeakTopicInsights();
+            const quizAverageRows = adminQuizCatalog.map((quiz) => {
+                const attempts = quizAttempts.filter((attempt) => (attempt.quizId || "python") === quiz.id);
+                return {
+                    quiz,
+                    attempts,
+                    average: attempts.length ? averagePercentage(attempts) : 0
+                };
+            });
+            const maxWeakSignals = Math.max(1, ...weakTopics.map((item) => Number(item.misses || 0)));
+            const maxPurchaseCount = Math.max(1, ...coursePurchases.byCourse.map((item) => item.total));
 
             document.getElementById("adminAnalytics").innerHTML = `
+                <div class="asg-analytics-dashboard">
                 <div class="asg-analytics-grid">
                     <article class="asg-analytics-card">
                         <span>Active students</span>
@@ -1528,29 +1601,75 @@
                         <strong>${certificateReady.length} ready</strong>
                         <p>${certificatePending.length} need admin approval.</p>
                     </article>
+                    <article class="asg-analytics-card">
+                        <span>Course purchases</span>
+                        <strong>${coursePurchases.totals.approved} approved</strong>
+                        <p>${coursePurchases.totals.pending} pending requests from ${courseAccessRows.length} total.</p>
+                    </article>
+                </div>
+
+                <div class="asg-analytics-spotlight">
+                    <article class="asg-analytics-chart-card">
+                        <div class="asg-question-head">
+                            <div>
+                                <h3>Performance Overview</h3>
+                                <small>Live bars from quiz, coding, activity, and certificate data.</small>
+                            </div>
+                        </div>
+                        <div class="asg-analytics-bar-list">
+                            ${renderAnalyticsBar("Active student ratio", ratioPercent(activeStudents.length, students.length), `${activeStudents.length} of ${students.length}`, "teal")}
+                            ${renderAnalyticsBar("Quiz average", averagePercentage(quizAttempts), percentage(averagePercentage(quizAttempts)), "blue")}
+                            ${renderAnalyticsBar("Coding average", averagePercentage(codingSubmissions), percentage(averagePercentage(codingSubmissions)), "gold")}
+                            ${renderAnalyticsBar("Certificate ready ratio", ratioPercent(certificateReady.length, students.length), `${certificateReady.length} ready`, "green")}
+                        </div>
+                    </article>
+                    <article class="asg-analytics-chart-card">
+                        <div class="asg-question-head">
+                            <div>
+                                <h3>Course Purchases</h3>
+                                <small>Paid-course access requests and approvals.</small>
+                            </div>
+                        </div>
+                        <div class="asg-purchase-status-grid">
+                            <div><strong>${coursePurchases.totals.pending}</strong><span>Pending</span></div>
+                            <div><strong>${coursePurchases.totals.approved}</strong><span>Approved</span></div>
+                            <div><strong>${coursePurchases.totals.revoked}</strong><span>Revoked</span></div>
+                        </div>
+                        <div class="asg-analytics-bar-list">
+                            ${coursePurchases.byCourse.length ? coursePurchases.byCourse.slice(0, 5).map((item) => (
+                                renderAnalyticsBar(
+                                    item.courseTitle,
+                                    (item.total / maxPurchaseCount) * 100,
+                                    `${item.approved} approved / ${item.total} total`,
+                                    "gold"
+                                )
+                            )).join("") : `<div class="asg-empty-state"><h2>No purchase requests yet</h2><p>Paid-course requests will appear here after students ask for access.</p></div>`}
+                        </div>
+                    </article>
                 </div>
 
                 <div class="asg-analytics-columns">
                     <article>
                         <h3>Quiz Averages</h3>
-                        <div class="asg-insight-list">
-                            ${adminQuizCatalog.map((quiz) => {
-                                const attempts = quizAttempts.filter((attempt) => (attempt.quizId || "python") === quiz.id);
-                                return `
-                                    <div class="asg-insight-row">
-                                        <span>${escapeHtml(quiz.title)}</span>
-                                        <strong>${attempts.length ? percentage(averagePercentage(attempts)) : "No attempts"}</strong>
-                                    </div>
-                                `;
-                            }).join("")}
+                        <div class="asg-analytics-bar-list">
+                            ${quizAverageRows.map((item) => renderAnalyticsBar(
+                                item.quiz.title,
+                                item.average,
+                                item.attempts.length ? `${percentage(item.average)} | ${item.attempts.length} attempts` : "No attempts",
+                                "blue"
+                            )).join("")}
                         </div>
                     </article>
                     <article>
                         <h3>Weak Topics</h3>
                         <div class="asg-insight-list">
                             ${weakTopics.length ? weakTopics.map((item) => `
-                                <div class="asg-insight-row">
-                                    <span>${escapeHtml(item.topic)}<small>${escapeHtml(item.reasons.join(", "))}</small></span>
+                                <div class="asg-insight-row asg-weak-topic-row">
+                                    <span>
+                                        ${escapeHtml(item.topic)}
+                                        <small>${escapeHtml(item.reasons.join(", "))}</small>
+                                        <span class="asg-row-meter" aria-hidden="true"><span style="--asg-meter-value: ${ratioPercent(item.misses, maxWeakSignals)}%;"></span></span>
+                                    </span>
                                     <strong>${item.misses} signals</strong>
                                 </div>
                             `).join("") : `<div class="asg-empty-state"><h2>No weak topics yet</h2><p>Missed quiz answers and low coding runs will appear here.</p></div>`}
@@ -1579,6 +1698,7 @@
                             }).join("") || `<div class="asg-empty-state"><h2>No students yet</h2><p>Registered students will appear here.</p></div>`}
                         </div>
                     </article>
+                </div>
                 </div>
             `;
         }
