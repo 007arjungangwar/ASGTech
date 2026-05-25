@@ -336,12 +336,16 @@
 
         .certificate-sheet .certificate-course {
             width: min(184mm, 100%);
-            margin: 4mm 0 2mm;
-            color: #143f71;
-            font-size: var(--certificate-course-size, 6mm) !important;
-            line-height: 1.12;
-            overflow-wrap: anywhere;
-            text-wrap: balance;
+            margin: 5mm auto 2mm;
+            color: #172033;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: var(--certificate-course-size, 7.8mm) !important;
+            font-weight: 700;
+            line-height: 1.05;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .certificate-signature {
@@ -665,7 +669,7 @@
 
                     <div class="certificate-main">
                         <div class="certificate-kicker">Verified professional achievement</div>
-                        <h2 class="certificate-title">Certificate of Completion</h2>
+                        <h2 class="certificate-title">Certificate of Accomplishment</h2>
                         <p class="certificate-copy">This certificate is proudly presented to</p>
                         <div class="certificate-name" id="certName">Student Name</div>
                         <p class="certificate-copy">for successfully completing the professional learning path</p>
@@ -827,11 +831,9 @@
             const title = selectedCertificateCourse.title;
             const titleLength = title.length;
             const element = document.getElementById("certCourseName");
-            let size = 6;
-            if (titleLength > 100) size = 3.5;
-            else if (titleLength > 82) size = 3.9;
-            else if (titleLength > 64) size = 4.4;
-            else if (titleLength > 46) size = 5.1;
+            let size = 7.8;
+            if (titleLength > 42) size = 6;
+            else if (titleLength > 32) size = 6.8;
             element.style.setProperty("--certificate-course-size", `${size}mm`);
         }
 
