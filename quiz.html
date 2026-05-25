@@ -78,6 +78,10 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function answerTextClass(value) {
+            return /[\n{};=()]|^\s/.test(String(value || "")) ? "asg-answer-text is-code" : "asg-answer-text";
+        }
+
         function getQuizAttemptCount(quizId = activeQuizId) {
             return asgGetQuizAttempts(quizUser, quizId).length + asgGetExamAttempts(quizUser, "quiz", getQuizExamId(quizId)).length;
         }
@@ -250,7 +254,7 @@
                                 ${question.options.map((option) => `
                                     <label class="asg-option-choice">
                                         <input type="radio" name="question_${escapeHtml(question.id)}" value="${escapeHtml(option.id)}">
-                                        <span>${escapeHtml(option.text)}</span>
+                                        <span class="${answerTextClass(option.text)}">${escapeHtml(option.text)}</span>
                                     </label>
                                 `).join("")}
                             </div>
@@ -376,8 +380,8 @@
                                 <small>${answer.isCorrect ? "Correct" : "Needs review"}</small>
                             </div>
                             <pre class="asg-question-text">${escapeHtml(answer.prompt)}</pre>
-                            <p><strong>Your answer:</strong> ${escapeHtml(answer.selectedText)}</p>
-                            <p><strong>Correct answer:</strong> ${escapeHtml(answer.correctText)}</p>
+                            <p><strong>Your answer:</strong> <span class="${answerTextClass(answer.selectedText)}">${escapeHtml(answer.selectedText)}</span></p>
+                            <p><strong>Correct answer:</strong> <span class="${answerTextClass(answer.correctText)}">${escapeHtml(answer.correctText)}</span></p>
                             ${answer.explanation ? `<p>${escapeHtml(answer.explanation)}</p>` : ""}
                         </article>
                     `).join("")}

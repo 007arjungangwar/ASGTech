@@ -37,6 +37,7 @@
             </div>
         </section>
 
+        <section class="asg-course-access-panel" id="courseAccessPanel" hidden></section>
         <section class="asg-course-grid" id="courseGrid"></section>
     </main>
 
@@ -75,8 +76,94 @@
             }
         }
 
+        function redirectToCourseLogin(courseId) {
+            sessionStorage.setItem("asgAuthNotice", "Sign in first, then request paid course access.");
+            window.location.href = `login.html?next=${encodeURIComponent(`courses.html?course=${courseId}`)}`;
+        }
+
+        function getCourseRequestStatus(course) {
+            const permission = asgGetCourseAccessPermission(courseUser, course.id);
+            if (permission && permission.allowed) return "Approved";
+            if (!courseUser) return "Payment required";
+            const request = asgGetLatestCourseAccessRequest(courseUser, course.id);
+            return request ? "Request pending" : "Payment required";
+        }
+
+        function renderCoursePaymentPanel(course) {
+            const panel = document.getElementById("courseAccessPanel");
+            if (!course || asgHasCourseAccess(courseUser, course)) {
+                panel.hidden = true;
+                panel.innerHTML = "";
+                panel.dataset.courseId = "";
+                return;
+            }
+
+            const request = courseUser ? asgGetLatestCourseAccessRequest(courseUser, course.id) : null;
+            const canRequest = Boolean(courseUser && course.paymentQrUrl);
+            const requestedDate = request && request.requestedAt
+                ? new Date(request.requestedAt).toLocaleDateString()
+                : "";
+            const requestText = request
+                ? `Request sent ${requestedDate}`
+                : "After payment, send your access request to admin.";
+            const action = !courseUser
+                ? `<button class="btn-primary" type="button" onclick="redirectToCourseLogin('${escapeHtml(course.id)}')">Sign In to Request Access</button>`
+                : `<button class="btn-primary" type="button" ${canRequest ? "" : "disabled"} onclick="requestCourseAccess('${escapeHtml(course.id)}')">${request ? "Request Again" : "I Have Paid - Request Access"}</button>`;
+
+            panel.hidden = false;
+            panel.dataset.courseId = course.id;
+            panel.innerHTML = `
+                <article class="asg-course-access-card">
+                    <div class="asg-course-access-copy">
+                        <span class="asg-course-label">${escapeHtml(course.price)}</span>
+                        <h2>${escapeHtml(course.title)}</h2>
+                        <p>Scan the payment QR, complete the payment, then request admin approval to unlock this paid course.</p>
+                        <strong class="asg-course-payment-status">${escapeHtml(requestText)}</strong>
+                        <div class="asg-form-actions">
+                            ${action}
+                            <a class="btn-secondary" href="courses.html">View All Courses</a>
+                        </div>
+                    </div>
+                    <div class="asg-course-payment-box">
+                        ${course.paymentQrUrl ? `
+                            <img class="asg-course-payment-qr" src="${escapeHtml(course.paymentQrUrl)}" alt="${escapeHtml(course.title)} payment QR">
+                        ` : `
+                            <div class="asg-empty-state compact">
+                                <h2>QR not uploaded</h2>
+                                <p>Admin needs to add the payment QR before students can request access.</p>
+                            </div>
+                        `}
+                    </div>
+                </article>
+            `;
+            panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function requestCourseAccess(courseId) {
+            const course = asgGetCourseById(courseId);
+            if (!course) return;
+            if (!courseUser) {
+                redirectToCourseLogin(course.id);
+                return;
+            }
+            if (!course.paymentQrUrl) {
+                alert("Payment QR is not available for this course yet.");
+                return;
+            }
+            asgSaveCourseAccessRequest(courseUser, course, "Student marked payment as completed.");
+            renderCoursePaymentPanel(course);
+            renderCourses();
+        }
+
         async function openCourse(courseId) {
             const course = asgGetCourseById(courseId);
+            if (course && !asgHasCourseAccess(courseUser, course)) {
+                const url = new URL(window.location.href);
+                url.searchParams.set("course", course.id);
+                window.history.replaceState({}, "", url);
+                renderCoursePaymentPanel(course);
+                return;
+            }
             if (course) saveEnrollment(course);
             const progress = course ? asgGetCourseProgress(courseUser, course.id) : null;
             const savedTopic = progress && course
@@ -98,8 +185,14 @@
             document.getElementById("courseGrid").innerHTML = courses.map((course) => {
                 const activeTopics = course.topics.filter((topic) => topic.status !== "draft");
                 const previewTopics = activeTopics.slice(0, 4);
+                const paid = asgIsPaidCourse(course);
+                const hasAccess = asgHasCourseAccess(courseUser, course);
+                const hasRequest = Boolean(courseUser && asgGetLatestCourseAccessRequest(courseUser, course.id));
+                const actionText = paid && !hasAccess
+                    ? (hasRequest ? "Request Pending" : "Pay & Request Access")
+                    : "Start Learning";
                 return `
-                    <article class="asg-course-card asg-course-brochure">
+                    <article class="asg-course-card asg-course-brochure ${paid && !hasAccess ? "is-locked" : ""}">
                         <div class="asg-course-card-top">
                             <div>
                                 <span class="asg-course-label">${escapeHtml(course.price)}</span>
@@ -110,7 +203,7 @@
                         <p>${escapeHtml(course.summary)}</p>
                         <div class="asg-course-card-meta">
                             <span>${activeTopics.length} lessons</span>
-                            <span>Live content</span>
+                            <span>${paid ? escapeHtml(getCourseRequestStatus(course)) : "Free access"}</span>
                             <span>PDF, HTML, video</span>
                         </div>
                         ${previewTopics.length ? `
@@ -119,7 +212,7 @@
                             </div>
                         ` : ""}
                         <div class="asg-course-card-footer compact">
-                            <button class="btn-primary" type="button" onclick="openCourse('${escapeHtml(course.id)}')">Start Learning</button>
+                            <button class="btn-primary" type="button" onclick="openCourse('${escapeHtml(course.id)}')">${escapeHtml(actionText)}</button>
                         </div>
                     </article>
                 `;
@@ -129,16 +222,33 @@
                     <p>Your admin can publish courses from the dashboard.</p>
                 </div>
             `;
+            const panel = document.getElementById("courseAccessPanel");
+            const panelCourse = panel && panel.dataset.courseId ? asgGetCourseById(panel.dataset.courseId) : null;
+            if (panelCourse && asgHasCourseAccess(courseUser, panelCourse)) {
+                renderCoursePaymentPanel(panelCourse);
+            }
         }
 
         window.addEventListener("asg:data-updated", (event) => {
-            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.courses) renderCourses();
+            if (event.detail && [
+                ASG_LEARNING_KEYS.courses,
+                ASG_LEARNING_KEYS.courseAccessRequests,
+                ASG_LEARNING_KEYS.courseAccessPermissions
+            ].includes(event.detail.key)) renderCourses();
         });
         window.addEventListener("storage", (event) => {
-            if (event.key === ASG_LEARNING_KEYS.courses) renderCourses();
+            if ([
+                ASG_LEARNING_KEYS.courses,
+                ASG_LEARNING_KEYS.courseAccessRequests,
+                ASG_LEARNING_KEYS.courseAccessPermissions
+            ].includes(event.key)) renderCourses();
         });
 
         renderCourses();
+        const requestedCourse = asgGetCourseById(new URLSearchParams(window.location.search).get("course"));
+        if (requestedCourse && !asgHasCourseAccess(courseUser, requestedCourse)) {
+            renderCoursePaymentPanel(requestedCourse);
+        }
     </script>
 </body>
 </html>

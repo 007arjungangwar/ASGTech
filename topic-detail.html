@@ -59,6 +59,65 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function redirectToCourseLogin() {
+            if (!course) return;
+            const next = `topic-detail.html?course=${course.id}&topic=${topic ? topic.id : ""}`;
+            sessionStorage.setItem("asgAuthNotice", "Sign in first, then request paid course access.");
+            window.location.href = `login.html?next=${encodeURIComponent(next)}`;
+        }
+
+        function requestCourseAccess() {
+            if (!course) return;
+            if (!topicUser) {
+                redirectToCourseLogin();
+                return;
+            }
+            if (!course.paymentQrUrl) {
+                alert("Payment QR is not available for this course yet.");
+                return;
+            }
+            asgSaveCourseAccessRequest(topicUser, course, "Student marked payment as completed.");
+            renderTopic();
+        }
+
+        function renderCourseAccessRequired() {
+            const request = topicUser ? asgGetLatestCourseAccessRequest(topicUser, course.id) : null;
+            const canRequest = Boolean(topicUser && course.paymentQrUrl);
+            const requestText = request && request.requestedAt
+                ? `Request sent ${new Date(request.requestedAt).toLocaleDateString()}`
+                : "Scan the QR, complete payment, then send your request.";
+            const action = !topicUser
+                ? `<button class="btn-primary" type="button" onclick="redirectToCourseLogin()">Sign In to Request Access</button>`
+                : `<button class="btn-primary" type="button" ${canRequest ? "" : "disabled"} onclick="requestCourseAccess()">${request ? "Request Again" : "I Have Paid - Request Access"}</button>`;
+
+            document.querySelector("main").innerHTML = `
+                <section class="asg-course-access-panel">
+                    <article class="asg-course-access-card">
+                        <div class="asg-course-access-copy">
+                            <span class="asg-course-label">${escapeHtml(course.price)}</span>
+                            <h1>${escapeHtml(course.title)}</h1>
+                            <p>This paid course is locked until payment is completed and admin approves access.</p>
+                            <strong class="asg-course-payment-status">${escapeHtml(requestText)}</strong>
+                            <div class="asg-form-actions">
+                                ${action}
+                                <a class="btn-secondary" href="courses.html">Back to Courses</a>
+                            </div>
+                        </div>
+                        <div class="asg-course-payment-box">
+                            ${course.paymentQrUrl ? `
+                                <img class="asg-course-payment-qr" src="${escapeHtml(course.paymentQrUrl)}" alt="${escapeHtml(course.title)} payment QR">
+                            ` : `
+                                <div class="asg-empty-state compact">
+                                    <h2>QR not uploaded</h2>
+                                    <p>Admin needs to add the payment QR before students can request access.</p>
+                                </div>
+                            `}
+                        </div>
+                    </article>
+                </section>
+            `;
+        }
+
         function getEmbedUrl(url) {
             const value = String(url || "").trim();
             if (!value) return "";
@@ -641,6 +700,11 @@ json.dumps(payload, default=str)
                 return;
             }
 
+            if (!asgHasCourseAccess(topicUser, course)) {
+                renderCourseAccessRequired();
+                return;
+            }
+
             if (!document.getElementById("topicHero")) {
                 document.querySelector("main").innerHTML = topicMainShell;
             }
@@ -711,10 +775,17 @@ json.dumps(payload, default=str)
             const watchedKeys = [
                 ASG_LEARNING_KEYS.courses,
                 ASG_LEARNING_KEYS.codingChallenges,
-                ASG_LEARNING_KEYS.codingSubmissions
+                ASG_LEARNING_KEYS.codingSubmissions,
+                ASG_LEARNING_KEYS.courseAccessRequests,
+                ASG_LEARNING_KEYS.courseAccessPermissions
             ];
             if (!watchedKeys.includes(key)) return;
             if (key === ASG_LEARNING_KEYS.codingSubmissions && activeTopicTab !== "coding") return;
+            if ([ASG_LEARNING_KEYS.courseAccessRequests, ASG_LEARNING_KEYS.courseAccessPermissions].includes(key)) {
+                reloadTopicFromStore();
+                renderTopic();
+                return;
+            }
             refreshTopicFromStore();
         }
 

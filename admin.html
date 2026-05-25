@@ -222,6 +222,17 @@
                 <div class="asg-table-wrap" id="certificatePermissions"></div>
             </article>
 
+            <article class="asg-live-panel asg-admin-wide" data-admin-section="students">
+                <div class="asg-section-header">
+                    <div>
+                        <h2>Paid Course Access Requests</h2>
+                        <p>Students scan the course QR, submit a request, and get access only after your approval.</p>
+                    </div>
+                    <a class="btn-secondary" href="courses.html">Preview Courses</a>
+                </div>
+                <div class="asg-table-wrap" id="courseAccessRequests"></div>
+            </article>
+
             <article class="asg-live-panel asg-admin-wide" data-admin-section="assessments">
                 <div class="asg-section-header">
                     <div>
@@ -309,10 +320,10 @@
                             <span>Answer options</span>
                             <small>Select the correct option below</small>
                         </div>
-                        <label><span>A</span><input id="quizOptionA" type="text" placeholder="Option A"></label>
-                        <label><span>B</span><input id="quizOptionB" type="text" placeholder="Option B"></label>
-                        <label><span>C</span><input id="quizOptionC" type="text" placeholder="Option C"></label>
-                        <label><span>D</span><input id="quizOptionD" type="text" placeholder="Option D"></label>
+                        <label><span>A</span><textarea id="quizOptionA" class="asg-mini-code" rows="3" spellcheck="false" placeholder="Option A"></textarea></label>
+                        <label><span>B</span><textarea id="quizOptionB" class="asg-mini-code" rows="3" spellcheck="false" placeholder="Option B"></textarea></label>
+                        <label><span>C</span><textarea id="quizOptionC" class="asg-mini-code" rows="3" spellcheck="false" placeholder="Option C"></textarea></label>
+                        <label><span>D</span><textarea id="quizOptionD" class="asg-mini-code" rows="3" spellcheck="false" placeholder="Option D"></textarea></label>
                     </div>
                     <label>
                         <span>Correct option</span>
@@ -463,6 +474,11 @@
                     <label>
                         <span>Price label</span>
                         <input id="coursePrice" type="text" placeholder="FREE">
+                    </label>
+                    <label>
+                        <span>Payment QR image</span>
+                        <input id="coursePaymentQrFile" type="file" accept="image/png,image/jpeg,image/webp">
+                        <small class="asg-field-hint" id="coursePaymentQrStatus">Upload PNG/JPG/WebP QR for paid course payment.</small>
                     </label>
                     <label>
                         <span>Status</span>
@@ -867,6 +883,39 @@
                 quizHtml: await readFileAsText(file),
                 quizFileName: file.name,
                 quizRenderMode: "iframe"
+            };
+        }
+
+        async function readCoursePaymentQrUpload(courseId, existingCourse = null) {
+            const file = document.getElementById("coursePaymentQrFile").files[0];
+            if (!file) {
+                return {
+                    paymentQrUrl: existingCourse ? existingCourse.paymentQrUrl || "" : "",
+                    paymentQrFileName: existingCourse ? existingCourse.paymentQrFileName || "" : "",
+                    paymentQrStoragePath: existingCourse ? existingCourse.paymentQrStoragePath || "" : ""
+                };
+            }
+
+            if (!/^image\/(png|jpeg|webp)$/i.test(file.type)) {
+                throw new Error("Upload a PNG, JPG, or WebP QR image.");
+            }
+
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.uploadFile === "function") {
+                const upload = await window.ASG_BACKEND.uploadFile(file, {
+                    folder: `course-payments/${courseId}`,
+                    upsert: true
+                });
+                return {
+                    paymentQrUrl: upload.url,
+                    paymentQrFileName: file.name,
+                    paymentQrStoragePath: upload.path
+                };
+            }
+
+            return {
+                paymentQrUrl: await readFileAsDataUrl(file),
+                paymentQrFileName: file.name,
+                paymentQrStoragePath: ""
             };
         }
 
@@ -1740,6 +1789,158 @@
             `;
         }
 
+        function courseAccessRecordMatchesStudent(record, student) {
+            if (!record || !student) return false;
+            return (
+                String(record.userId || "") === String(student.id || "") ||
+                String(record.email || "").toLowerCase() === String(student.email || "").toLowerCase()
+            );
+        }
+
+        function findCourseAccessStudent(studentId, courseId) {
+            const normalizedStudentId = String(studentId || "").toLowerCase();
+            const students = getStudents();
+            const student = students.find((item) => (
+                String(item.id || "").toLowerCase() === normalizedStudentId ||
+                String(item.email || "").toLowerCase() === normalizedStudentId
+            ));
+            if (student) return student;
+
+            const request = asgGetCourseAccessRequests().find((item) => (
+                (
+                    String(item.userId || "").toLowerCase() === normalizedStudentId ||
+                    String(item.email || "").toLowerCase() === normalizedStudentId
+                ) &&
+                (!courseId || String(item.courseId || "") === String(courseId))
+            ));
+            if (!request) return null;
+            return {
+                id: request.userId || request.email,
+                name: request.name || request.email || "Student",
+                email: request.email || "",
+                role: "student"
+            };
+        }
+
+        function getCourseAccessRows() {
+            const rows = new Map();
+            const addRow = (record, source) => {
+                if (!record || !record.courseId) return;
+                const studentId = record.userId || record.email || "student";
+                const key = `${studentId}:${record.courseId}`;
+                const current = rows.get(key) || {};
+                rows.set(key, {
+                    ...current,
+                    ...record,
+                    source: current.source && current.source !== source ? "request+permission" : source,
+                    requestedAt: current.requestedAt || record.requestedAt || "",
+                    updatedAt: record.updatedAt || current.updatedAt || ""
+                });
+            };
+
+            asgGetCourseAccessRequests().forEach((request) => addRow(request, "request"));
+            Object.values(asgGetCourseAccessPermissions()).forEach((permission) => addRow(permission, "permission"));
+            return [...rows.values()].sort((left, right) => {
+                const leftDate = new Date(left.updatedAt || left.requestedAt || 0);
+                const rightDate = new Date(right.updatedAt || right.requestedAt || 0);
+                return rightDate - leftDate;
+            });
+        }
+
+        function getCoursePermissionsForStudent(student) {
+            const permissions = asgGetCourseAccessPermissions();
+            return Object.keys(permissions).reduce((records, key) => {
+                if (courseAccessRecordMatchesStudent(permissions[key], student)) {
+                    records[key] = permissions[key];
+                }
+                return records;
+            }, {});
+        }
+
+        function setCourseAccess(studentId, courseId, allowed) {
+            const student = findCourseAccessStudent(studentId, courseId);
+            const course = adminCourses.find((item) => String(item.id) === String(courseId));
+            if (!student || !course) {
+                alert("Student or course record was not found.");
+                return;
+            }
+
+            asgSaveCourseAccessPermission(
+                student,
+                course,
+                allowed,
+                allowed ? "Admin approved paid course access." : "Admin revoked paid course access.",
+                adminUser
+            );
+
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.saveUserActivityForUser === "function") {
+                window.ASG_BACKEND.saveUserActivityForUser(
+                    ASG_LEARNING_KEYS.courseAccessPermissions,
+                    getCoursePermissionsForStudent(student),
+                    student
+                ).catch((error) => {
+                    console.warn("Could not sync paid course access for student.", error);
+                });
+            }
+
+            refreshDashboard();
+        }
+
+        function renderCourseAccessRequests() {
+            const target = document.getElementById("courseAccessRequests");
+            const rows = getCourseAccessRows();
+            if (!rows.length) {
+                target.innerHTML = `<div class="asg-empty-state"><h2>No paid course requests</h2><p>Requests appear here after students scan a QR and ask for access.</p></div>`;
+                return;
+            }
+
+            target.innerHTML = `
+                <table class="asg-admin-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Payment Request</th>
+                            <th>Access</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map((row) => {
+                            const student = findCourseAccessStudent(row.userId || row.email, row.courseId) || row;
+                            const course = adminCourses.find((item) => String(item.id) === String(row.courseId)) || row;
+                            const permission = asgGetCourseAccessPermission(student, row.courseId);
+                            const allowed = Boolean(permission && permission.allowed);
+                            const requestedText = row.requestedAt
+                                ? `Requested ${formatDate(row.requestedAt)}`
+                                : "No request date";
+                            return `
+                                <tr>
+                                    <td>
+                                        <strong>${escapeHtml(student.name || row.name || "Student")}</strong>
+                                        <small>${escapeHtml(student.email || row.email || "")}</small>
+                                    </td>
+                                    <td>
+                                        ${escapeHtml(course.title || row.courseTitle || row.courseId)}
+                                        <small>${escapeHtml(course.price || row.price || "")}</small>
+                                    </td>
+                                    <td>
+                                        ${escapeHtml(requestedText)}
+                                        ${row.note ? `<small>${escapeHtml(row.note)}</small>` : ""}
+                                    </td>
+                                    <td>${allowed ? "Allowed" : "Locked"}</td>
+                                    <td>
+                                        <button class="asg-link-button" type="button" onclick="setCourseAccess('${escapeHtml(student.id || row.userId)}', '${escapeHtml(row.courseId)}', true)">Allow</button>
+                                        <button class="asg-link-button danger" type="button" onclick="setCourseAccess('${escapeHtml(student.id || row.userId)}', '${escapeHtml(row.courseId)}', false)">Revoke</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join("")}
+                    </tbody>
+                </table>
+            `;
+        }
+
         function getCodingExamTopics() {
             const topics = [...new Set(codingChallenges
                 .filter((challenge) => !challenge.courseId && !challenge.topicId)
@@ -1844,8 +2045,23 @@
             refreshDashboard();
         }
 
+        function enableCodeTextareaTabs() {
+            document.querySelectorAll("textarea.asg-mini-code").forEach((textarea) => {
+                if (textarea.dataset.asgTabReady) return;
+                textarea.dataset.asgTabReady = "true";
+                textarea.addEventListener("keydown", (event) => {
+                    if (event.key !== "Tab") return;
+                    event.preventDefault();
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    textarea.value = `${textarea.value.slice(0, start)}    ${textarea.value.slice(end)}`;
+                    textarea.selectionStart = textarea.selectionEnd = start + 4;
+                });
+            });
+        }
+
         function optionValue(id) {
-            return document.getElementById(id).value.trim();
+            return document.getElementById(id).value.replace(/\r\n?/g, "\n").replace(/\s+$/g, "");
         }
 
         function resetQuizForm() {
@@ -1882,7 +2098,7 @@
                 { id: "b", text: optionValue("quizOptionB") },
                 { id: "c", text: optionValue("quizOptionC") },
                 { id: "d", text: optionValue("quizOptionD") }
-            ].filter((option) => option.text);
+            ].filter((option) => option.text.trim());
 
             const correctOption = document.getElementById("quizCorrect").value;
             if (!document.getElementById("quizPrompt").value.trim() || options.length < 2) {
@@ -2285,13 +2501,15 @@
             document.getElementById("courseTitle").value = "";
             document.getElementById("courseIcon").value = "";
             document.getElementById("coursePrice").value = "FREE";
+            document.getElementById("coursePaymentQrFile").value = "";
+            document.getElementById("coursePaymentQrStatus").textContent = "Upload PNG/JPG/WebP QR for paid course payment.";
             document.getElementById("courseStatus").value = "active";
             document.getElementById("courseSummary").value = "";
             document.getElementById("courseWelcome").value = "";
             document.getElementById("courseCheatSheet").value = "";
         }
 
-        function saveCourse() {
+        async function saveCourse() {
             const editId = document.getElementById("courseEditId").value;
             const title = document.getElementById("courseTitle").value.trim();
             if (!title) {
@@ -2300,11 +2518,23 @@
             }
 
             const existing = adminCourses.find((course) => course.id === editId);
+            const courseId = editId || asgSlugify(title, "course");
+            let paymentQr = {};
+            try {
+                paymentQr = await readCoursePaymentQrUpload(courseId, existing);
+            } catch (error) {
+                alert(error.message || "Could not read the selected payment QR image.");
+                return;
+            }
+
             const course = {
-                id: editId || asgSlugify(title, "course"),
+                id: courseId,
                 title,
                 icon: document.getElementById("courseIcon").value.trim() || title,
                 price: document.getElementById("coursePrice").value.trim() || "FREE",
+                paymentQrUrl: paymentQr.paymentQrUrl || "",
+                paymentQrFileName: paymentQr.paymentQrFileName || "",
+                paymentQrStoragePath: paymentQr.paymentQrStoragePath || "",
                 status: document.getElementById("courseStatus").value,
                 summary: document.getElementById("courseSummary").value.trim(),
                 welcome: document.getElementById("courseWelcome").value.trim(),
@@ -2329,6 +2559,10 @@
             document.getElementById("courseTitle").value = course.title;
             document.getElementById("courseIcon").value = course.icon;
             document.getElementById("coursePrice").value = course.price;
+            document.getElementById("coursePaymentQrFile").value = "";
+            document.getElementById("coursePaymentQrStatus").textContent = course.paymentQrFileName
+                ? `Current QR: ${course.paymentQrFileName}`
+                : "No payment QR uploaded yet.";
             document.getElementById("courseStatus").value = course.status;
             document.getElementById("courseSummary").value = course.summary;
             document.getElementById("courseWelcome").value = course.welcome;
@@ -2444,7 +2678,7 @@
             document.getElementById("courseList").innerHTML = adminCourses.map((course, index) => `
                 <article class="asg-admin-list-item">
                     <div>
-                        <span class="asg-item-kicker">${course.status} | ${course.topics.length} topics | ${escapeHtml(course.price)}</span>
+                        <span class="asg-item-kicker">${course.status} | ${course.topics.length} topics | ${escapeHtml(course.price)} | ${asgIsPaidCourse(course) ? (course.paymentQrUrl ? "QR ready" : "QR missing") : "free access"}</span>
                         <h3>${index + 1}. ${escapeHtml(course.title)}</h3>
                         <p>${escapeHtml(course.summary)}</p>
                         <div class="asg-topic-admin-list">
@@ -2932,6 +3166,8 @@
                 examRetakePermissions: asgGetExamRetakePermissions(),
                 courses: asgGetCourses(true),
                 courseProgress: asgGetCourseProgress(),
+                courseAccessRequests: asgGetCourseAccessRequests(),
+                courseAccessPermissions: asgGetCourseAccessPermissions(),
                 blogPosts: asgGetBlogPosts(true),
                 projectShowcase: asgGetProjectShowcase(true),
                 roadmapItems: asgGetRoadmapItems(true),
@@ -3117,6 +3353,7 @@
             renderAnalytics();
             renderStudentsTable();
             renderCertificatePermissions();
+            renderCourseAccessRequests();
             renderExamRetakePermissions();
             renderQuizCatalog();
             renderQuizQuestions();
@@ -3149,6 +3386,8 @@
                 ASG_LEARNING_KEYS.videoLibrary,
                 ASG_LEARNING_KEYS.resourceLibrary,
                 ASG_LEARNING_KEYS.courseProgress,
+                ASG_LEARNING_KEYS.courseAccessRequests,
+                ASG_LEARNING_KEYS.courseAccessPermissions,
                 ASG_LEARNING_KEYS.certificatePermissions,
                 ASG_LEARNING_KEYS.studentAnnouncement,
                 "users",
@@ -3178,6 +3417,7 @@
             resetVideoPlaylistForm();
             resetVideoForm();
             resetResourceForm();
+            enableCodeTextareaTabs();
             setAdminSection(localStorage.getItem("asgAdminActiveSection") || "overview", { scroll: false });
             showCloudBackupHint();
             showCloudPublishStatus();

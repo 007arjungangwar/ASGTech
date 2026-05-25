@@ -45,6 +45,8 @@
         "asgCodingSubmissions",
         "asgExamAttempts",
         "asgCourseProgress",
+        "asgCourseAccessRequests",
+        "asgCourseAccessPermissions",
         "certificates",
         "asgCertificateRequests",
         "asgCertificateNameLocks",
@@ -661,7 +663,11 @@
         if (Array.isArray(value)) {
             return value.filter((record) => recordMatchesProfile(record, profile));
         }
-        if ((key === "asgCourseProgress" || key === "asgCertificateNameLocks") && value && typeof value === "object") {
+        if ([
+            "asgCourseProgress",
+            "asgCertificateNameLocks",
+            "asgCourseAccessPermissions"
+        ].includes(key) && value && typeof value === "object") {
             const profileId = String(profile.id || "").toLowerCase();
             const profileEmail = normalizeEmail(profile.email);
             return Object.keys(value).reduce((records, progressKey) => {
@@ -681,7 +687,11 @@
     }
 
     function mergeActivityValue(key, currentValue, nextValue) {
-        if (key === "asgCourseProgress" || key === "asgCertificateNameLocks") {
+        if ([
+            "asgCourseProgress",
+            "asgCertificateNameLocks",
+            "asgCourseAccessPermissions"
+        ].includes(key)) {
             return {
                 ...(currentValue && typeof currentValue === "object" && !Array.isArray(currentValue) ? currentValue : {}),
                 ...(nextValue && typeof nextValue === "object" && !Array.isArray(nextValue) ? nextValue : {})

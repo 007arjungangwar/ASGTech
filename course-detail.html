@@ -55,8 +55,70 @@
             ASGExamGuard.requestFullscreen();
         }
 
+        function redirectToCourseLogin() {
+            if (!course) return;
+            sessionStorage.setItem("asgAuthNotice", "Sign in first, then request paid course access.");
+            window.location.href = `login.html?next=${encodeURIComponent(`course-detail.html?course=${course.id}`)}`;
+        }
+
+        function requestCourseAccess() {
+            if (!course) return;
+            if (!courseUser) {
+                redirectToCourseLogin();
+                return;
+            }
+            if (!course.paymentQrUrl) {
+                alert("Payment QR is not available for this course yet.");
+                return;
+            }
+            asgSaveCourseAccessRequest(courseUser, course, "Student marked payment as completed.");
+            renderCourse();
+        }
+
+        function renderCourseAccessRequired() {
+            const request = courseUser ? asgGetLatestCourseAccessRequest(courseUser, course.id) : null;
+            const canRequest = Boolean(courseUser && course.paymentQrUrl);
+            const requestText = request && request.requestedAt
+                ? `Request sent ${new Date(request.requestedAt).toLocaleDateString()}`
+                : "Scan the QR, complete payment, then send your request.";
+            const action = !courseUser
+                ? `<button class="btn-primary" type="button" onclick="redirectToCourseLogin()">Sign In to Request Access</button>`
+                : `<button class="btn-primary" type="button" ${canRequest ? "" : "disabled"} onclick="requestCourseAccess()">${request ? "Request Again" : "I Have Paid - Request Access"}</button>`;
+
+            document.querySelector("main").innerHTML = `
+                <section class="asg-course-access-panel">
+                    <article class="asg-course-access-card">
+                        <div class="asg-course-access-copy">
+                            <span class="asg-course-label">${escapeHtml(course.price)}</span>
+                            <h1>${escapeHtml(course.title)}</h1>
+                            <p>This is a paid course. Access opens after payment and admin approval.</p>
+                            <strong class="asg-course-payment-status">${escapeHtml(requestText)}</strong>
+                            <div class="asg-form-actions">
+                                ${action}
+                                <a class="btn-secondary" href="courses.html">Back to Courses</a>
+                            </div>
+                        </div>
+                        <div class="asg-course-payment-box">
+                            ${course.paymentQrUrl ? `
+                                <img class="asg-course-payment-qr" src="${escapeHtml(course.paymentQrUrl)}" alt="${escapeHtml(course.title)} payment QR">
+                            ` : `
+                                <div class="asg-empty-state compact">
+                                    <h2>QR not uploaded</h2>
+                                    <p>Admin needs to add the payment QR before students can request access.</p>
+                                </div>
+                            `}
+                        </div>
+                    </article>
+                </section>
+            `;
+        }
+
         async function continueCourse() {
             if (!course) return;
+            if (!asgHasCourseAccess(courseUser, course)) {
+                renderCourseAccessRequired();
+                return;
+            }
             const progress = asgGetCourseProgress(courseUser, course.id);
             const savedTopic = progress
                 ? course.topics.find((topic) => topic.id === progress.topicId)
@@ -77,6 +139,11 @@
                         <a class="btn-primary" href="courses.html">Back to Courses</a>
                     </section>
                 `;
+                return;
+            }
+
+            if (!asgHasCourseAccess(courseUser, course)) {
+                renderCourseAccessRequired();
                 return;
             }
 
@@ -125,7 +192,12 @@
 
         function handleCourseDataUpdate(event) {
             const key = event.detail ? event.detail.key : event.key;
-            if ([ASG_LEARNING_KEYS.courses, ASG_LEARNING_KEYS.courseProgress].includes(key)) {
+            if ([
+                ASG_LEARNING_KEYS.courses,
+                ASG_LEARNING_KEYS.courseProgress,
+                ASG_LEARNING_KEYS.courseAccessRequests,
+                ASG_LEARNING_KEYS.courseAccessPermissions
+            ].includes(key)) {
                 refreshCourseFromStore();
             }
         }

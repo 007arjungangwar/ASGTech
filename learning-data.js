@@ -16,6 +16,8 @@ const ASG_LEARNING_KEYS = {
     videoLibrary: "asgVideoLibrary",
     resourceLibrary: "asgResourceLibrary",
     courseProgress: "asgCourseProgress",
+    courseAccessRequests: "asgCourseAccessRequests",
+    courseAccessPermissions: "asgCourseAccessPermissions",
     certificatePermissions: "asgCertificatePermissions",
     certificateNameLocks: "asgCertificateNameLocks",
     studentAnnouncement: "studentAnnouncement",
@@ -1577,6 +1579,16 @@ function asgEnsureLearningData() {
         asgWriteJSON(ASG_LEARNING_KEYS.courseProgress, {});
     }
 
+    const courseAccessRequests = asgReadJSON(ASG_LEARNING_KEYS.courseAccessRequests, null);
+    if (!Array.isArray(courseAccessRequests)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.courseAccessRequests, []);
+    }
+
+    const courseAccessPermissions = asgReadJSON(ASG_LEARNING_KEYS.courseAccessPermissions, null);
+    if (!courseAccessPermissions || typeof courseAccessPermissions !== "object" || Array.isArray(courseAccessPermissions)) {
+        asgWriteJSON(ASG_LEARNING_KEYS.courseAccessPermissions, {});
+    }
+
     const announcement = asgReadJSON(ASG_LEARNING_KEYS.studentAnnouncement, null);
     if (!announcement) {
         asgWriteJSON(ASG_LEARNING_KEYS.studentAnnouncement, {
@@ -2241,6 +2253,111 @@ function asgGetStudentEnrollments(user) {
     return asgUniqueLearningRecords([...personal, ...matchingGlobal]);
 }
 
+function asgIsPaidCourse(course) {
+    const price = String(course && course.price || "").trim().toLowerCase();
+    return Boolean(price && !["free", "0", "rs. 0", "rs 0", "₹0", "₹ 0"].includes(price));
+}
+
+function asgGetCourseAccessKey(user, courseId) {
+    return `${asgGetLearningUserKey(user)}:${asgSlugify(courseId, "course")}`;
+}
+
+function asgGetCourseAccessRequests(user = null, courseId = "") {
+    asgEnsureLearningData();
+    const normalizedCourseId = courseId ? asgSlugify(courseId, "course") : "";
+    return asgReadJSON(ASG_LEARNING_KEYS.courseAccessRequests, []).filter((request) => {
+        const matchesUser = !user || (
+            String(request.userId || "") === String(user.id || "") ||
+            String(request.email || "").toLowerCase() === String(user.email || "").toLowerCase()
+        );
+        const matchesCourse = !normalizedCourseId || request.courseId === normalizedCourseId;
+        return matchesUser && matchesCourse;
+    });
+}
+
+function asgGetLatestCourseAccessRequest(user, courseId) {
+    return asgGetCourseAccessRequests(user, courseId)
+        .sort((left, right) => new Date(right.requestedAt || 0) - new Date(left.requestedAt || 0))[0] || null;
+}
+
+function asgSaveCourseAccessRequest(user, course, note = "") {
+    if (!user || !course) return null;
+    const requests = asgReadJSON(ASG_LEARNING_KEYS.courseAccessRequests, []);
+    const existingIndex = requests.findIndex((request) => (
+        String(request.userId || "") === String(user.id || "") &&
+        String(request.courseId || "") === String(course.id || "") &&
+        request.status === "pending"
+    ));
+    const record = {
+        id: existingIndex >= 0 ? requests[existingIndex].id : asgCreateId("course_access"),
+        userId: user.id || "",
+        email: user.email || "",
+        name: user.name || "",
+        courseId: course.id,
+        courseTitle: course.title,
+        price: course.price || "",
+        note: String(note || "").trim(),
+        status: "pending",
+        requestedAt: existingIndex >= 0 ? requests[existingIndex].requestedAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    if (existingIndex >= 0) {
+        requests[existingIndex] = record;
+    } else {
+        requests.push(record);
+    }
+
+    asgWriteJSON(ASG_LEARNING_KEYS.courseAccessRequests, requests);
+    return record;
+}
+
+function asgGetCourseAccessPermissions() {
+    asgEnsureLearningData();
+    return asgReadJSON(ASG_LEARNING_KEYS.courseAccessPermissions, {});
+}
+
+function asgGetCourseAccessPermission(user, courseId) {
+    if (!user || !courseId) return null;
+    const permissions = asgGetCourseAccessPermissions();
+    const candidates = [
+        asgGetCourseAccessKey(user, courseId),
+        `${String(user.email || "").toLowerCase()}:${asgSlugify(courseId, "course")}`
+    ].filter(Boolean);
+    for (const key of candidates) {
+        if (permissions[key]) return permissions[key];
+    }
+    return null;
+}
+
+function asgHasCourseAccess(user, course) {
+    if (!asgIsPaidCourse(course)) return true;
+    if (user && user.role === "admin") return true;
+    const permission = asgGetCourseAccessPermission(user, course && course.id);
+    return Boolean(permission && permission.allowed);
+}
+
+function asgSaveCourseAccessPermission(user, course, allowed, note = "", admin = null) {
+    if (!user || !course) return null;
+    asgEnsureLearningData();
+    const permissions = asgReadJSON(ASG_LEARNING_KEYS.courseAccessPermissions, {});
+    const key = asgGetCourseAccessKey(user, course.id);
+    permissions[key] = {
+        userId: user.id || "",
+        email: user.email || "",
+        name: user.name || "",
+        courseId: course.id,
+        courseTitle: course.title,
+        price: course.price || "",
+        allowed: Boolean(allowed),
+        note: String(note || "").trim(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: admin ? admin.email || admin.name || "Admin" : "Admin"
+    };
+    asgWriteJSON(ASG_LEARNING_KEYS.courseAccessPermissions, permissions);
+    return permissions[key];
+}
+
 function asgGetCourseProgressKey(user, courseId) {
     return `${asgGetLearningUserKey(user)}:${asgSlugify(courseId, "course")}`;
 }
@@ -2535,6 +2652,9 @@ function asgNormalizeCourse(course, index) {
         summary: String(course.summary || "Course lessons and practice.").trim(),
         icon: String(course.icon || title.slice(0, 2).toUpperCase()).slice(0, 4),
         price: String(course.price || "FREE").trim(),
+        paymentQrUrl: String(course.paymentQrUrl || course.paymentQrDataUrl || "").trim(),
+        paymentQrFileName: String(course.paymentQrFileName || "").trim(),
+        paymentQrStoragePath: String(course.paymentQrStoragePath || "").trim(),
         status: course.status === "draft" ? "draft" : "active",
         welcome: String(course.welcome || `Welcome to ${title}.`).trim(),
         cheatSheet: String(course.cheatSheet || "Add the course cheat sheet from the admin dashboard.").trim(),
