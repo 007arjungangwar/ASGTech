@@ -8817,6 +8817,15 @@ body.has-asg-shell .asg-social-link:hover {
     background: var(--asg-surface-soft);
 }
 
+body.has-asg-shell:not(.asg-theme-dark) .asg-about-social-grid .asg-social-link.detailed {
+    background: var(--asg-surface-tint);
+    border-color: color-mix(in srgb, var(--asg-border) 82%, var(--asg-accent));
+}
+
+body.has-asg-shell:not(.asg-theme-dark) .asg-about-social-grid .asg-social-link.detailed:hover {
+    background: var(--asg-surface-soft);
+}
+
 body.asg-auth-page .auth-container,
 body.asg-auth-page .asg-auth-card-top,
 body.asg-auth-page .auth-tab.active,

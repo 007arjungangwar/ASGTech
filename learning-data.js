@@ -23,6 +23,7 @@ const ASG_LEARNING_KEYS = {
 };
 
 const ASG_LEARNING_DATA_VERSION = 12;
+const ASG_CERTIFICATE_PROGRESS_REQUIRED = 70;
 let ASG_LEARNING_SEEDING_DEFAULTS = false;
 
 const ASG_PUBLISHABLE_DATA_FIELDS = [
@@ -2100,6 +2101,28 @@ function asgCanDownloadCertificate(user) {
     return Boolean(permission && permission.allowed);
 }
 
+function asgGetCertificateProgressRequirement() {
+    return ASG_CERTIFICATE_PROGRESS_REQUIRED;
+}
+
+function asgGetBestCertificateCourseProgress(user) {
+    const records = asgGetStudentCourseProgress(user);
+    if (!records.length) return null;
+    return records
+        .slice()
+        .sort((left, right) => Number(right.progressPercent || 0) - Number(left.progressPercent || 0))[0] || null;
+}
+
+function asgHasCertificateProgressRequirement(user, courseId = "") {
+    if (!user) return false;
+    if (courseId) {
+        const record = asgGetCourseProgress(user, courseId);
+        return Number(record && record.progressPercent || 0) >= ASG_CERTIFICATE_PROGRESS_REQUIRED;
+    }
+    const bestCourse = asgGetBestCertificateCourseProgress(user);
+    return Number(bestCourse && bestCourse.progressPercent || 0) >= ASG_CERTIFICATE_PROGRESS_REQUIRED;
+}
+
 function asgSaveCertificatePermission(user, allowed, note = "", admin = null) {
     asgEnsureLearningData();
     const permissions = asgReadJSON(ASG_LEARNING_KEYS.certificatePermissions, {});
@@ -2124,6 +2147,7 @@ function asgSaveCertificateRecord(record) {
         email: String(record.email || "").trim(),
         userId: record.userId || "",
         certificateId: record.certificateId || `ASG-${Date.now()}`,
+        courseId: record.courseId || "",
         course: record.course || "Data Science & Machine Learning",
         date: record.date || new Date().toISOString(),
         signature: "",

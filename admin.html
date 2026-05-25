@@ -215,7 +215,7 @@
                 <div class="asg-section-header">
                     <div>
                         <h2>Certificate Download Permissions</h2>
-                        <p>Students can preview certificates, but download is locked until you allow access here.</p>
+                        <p>Students can preview certificates, but download and LinkedIn sharing unlock only after 70% course progress plus your approval.</p>
                     </div>
                     <a class="btn-secondary" href="certificate.html">Preview Certificate</a>
                 </div>
@@ -1401,12 +1401,10 @@
             const quizAttempts = asgGetQuizAttempts();
             const codingSubmissions = asgGetCodingSubmissions();
             const certificateReady = students.filter((student) => {
-                const progress = asgGetStudentProgress(student);
-                return progress.progressPercent >= 50 && asgCanDownloadCertificate(student);
+                return asgHasCertificateProgressRequirement(student) && asgCanDownloadCertificate(student);
             });
             const certificatePending = students.filter((student) => {
-                const progress = asgGetStudentProgress(student);
-                return progress.progressPercent >= 50 && !asgCanDownloadCertificate(student);
+                return asgHasCertificateProgressRequirement(student) && !asgCanDownloadCertificate(student);
             });
             const weakTopics = getWeakTopicInsights();
 
@@ -1464,15 +1462,16 @@
                         <h3>Certificate Readiness</h3>
                         <div class="asg-insight-list">
                             ${students.map((student) => {
-                                const progress = asgGetStudentProgress(student);
+                                const bestCourse = asgGetBestCertificateCourseProgress(student);
+                                const progressPercent = Number(bestCourse && bestCourse.progressPercent || 0);
                                 const allowed = asgCanDownloadCertificate(student);
-                                const status = progress.progressPercent >= 50
+                                const status = progressPercent >= asgGetCertificateProgressRequirement()
                                     ? (allowed ? "Ready" : "Needs approval")
                                     : "Still learning";
                                 return `
                                     <div class="asg-insight-row">
                                         <span>${escapeHtml(student.name)}<small>${escapeHtml(student.email)}</small></span>
-                                        <strong>${percentage(progress.progressPercent)} | ${status}</strong>
+                                        <strong>${percentage(progressPercent)} | ${escapeHtml(bestCourse ? bestCourse.courseTitle : "No course")} | ${status}</strong>
                                     </div>
                                 `;
                             }).join("") || `<div class="asg-empty-state"><h2>No students yet</h2><p>Registered students will appear here.</p></div>`}
@@ -1685,7 +1684,8 @@
                     </thead>
                     <tbody>
                         ${students.map((student) => {
-                            const progress = asgGetStudentProgress(student);
+                            const bestCourse = asgGetBestCertificateCourseProgress(student);
+                            const progressPercent = Number(bestCourse && bestCourse.progressPercent || 0);
                             const permission = asgGetCertificatePermission(student);
                             const request = getLatestCertificateRequest(student);
                             const allowed = Boolean(permission && permission.allowed);
@@ -1695,8 +1695,8 @@
                                         <strong>${escapeHtml(student.name)}</strong>
                                         <small>${escapeHtml(student.email)}</small>
                                     </td>
-                                    <td>${percentage(progress.progressPercent)}</td>
-                                    <td>${request ? `Requested ${formatDate(request.requestedAt)}` : "No request"}</td>
+                                    <td>${percentage(progressPercent)}${bestCourse ? `<small>${escapeHtml(bestCourse.courseTitle)}</small>` : ""}</td>
+                                    <td>${request ? `Requested ${formatDate(request.requestedAt)}${request.course ? `<small>${escapeHtml(request.course)}</small>` : ""}` : "No request"}</td>
                                     <td>${allowed ? "Allowed" : "Locked"}</td>
                                     <td>
                                         <button class="asg-link-button" type="button" onclick="setCertificateDownloadAccess('${student.id}', true)">Allow</button>

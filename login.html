@@ -204,6 +204,38 @@
             }));
         }
 
+        function getAuthRole(email) {
+            return email === "arjungangwariitpkd@gmail.com" ? "admin" : "student";
+        }
+
+        function saveLocalUserAccount({ id = "", name, email, password, role = "student", joinDate = "", provider = "local-saved" }) {
+            const users = ensureDefaultUsers();
+            const existing = users.find((user) => user.email && user.email.toLowerCase() === email);
+            const savedUser = {
+                id: id || (existing && existing.id) || Date.now(),
+                name,
+                email,
+                password: password || (existing && existing.password) || "",
+                role: getAuthRole(email),
+                joinDate: joinDate || (existing && existing.joinDate) || new Date().toISOString(),
+                provider: provider || (existing && existing.provider) || "local-saved"
+            };
+            const nextUsers = users.filter((user) => !user.email || user.email.toLowerCase() !== email);
+            nextUsers.push(savedUser);
+            localStorage.setItem("users", JSON.stringify(nextUsers));
+            window.dispatchEvent(new CustomEvent("asg:data-updated", {
+                detail: { key: "users", value: nextUsers, source: "auth" }
+            }));
+            return savedUser;
+        }
+
+        function isEmailConfirmationError(error) {
+            const message = error && error.message ? error.message.toLowerCase() : "";
+            return (error && error.code === "supabase/email-confirmation-required") ||
+                message.includes("email not confirmed") ||
+                message.includes("confirm your email");
+        }
+
         function formatBackendAuthError(error) {
             const code = error && error.code ? error.code : "";
             const message = error && error.message ? error.message : "";
@@ -211,13 +243,13 @@
                 return "Supabase is not configured yet. Add your Supabase project URL and anon key in supabase-backend.js, then run supabase-setup.sql.";
             }
             if (code === "supabase/email-confirmation-required") {
-                return message;
+                return "Use your saved student login or reset your password if needed.";
             }
             if (message.toLowerCase().includes("invalid login credentials")) {
                 return "Invalid email or password.";
             }
             if (message.toLowerCase().includes("already registered") || message.toLowerCase().includes("already been registered")) return "This email is already registered. Please login.";
-            if (message.toLowerCase().includes("email not confirmed")) return "Please confirm your email, then sign in.";
+            if (message.toLowerCase().includes("email not confirmed")) return "Use your saved student login or reset your password if needed.";
             if (message.toLowerCase().includes("password")) return message;
             if (message.toLowerCase().includes("rate limit")) return "Too many attempts. Please wait a few minutes and try again.";
             if (message.toLowerCase().includes("failed to fetch") || message.toLowerCase().includes("network")) return "Network issue. Please check your connection and try again.";
@@ -321,14 +353,14 @@
             }
 
             const users = ensureDefaultUsers();
-            const user = users.find((item) => item.email.toLowerCase() === email && item.password === password);
+            const user = users.find((item) => item.email && item.email.toLowerCase() === email && item.password === password);
 
             if (!user) {
                 error.textContent = backendError ? formatBackendAuthError(backendError) : "Invalid email or password.";
                 return;
             }
 
-            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.migrateLocalUser === "function") {
+            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.migrateLocalUser === "function" && !isEmailConfirmationError(backendError)) {
                 try {
                     const migratedUser = await window.ASG_BACKEND.migrateLocalUser(user, password);
                     setCurrentUser(migratedUser);
@@ -370,16 +402,33 @@
             }
 
             const users = ensureDefaultUsers();
-            const exists = users.some((user) => user.email.toLowerCase() === email);
+            const exists = users.some((user) => user.email && user.email.toLowerCase() === email);
 
             if (exists) {
                 error.textContent = "This email is already registered. Please login.";
                 return;
             }
 
+            let localUser = saveLocalUserAccount({
+                name,
+                email,
+                password,
+                role: getAuthRole(email),
+                provider: "local-saved"
+            });
+
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.register === "function") {
                 try {
                     const cloudUser = await window.ASG_BACKEND.register({ name, email, password });
+                    localUser = saveLocalUserAccount({
+                        id: cloudUser.id,
+                        name: cloudUser.name || name,
+                        email,
+                        password,
+                        role: cloudUser.role || localUser.role,
+                        joinDate: cloudUser.joinDate || localUser.joinDate,
+                        provider: cloudUser.provider || "supabase"
+                    });
                     setCurrentUser(cloudUser);
                     success.textContent = "Account created. Opening your student workspace...";
                     setTimeout(() => {
@@ -387,27 +436,15 @@
                     }, 700);
                     return;
                 } catch (authError) {
-                    error.textContent = formatBackendAuthError(authError);
-                    return;
+                    console.warn("Supabase account creation did not complete. Using saved local account.", authError);
                 }
             }
 
-            const newUser = {
-                id: Date.now(),
-                name,
-                email,
-                password,
-                role: "student",
-                joinDate: new Date().toISOString()
-            };
-
-            users.push(newUser);
-            localStorage.setItem("users", JSON.stringify(users));
-            setCurrentUser(newUser);
+            setCurrentUser(localUser);
 
             success.textContent = "Account created. Opening your student workspace...";
             setTimeout(() => {
-                window.location.href = safeNextFor(newUser);
+                window.location.href = safeNextFor(localUser);
             }, 700);
         }
 

@@ -315,6 +315,12 @@
     function cacheProfileLocally(profile) {
         if (!profile || !profile.email) return;
         const users = readLocalJSON("users", []);
+        const existingUser = Array.isArray(users)
+            ? users.find((user) => (
+                String(user.id || "") === String(profile.id || "") ||
+                normalizeEmail(user.email) === normalizeEmail(profile.email)
+            ))
+            : null;
         const nextUsers = Array.isArray(users)
             ? users.filter((user) => (
                 String(user.id || "") !== String(profile.id || "") &&
@@ -326,7 +332,9 @@
             name: profile.name,
             email: profile.email,
             role: profile.role,
-            joinDate: profile.joinDate
+            joinDate: profile.joinDate,
+            provider: profile.provider || (existingUser && existingUser.provider) || "supabase",
+            ...(existingUser && existingUser.password ? { password: existingUser.password } : {})
         });
         localStorage.setItem("users", JSON.stringify(nextUsers));
         window.dispatchEvent(new CustomEvent("asg:data-updated", {
@@ -588,18 +596,24 @@
             }
         });
         if (error) throw error;
-        if (!data.session) {
-            const confirmError = new Error("Account created. Please confirm your email, then sign in.");
-            confirmError.code = "supabase/email-confirmation-required";
-            throw confirmError;
-        }
 
         const profile = {
+            id: data.user ? data.user.id : email,
             name,
             email,
             role: isAdminEmail(email) ? "admin" : "student",
-            joinDate: new Date().toISOString()
+            joinDate: new Date().toISOString(),
+            provider: data.session ? "supabase" : "supabase-pending"
         };
+        if (!data.session) {
+            currentProfile = profile;
+            authReadyPromise = Promise.resolve(profile);
+            sessionStorage.setItem("currentUser", JSON.stringify(profile));
+            cacheProfileLocally(profile);
+            dispatchBackendStatus("signed-in", { profile });
+            return profile;
+        }
+
         authReadyPromise = Promise.resolve(profileFromSupabaseUser(data.user, profile));
         return authReadyPromise;
     }

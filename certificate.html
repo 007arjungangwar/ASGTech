@@ -42,7 +42,8 @@
             font-weight: 800;
         }
 
-        .certificate-command-bar input {
+        .certificate-command-bar input,
+        .certificate-command-bar select {
             min-height: 46px;
             padding: 0 0.9rem;
             border: 1px solid var(--asg-border);
@@ -506,11 +507,15 @@
                 Student name
                 <input type="text" id="studentName" placeholder="Enter your full name" oninput="updateCertificateName()">
             </label>
+            <label>
+                Course
+                <select id="certificateCourseSelect" onchange="selectCertificateCourse(this.value)"></select>
+            </label>
             <div class="certificate-actions">
                 <button class="btn-primary" id="downloadCertificateButton" type="button" onclick="generateCertificate()">Download Certificate</button>
                 <button class="btn-secondary" type="button" onclick="requestCertificateApproval()">Request Approval</button>
                 <a class="btn-secondary" id="verifyCertificateLink" href="certificate-verify.html">Verify Credential</a>
-                <button class="btn-secondary" type="button" onclick="shareLinkedIn()">Share on LinkedIn</button>
+                <button class="btn-secondary" id="shareLinkedInButton" type="button" onclick="shareLinkedIn()">Share on LinkedIn</button>
             </div>
         </section>
 
@@ -649,7 +654,7 @@
                         <p class="certificate-copy">This certificate is proudly presented to</p>
                         <div class="certificate-name" id="certName">Student Name</div>
                         <p class="certificate-copy">for successfully completing the professional learning path</p>
-                        <h1 class="certificate-course">Data Science &amp; Machine Learning</h1>
+                        <h1 class="certificate-course" id="certCourseName">Data Science &amp; Machine Learning</h1>
                         <p class="certificate-copy">with dedication, consistency, and practical progress through the ASG Tech learning workspace.</p>
                     </div>
 
@@ -685,42 +690,119 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         const certificateUser = getCurrentUser();
-        const certificateIdKey = certificateUser ? `certificateId_${certificateUser.id}` : "certificateId_guest";
-        const certificateIssueDateKey = certificateUser ? `certificateIssueDate_${certificateUser.id}` : "certificateIssueDate_guest";
-        const certificateCourse = "Data Science & Machine Learning";
-        let certificateId = localStorage.getItem(certificateIdKey);
-        let certificateIssueDate = localStorage.getItem(certificateIssueDateKey);
+        const certificateProgressRequired = typeof asgGetCertificateProgressRequirement === "function"
+            ? asgGetCertificateProgressRequirement()
+            : 70;
+        const fallbackCertificateCourse = { id: "data-science-machine-learning", title: "Data Science & Machine Learning" };
+        const certificateCourses = typeof asgGetCourses === "function" ? asgGetCourses() : [];
+        const availableCertificateCourses = certificateCourses.length ? certificateCourses : [fallbackCertificateCourse];
+        const certificateCoursePreferenceKey = certificateUser
+            ? `certificateCourse_${certificateUser.id}`
+            : "certificateCourse_guest";
+        let selectedCertificateCourse = resolveInitialCertificateCourse();
+        let certificateId = "";
+        let certificateIssueDate = "";
         let certificateLogoCanvasSource = null;
-        if (!certificateId) {
-            certificateId = `${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
-            localStorage.setItem(certificateIdKey, certificateId);
-        }
-        if (!certificateIssueDate) {
-            certificateIssueDate = new Date().toISOString();
-            localStorage.setItem(certificateIssueDateKey, certificateIssueDate);
-        }
-
-        document.getElementById("certDate").textContent = new Date(certificateIssueDate).toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-        });
-        document.getElementById("certNumber").textContent = certificateId;
         let verificationUrl = "";
 
         if (certificateUser && certificateUser.name) {
             document.getElementById("studentName").value = certificateUser.name;
         }
 
+        function escapeCertificateHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function resolveCertificateCourse(courseId) {
+            const normalizedId = typeof asgSlugify === "function" ? asgSlugify(courseId, "course") : String(courseId || "");
+            return availableCertificateCourses.find((course) => course.id === normalizedId) || null;
+        }
+
+        function resolveInitialCertificateCourse() {
+            const params = new URLSearchParams(window.location.search);
+            const storedCourse = localStorage.getItem(certificateCoursePreferenceKey);
+            const courseProgress = certificateUser && typeof asgGetStudentCourseProgress === "function"
+                ? asgGetStudentCourseProgress(certificateUser)
+                : [];
+            const bestProgressCourse = courseProgress
+                .slice()
+                .sort((left, right) => Number(right.progressPercent || 0) - Number(left.progressPercent || 0))[0];
+            const candidates = [
+                params.get("course"),
+                storedCourse,
+                bestProgressCourse && bestProgressCourse.courseId,
+                availableCertificateCourses[0] && availableCertificateCourses[0].id
+            ];
+
+            for (const candidate of candidates) {
+                const course = resolveCertificateCourse(candidate);
+                if (course) return course;
+            }
+
+            return fallbackCertificateCourse;
+        }
+
+        function getCertificateScopedKey(prefix) {
+            const userPart = certificateUser ? certificateUser.id : "guest";
+            const coursePart = selectedCertificateCourse ? selectedCertificateCourse.id : fallbackCertificateCourse.id;
+            return `${prefix}_${userPart}_${coursePart}`;
+        }
+
+        function loadCertificateIdentity() {
+            const certificateIdKey = getCertificateScopedKey("certificateId");
+            const certificateIssueDateKey = getCertificateScopedKey("certificateIssueDate");
+            certificateId = localStorage.getItem(certificateIdKey);
+            certificateIssueDate = localStorage.getItem(certificateIssueDateKey);
+
+            if (!certificateId) {
+                certificateId = `${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+                localStorage.setItem(certificateIdKey, certificateId);
+            }
+            if (!certificateIssueDate) {
+                certificateIssueDate = new Date().toISOString();
+                localStorage.setItem(certificateIssueDateKey, certificateIssueDate);
+            }
+
+            document.getElementById("certDate").textContent = new Date(certificateIssueDate).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric"
+            });
+            document.getElementById("certNumber").textContent = certificateId;
+        }
+
+        function renderCertificateCourseOptions() {
+            const select = document.getElementById("certificateCourseSelect");
+            select.innerHTML = availableCertificateCourses.map((course) => `
+                <option value="${escapeCertificateHtml(course.id)}">${escapeCertificateHtml(course.title)}</option>
+            `).join("");
+            select.value = selectedCertificateCourse.id;
+            select.disabled = availableCertificateCourses.length <= 1 && availableCertificateCourses[0].id === fallbackCertificateCourse.id;
+        }
+
+        function selectCertificateCourse(courseId) {
+            selectedCertificateCourse = resolveCertificateCourse(courseId) || availableCertificateCourses[0] || fallbackCertificateCourse;
+            localStorage.setItem(certificateCoursePreferenceKey, selectedCertificateCourse.id);
+            loadCertificateIdentity();
+            refreshCertificateAccess();
+        }
+
         function updateCertificateName() {
             const name = document.getElementById("studentName").value.trim() || "Student Name";
             document.getElementById("certName").textContent = name;
+            document.getElementById("certCourseName").textContent = selectedCertificateCourse.title;
             updateCredentialVerification();
         }
 
         function getCertificateProgress() {
             if (!certificateUser) return 0;
-            return asgGetStudentProgress(certificateUser).progressPercent;
+            const progress = asgGetCourseProgress(certificateUser, selectedCertificateCourse.id);
+            return Math.round(Number(progress && progress.progressPercent || 0));
         }
 
         function getCertificateVerificationBaseUrl() {
@@ -736,7 +818,7 @@
             return {
                 certificateId: `ASG-${certificateId}`,
                 name: document.getElementById("studentName").value.trim() || "Student Name",
-                course: certificateCourse,
+                course: selectedCertificateCourse.title,
                 issued: certificateIssueDate.slice(0, 10)
             };
         }
@@ -758,33 +840,37 @@
             updateCertificateName();
             const progress = getCertificateProgress();
             const allowed = asgCanDownloadCertificate(certificateUser);
-            const canDownload = allowed && progress >= 50;
+            const progressReady = progress >= certificateProgressRequired;
+            const canDownload = allowed && progressReady;
             const button = document.getElementById("downloadCertificateButton");
+            const shareButton = document.getElementById("shareLinkedInButton");
             const note = document.getElementById("certificateAccessNote");
             const sheet = document.getElementById("certificate");
 
             document.getElementById("certificateProgress").textContent = `${progress}%`;
             document.getElementById("certificatePermission").textContent = canDownload ? "Allowed" : "Locked";
             button.disabled = !canDownload;
+            shareButton.disabled = !canDownload;
             sheet.classList.toggle("is-locked", !canDownload);
             note.className = `certificate-access-note ${canDownload ? "allowed" : "locked"}`;
+            const courseTitle = escapeCertificateHtml(selectedCertificateCourse.title);
 
             if (canDownload) {
-                note.innerHTML = "<strong>Download unlocked.</strong> Admin approval is active and your roadmap progress is at least 50%.";
+                note.innerHTML = `<strong>Certificate unlocked.</strong> Admin approval is active and ${courseTitle} progress is at least ${certificateProgressRequired}%.`;
                 return;
             }
 
-            if (!allowed && progress < 50) {
-                note.innerHTML = "<strong>Preview only.</strong> Complete at least 50% progress and ask admin to allow certificate download.";
+            if (!allowed && !progressReady) {
+                note.innerHTML = `<strong>Preview only.</strong> Complete at least ${certificateProgressRequired}% of ${courseTitle} and ask admin to allow certificate download. LinkedIn sharing stays locked until then.`;
                 return;
             }
 
             if (!allowed) {
-                note.innerHTML = "<strong>Admin approval required.</strong> You can view the certificate, but download is locked until admin enables it from the dashboard.";
+                note.innerHTML = "<strong>Admin approval required.</strong> You can view the certificate, but download and LinkedIn sharing are locked until admin enables access from the dashboard.";
                 return;
             }
 
-            note.innerHTML = "<strong>Progress required.</strong> Admin approval is active, but download unlocks after 50% roadmap progress.";
+            note.innerHTML = `<strong>Progress required.</strong> Admin approval is active, but this course unlocks after ${certificateProgressRequired}% progress.`;
         }
 
         function requestCertificateApproval() {
@@ -794,6 +880,8 @@
                 userId: certificateUser.id,
                 name: certificateUser.name,
                 email: certificateUser.email,
+                courseId: selectedCertificateCourse.id,
+                course: selectedCertificateCourse.title,
                 progress: getCertificateProgress(),
                 requestedAt: new Date().toISOString()
             });
@@ -909,8 +997,8 @@
             }
 
             const progress = getCertificateProgress();
-            if (!asgCanDownloadCertificate(certificateUser) || progress < 50) {
-                alert("Certificate download is locked. Admin approval and 50% progress are required.");
+            if (!asgCanDownloadCertificate(certificateUser) || progress < certificateProgressRequired) {
+                alert(`Certificate download is locked. Admin approval and ${certificateProgressRequired}% course progress are required.`);
                 refreshCertificateAccess();
                 return;
             }
@@ -931,6 +1019,7 @@
                     email: certificateUser ? certificateUser.email : "",
                     userId: certificateUser ? certificateUser.id : "",
                     certificateId: credential.certificateId,
+                    courseId: selectedCertificateCourse.id,
                     course: credential.course,
                     date: certificateIssueDate,
                     signature: asgCertificateSignature(credential),
@@ -946,21 +1035,33 @@
         }
 
         function shareLinkedIn() {
+            const progress = getCertificateProgress();
+            if (!asgCanDownloadCertificate(certificateUser) || progress < certificateProgressRequired) {
+                alert(`LinkedIn sharing is locked until admin approval and ${certificateProgressRequired}% course progress are complete.`);
+                refreshCertificateAccess();
+                return;
+            }
+
             const name = document.getElementById("studentName").value.trim() || "Student";
             const shareUrl = verificationUrl;
-            const text = `${name} completed the ${certificateCourse} learning path at ASG Tech Online.`;
+            const text = `${name} completed the ${selectedCertificateCourse.title} learning path at ASG Tech Online.`;
             window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
         }
 
         window.addEventListener("asg:data-updated", (event) => {
-            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.certificatePermissions) {
+            const key = event.detail && event.detail.key;
+            if ([ASG_LEARNING_KEYS.certificatePermissions, ASG_LEARNING_KEYS.courseProgress].includes(key)) {
                 refreshCertificateAccess();
             }
         });
         window.addEventListener("storage", (event) => {
-            if (event.key === ASG_LEARNING_KEYS.certificatePermissions) refreshCertificateAccess();
+            if ([ASG_LEARNING_KEYS.certificatePermissions, ASG_LEARNING_KEYS.courseProgress].includes(event.key)) {
+                refreshCertificateAccess();
+            }
         });
 
+        renderCertificateCourseOptions();
+        loadCertificateIdentity();
         refreshCertificateAccess();
     </script>
 </body>
