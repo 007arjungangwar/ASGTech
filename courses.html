@@ -47,6 +47,7 @@
 
     <script>
         const courseUser = getCurrentUser();
+        let courseAccessRefreshStarted = false;
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -139,7 +140,7 @@
             panel.scrollIntoView({ behavior: "smooth", block: "start" });
         }
 
-        function requestCourseAccess(courseId) {
+        async function requestCourseAccess(courseId) {
             const course = asgGetCourseById(courseId);
             if (!course) return;
             if (!courseUser) {
@@ -150,9 +151,22 @@
                 alert("Payment QR is not available for this course yet.");
                 return;
             }
-            asgSaveCourseAccessRequest(courseUser, course, "Student marked payment as completed.");
+            const request = asgSaveCourseAccessRequest(courseUser, course, "Student marked payment as completed.");
             renderCoursePaymentPanel(course);
             renderCourses();
+            await asgSyncCourseAccessRequestToCloud(request);
+            renderCoursePaymentPanel(course);
+            renderCourses();
+        }
+
+        async function refreshCourseAccessStatusFromCloud() {
+            if (!courseUser || courseAccessRefreshStarted) return;
+            courseAccessRefreshStarted = true;
+            await asgRefreshCourseAccessRequestsForUser(courseUser);
+            renderCourses();
+            const panel = document.getElementById("courseAccessPanel");
+            const panelCourse = panel && panel.dataset.courseId ? asgGetCourseById(panel.dataset.courseId) : null;
+            if (panelCourse) renderCoursePaymentPanel(panelCourse);
         }
 
         async function openCourse(courseId) {
@@ -249,6 +263,7 @@
         if (requestedCourse && !asgHasCourseAccess(courseUser, requestedCourse)) {
             renderCoursePaymentPanel(requestedCourse);
         }
+        refreshCourseAccessStatusFromCloud();
     </script>
 </body>
 </html>

@@ -2262,6 +2262,56 @@ function asgGetCourseAccessKey(user, courseId) {
     return `${asgGetLearningUserKey(user)}:${asgSlugify(courseId, "course")}`;
 }
 
+function asgNormalizeCourseAccessRequest(record) {
+    if (!record || typeof record !== "object") return null;
+    const courseId = asgSlugify(record.courseId || record.course_id || "", "course");
+    if (!courseId) return null;
+    return {
+        id: String(record.id || asgCreateId("course_access")),
+        requestToken: String(record.requestToken || record.request_token || asgCreateId("access_token")),
+        userId: String(record.userId || record.user_id || ""),
+        email: String(record.email || "").trim().toLowerCase(),
+        name: String(record.name || "").trim(),
+        courseId,
+        courseTitle: String(record.courseTitle || record.course_title || record.course || "").trim(),
+        price: String(record.price || "").trim(),
+        note: String(record.note || "").trim(),
+        status: ["pending", "approved", "revoked"].includes(record.status) ? record.status : "pending",
+        requestedAt: record.requestedAt || record.requested_at || new Date().toISOString(),
+        updatedAt: record.updatedAt || record.updated_at || new Date().toISOString(),
+        updatedBy: record.updatedBy || record.updated_by || null
+    };
+}
+
+function asgMergeCourseAccessRequest(record) {
+    const normalized = asgNormalizeCourseAccessRequest(record);
+    if (!normalized) return null;
+    const requests = asgReadJSON(ASG_LEARNING_KEYS.courseAccessRequests, []);
+    const existingIndex = requests.findIndex((request) => (
+        (normalized.requestToken && request.requestToken === normalized.requestToken) ||
+        (normalized.id && String(request.id || "") === normalized.id) ||
+        (
+            String(request.userId || "") === normalized.userId &&
+            String(request.email || "").toLowerCase() === normalized.email &&
+            String(request.courseId || "") === normalized.courseId &&
+            request.status === "pending"
+        )
+    ));
+
+    if (existingIndex >= 0) {
+        requests[existingIndex] = {
+            ...requests[existingIndex],
+            ...normalized,
+            requestedAt: requests[existingIndex].requestedAt || normalized.requestedAt
+        };
+    } else {
+        requests.push(normalized);
+    }
+
+    asgWriteJSON(ASG_LEARNING_KEYS.courseAccessRequests, requests);
+    return existingIndex >= 0 ? requests[existingIndex] : normalized;
+}
+
 function asgGetCourseAccessRequests(user = null, courseId = "") {
     asgEnsureLearningData();
     const normalizedCourseId = courseId ? asgSlugify(courseId, "course") : "";
@@ -2290,6 +2340,7 @@ function asgSaveCourseAccessRequest(user, course, note = "") {
     ));
     const record = {
         id: existingIndex >= 0 ? requests[existingIndex].id : asgCreateId("course_access"),
+        requestToken: existingIndex >= 0 && requests[existingIndex].requestToken ? requests[existingIndex].requestToken : asgCreateId("access_token"),
         userId: user.id || "",
         email: user.email || "",
         name: user.name || "",
@@ -2334,7 +2385,10 @@ function asgHasCourseAccess(user, course) {
     if (!asgIsPaidCourse(course)) return true;
     if (user && user.role === "admin") return true;
     const permission = asgGetCourseAccessPermission(user, course && course.id);
-    return Boolean(permission && permission.allowed);
+    if (permission && permission.allowed) return true;
+    const approvedRequest = asgGetCourseAccessRequests(user, course && course.id)
+        .some((request) => request.status === "approved");
+    return approvedRequest;
 }
 
 function asgSaveCourseAccessPermission(user, course, allowed, note = "", admin = null) {
@@ -2356,6 +2410,35 @@ function asgSaveCourseAccessPermission(user, course, allowed, note = "", admin =
     };
     asgWriteJSON(ASG_LEARNING_KEYS.courseAccessPermissions, permissions);
     return permissions[key];
+}
+
+async function asgSyncCourseAccessRequestToCloud(record) {
+    if (!record || !window.ASG_BACKEND || typeof window.ASG_BACKEND.submitCourseAccessRequest !== "function") return record;
+    try {
+        const synced = await window.ASG_BACKEND.submitCourseAccessRequest(record);
+        return asgMergeCourseAccessRequest(synced || record) || record;
+    } catch (error) {
+        console.warn("Could not sync paid course request to Supabase.", error);
+        return record;
+    }
+}
+
+async function asgRefreshCourseAccessRequestFromCloud(record) {
+    const token = record && (record.requestToken || record.request_token);
+    if (!token || !window.ASG_BACKEND || typeof window.ASG_BACKEND.refreshCourseAccessRequest !== "function") return record;
+    try {
+        const remote = await window.ASG_BACKEND.refreshCourseAccessRequest(token);
+        return remote ? asgMergeCourseAccessRequest(remote) : record;
+    } catch (error) {
+        console.warn("Could not refresh paid course request status.", error);
+        return record;
+    }
+}
+
+async function asgRefreshCourseAccessRequestsForUser(user, courseId = "") {
+    const requests = asgGetCourseAccessRequests(user, courseId).filter((request) => request.requestToken);
+    await Promise.all(requests.map(asgRefreshCourseAccessRequestFromCloud));
+    return asgGetCourseAccessRequests(user, courseId);
 }
 
 function asgGetCourseProgressKey(user, courseId) {

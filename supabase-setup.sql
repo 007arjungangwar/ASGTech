@@ -67,9 +67,28 @@ create table if not exists public.user_activity (
     primary key (user_id, key)
 );
 
+create table if not exists public.course_access_requests (
+    id uuid primary key default gen_random_uuid(),
+    request_token text not null unique,
+    user_id text not null default '',
+    name text not null default '',
+    email text not null default '',
+    course_id text not null,
+    course_title text not null default '',
+    price text not null default '',
+    note text not null default '',
+    status text not null default 'pending' check (status in ('pending', 'approved', 'revoked')),
+    requested_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    updated_by jsonb not null default '{}'::jsonb
+);
+
 create index if not exists profiles_email_idx on public.profiles (lower(email));
 create index if not exists profiles_role_idx on public.profiles (role);
 create index if not exists user_activity_key_idx on public.user_activity (key);
+create index if not exists course_access_requests_email_idx on public.course_access_requests (lower(email));
+create index if not exists course_access_requests_course_idx on public.course_access_requests (course_id);
+create index if not exists course_access_requests_status_idx on public.course_access_requests (status);
 
 create or replace function public.asg_is_admin()
 returns boolean
@@ -122,6 +141,7 @@ for each row execute function public.asg_handle_new_user();
 alter table public.profiles enable row level security;
 alter table public.site_data enable row level security;
 alter table public.user_activity enable row level security;
+alter table public.course_access_requests enable row level security;
 
 update public.profiles
 set role = 'student',
@@ -134,6 +154,8 @@ grant select on public.site_data to anon, authenticated;
 grant select, insert, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.user_activity to authenticated;
 grant insert, update, delete on public.site_data to authenticated;
+grant insert on public.course_access_requests to anon, authenticated;
+grant select, update, delete on public.course_access_requests to authenticated;
 
 drop policy if exists "Users can read their own profile or admins read all" on public.profiles;
 create policy "Users can read their own profile or admins read all"
@@ -225,6 +247,86 @@ for delete
 to authenticated
 using (public.asg_is_admin());
 
+drop policy if exists "Anyone can request paid course access" on public.course_access_requests;
+create policy "Anyone can request paid course access"
+on public.course_access_requests
+for insert
+to anon, authenticated
+with check (
+    status = 'pending'
+    and length(trim(request_token)) >= 12
+    and length(trim(email)) > 3
+    and length(trim(course_id)) > 0
+);
+
+drop policy if exists "Students can read own paid course requests" on public.course_access_requests;
+create policy "Students can read own paid course requests"
+on public.course_access_requests
+for select
+to authenticated
+using (
+    public.asg_is_admin()
+    or lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+    or user_id = auth.uid()::text
+);
+
+drop policy if exists "Admins can update paid course requests" on public.course_access_requests;
+create policy "Admins can update paid course requests"
+on public.course_access_requests
+for update
+to authenticated
+using (public.asg_is_admin())
+with check (public.asg_is_admin());
+
+drop policy if exists "Admins can delete paid course requests" on public.course_access_requests;
+create policy "Admins can delete paid course requests"
+on public.course_access_requests
+for delete
+to authenticated
+using (public.asg_is_admin());
+
+create or replace function public.asg_get_course_access_request(p_request_token text)
+returns table (
+    id uuid,
+    request_token text,
+    user_id text,
+    name text,
+    email text,
+    course_id text,
+    course_title text,
+    price text,
+    note text,
+    status text,
+    requested_at timestamptz,
+    updated_at timestamptz,
+    updated_by jsonb
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select
+        car.id,
+        car.request_token,
+        car.user_id,
+        car.name,
+        car.email,
+        car.course_id,
+        car.course_title,
+        car.price,
+        car.note,
+        car.status,
+        car.requested_at,
+        car.updated_at,
+        car.updated_by
+    from public.course_access_requests car
+    where car.request_token = p_request_token
+    limit 1;
+$$;
+
+grant execute on function public.asg_get_course_access_request(text) to anon, authenticated;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
     'asg-content',
@@ -287,6 +389,14 @@ $$;
 do $$
 begin
     alter publication supabase_realtime add table public.profiles;
+exception
+    when duplicate_object then null;
+end;
+$$;
+
+do $$
+begin
+    alter publication supabase_realtime add table public.course_access_requests;
 exception
     when duplicate_object then null;
 end;

@@ -40,6 +40,7 @@
         const courseUser = getCurrentUser();
         let course = asgGetCourseById(params.get("course"));
         const courseMainShell = document.querySelector("main").innerHTML;
+        let courseAccessRefreshStarted = false;
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -61,7 +62,7 @@
             window.location.href = `login.html?next=${encodeURIComponent(`course-detail.html?course=${course.id}`)}`;
         }
 
-        function requestCourseAccess() {
+        async function requestCourseAccess() {
             if (!course) return;
             if (!courseUser) {
                 redirectToCourseLogin();
@@ -71,7 +72,9 @@
                 alert("Payment QR is not available for this course yet.");
                 return;
             }
-            asgSaveCourseAccessRequest(courseUser, course, "Student marked payment as completed.");
+            const request = asgSaveCourseAccessRequest(courseUser, course, "Student marked payment as completed.");
+            renderCourse();
+            await asgSyncCourseAccessRequestToCloud(request);
             renderCourse();
         }
 
@@ -190,6 +193,13 @@
             renderCourse();
         }
 
+        async function refreshCourseAccessStatusFromCloud() {
+            if (!courseUser || !course || courseAccessRefreshStarted) return;
+            courseAccessRefreshStarted = true;
+            await asgRefreshCourseAccessRequestsForUser(courseUser, course.id);
+            renderCourse();
+        }
+
         function handleCourseDataUpdate(event) {
             const key = event.detail ? event.detail.key : event.key;
             if ([
@@ -206,6 +216,7 @@
         window.addEventListener("storage", handleCourseDataUpdate);
 
         renderCourse();
+        refreshCourseAccessStatusFromCloud();
         if (sessionStorage.getItem("asgCourseFullscreen") === "1") {
             ASGExamGuard.requestFullscreen();
             window.addEventListener("pointerdown", requestCourseFullscreen, { once: true });

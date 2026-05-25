@@ -228,7 +228,10 @@
                         <h2>Paid Course Access Requests</h2>
                         <p>Students scan the course QR, submit a request, and get access only after your approval.</p>
                     </div>
-                    <a class="btn-secondary" href="courses.html">Preview Courses</a>
+                    <div class="asg-item-actions">
+                        <button class="btn-secondary" type="button" onclick="refreshCourseAccessRequestsFromCloud()">Refresh Requests</button>
+                        <a class="btn-secondary" href="courses.html">Preview Courses</a>
+                    </div>
                 </div>
                 <div class="asg-table-wrap" id="courseAccessRequests"></div>
             </article>
@@ -1857,7 +1860,40 @@
             }, {});
         }
 
-        function setCourseAccess(studentId, courseId, allowed) {
+        function updateLocalCourseAccessRequestStatus(student, courseId, allowed) {
+            const requests = readJSON(ASG_LEARNING_KEYS.courseAccessRequests, []);
+            let updatedRequest = null;
+            const nextRequests = requests.map((request) => {
+                const matches = courseAccessRecordMatchesStudent(request, student) && String(request.courseId || "") === String(courseId);
+                if (!matches) return request;
+                updatedRequest = {
+                    ...request,
+                    status: allowed ? "approved" : "revoked",
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: adminUser ? adminUser.email || adminUser.name || "Admin" : "Admin"
+                };
+                return updatedRequest;
+            });
+            if (updatedRequest) {
+                asgWriteJSON(ASG_LEARNING_KEYS.courseAccessRequests, nextRequests);
+            }
+            return updatedRequest;
+        }
+
+        async function refreshCourseAccessRequestsFromCloud() {
+            if (!window.ASG_BACKEND || typeof window.ASG_BACKEND.loadCourseAccessRequests !== "function") {
+                refreshDashboard();
+                return;
+            }
+            try {
+                await window.ASG_BACKEND.loadCourseAccessRequests();
+            } catch (error) {
+                console.warn("Could not load paid course requests from Supabase.", error);
+            }
+            refreshDashboard();
+        }
+
+        async function setCourseAccess(studentId, courseId, allowed) {
             const student = findCourseAccessStudent(studentId, courseId);
             const course = adminCourses.find((item) => String(item.id) === String(courseId));
             if (!student || !course) {
@@ -1873,6 +1909,8 @@
                 adminUser
             );
 
+            const updatedRequest = updateLocalCourseAccessRequestStatus(student, courseId, allowed);
+
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.saveUserActivityForUser === "function") {
                 window.ASG_BACKEND.saveUserActivityForUser(
                     ASG_LEARNING_KEYS.courseAccessPermissions,
@@ -1880,6 +1918,15 @@
                     student
                 ).catch((error) => {
                     console.warn("Could not sync paid course access for student.", error);
+                });
+            }
+
+            if (updatedRequest && window.ASG_BACKEND && typeof window.ASG_BACKEND.updateCourseAccessRequestStatus === "function") {
+                window.ASG_BACKEND.updateCourseAccessRequestStatus(
+                    updatedRequest,
+                    allowed ? "approved" : "revoked"
+                ).catch((error) => {
+                    console.warn("Could not update paid course request status in Supabase.", error);
                 });
             }
 
@@ -1910,7 +1957,7 @@
                             const student = findCourseAccessStudent(row.userId || row.email, row.courseId) || row;
                             const course = adminCourses.find((item) => String(item.id) === String(row.courseId)) || row;
                             const permission = asgGetCourseAccessPermission(student, row.courseId);
-                            const allowed = Boolean(permission && permission.allowed);
+                            const allowed = Boolean(permission && permission.allowed) || row.status === "approved";
                             const requestedText = row.requestedAt
                                 ? `Requested ${formatDate(row.requestedAt)}`
                                 : "No request date";
@@ -1926,7 +1973,7 @@
                                     </td>
                                     <td>
                                         ${escapeHtml(requestedText)}
-                                        ${row.note ? `<small>${escapeHtml(row.note)}</small>` : ""}
+                                        <small>Status: ${escapeHtml(row.status || (allowed ? "approved" : "pending"))}${row.note ? ` | ${escapeHtml(row.note)}` : ""}</small>
                                     </td>
                                     <td>${allowed ? "Allowed" : "Locked"}</td>
                                     <td>
@@ -3419,6 +3466,7 @@
             resetResourceForm();
             enableCodeTextareaTabs();
             setAdminSection(localStorage.getItem("asgAdminActiveSection") || "overview", { scroll: false });
+            refreshCourseAccessRequestsFromCloud();
             showCloudBackupHint();
             showCloudPublishStatus();
         }

@@ -75,6 +75,7 @@
     let userSyncStarted = false;
     let activityReloadTimer = null;
     let usersReloadTimer = null;
+    let courseAccessReloadTimer = null;
     const pendingWrites = new Map();
     const missingRemoteKeys = new Set();
     const channelNames = new Set();
@@ -701,9 +702,9 @@
         if (Array.isArray(nextValue)) {
             const current = Array.isArray(currentValue) ? currentValue : [];
             const seen = new Set();
-            return [...current, ...nextValue].filter((record) => {
+            return [...nextValue, ...current].filter((record) => {
                 const id = record && typeof record === "object"
-                    ? String(record.id || record.certificateId || `${record.email || ""}:${record.submittedAt || record.requestedAt || record.date || ""}`)
+                    ? String(record.requestToken || record.request_token || record.id || record.certificateId || `${record.email || ""}:${record.courseId || record.course_id || ""}:${record.submittedAt || record.requestedAt || record.requested_at || record.date || ""}`)
                     : JSON.stringify(record);
                 if (seen.has(id)) return false;
                 seen.add(id);
@@ -712,6 +713,58 @@
         }
 
         return nextValue;
+    }
+
+    function normalizeCourseAccessRequestRecord(record) {
+        if (!record || typeof record !== "object") return null;
+        const token = String(record.requestToken || record.request_token || "").trim();
+        const courseId = String(record.courseId || record.course_id || "").trim();
+        if (!token || !courseId) return null;
+        return {
+            id: String(record.id || ""),
+            requestToken: token,
+            userId: String(record.userId || record.user_id || ""),
+            name: String(record.name || "").trim(),
+            email: normalizeEmail(record.email),
+            courseId,
+            courseTitle: String(record.courseTitle || record.course_title || "").trim(),
+            price: String(record.price || "").trim(),
+            note: String(record.note || "").trim(),
+            status: ["pending", "approved", "revoked"].includes(record.status) ? record.status : "pending",
+            requestedAt: toIsoDate(record.requestedAt || record.requested_at) || new Date().toISOString(),
+            updatedAt: toIsoDate(record.updatedAt || record.updated_at) || new Date().toISOString(),
+            updatedBy: record.updatedBy || record.updated_by || null
+        };
+    }
+
+    function courseAccessRequestBody(record) {
+        const normalized = normalizeCourseAccessRequestRecord(record);
+        if (!normalized) return null;
+        return {
+            request_token: normalized.requestToken,
+            user_id: normalized.userId,
+            name: normalized.name,
+            email: normalized.email,
+            course_id: normalized.courseId,
+            course_title: normalized.courseTitle,
+            price: normalized.price,
+            note: normalized.note,
+            status: normalized.status,
+            requested_at: normalized.requestedAt,
+            updated_at: normalized.updatedAt,
+            updated_by: normalized.updatedBy || {}
+        };
+    }
+
+    function mergeCourseAccessRequestsLocal(records) {
+        const normalized = (Array.isArray(records) ? records : [records])
+            .map(normalizeCourseAccessRequestRecord)
+            .filter(Boolean);
+        if (!normalized.length) return readLocalJSON("asgCourseAccessRequests", []);
+        const current = readLocalJSON("asgCourseAccessRequests", []);
+        const merged = mergeActivityValue("asgCourseAccessRequests", current, normalized);
+        writeLocalJSON("asgCourseAccessRequests", merged, "supabase-course-access");
+        return merged;
     }
 
     async function saveUserActivityKey(key, value, profile) {
@@ -799,6 +852,85 @@
         pendingWrites.delete(key);
         dispatchBackendStatus("synced", { key });
         return true;
+    }
+
+    async function submitCourseAccessRequest(record) {
+        const body = courseAccessRequestBody(record);
+        if (!body || !body.request_token || !body.email || !body.course_id) {
+            throw new Error("Paid course request is missing student or course details.");
+        }
+
+        body.status = "pending";
+        body.updated_at = new Date().toISOString();
+        try {
+            const rows = await restRequest("course_access_requests", {
+                method: "POST",
+                prefer: "return=representation",
+                body
+            });
+            const saved = Array.isArray(rows) && rows[0] ? rows[0] : body;
+            mergeCourseAccessRequestsLocal(saved);
+            dispatchBackendStatus("synced", { key: "asgCourseAccessRequests" });
+            return normalizeCourseAccessRequestRecord(saved) || record;
+        } catch (error) {
+            if (error && (error.status === 409 || String(error.message || "").toLowerCase().includes("duplicate"))) {
+                const existing = await refreshCourseAccessRequest(body.request_token);
+                return existing || record;
+            }
+            throw error;
+        }
+    }
+
+    async function refreshCourseAccessRequest(requestToken) {
+        const token = String(requestToken || "").trim();
+        if (!token) return null;
+        const result = await restRequest("rpc/asg_get_course_access_request", {
+            method: "POST",
+            body: { p_request_token: token }
+        });
+        const row = Array.isArray(result) && result[0] ? result[0] : null;
+        if (!row) return null;
+        mergeCourseAccessRequestsLocal(row);
+        return normalizeCourseAccessRequestRecord(row);
+    }
+
+    async function loadCourseAccessRequests() {
+        const profile = currentProfile || await restoreSession();
+        if (!isProfileAdmin(profile)) return readLocalJSON("asgCourseAccessRequests", []);
+        const rows = await restRequest(
+            "course_access_requests?select=id,request_token,user_id,name,email,course_id,course_title,price,note,status,requested_at,updated_at,updated_by&order=updated_at.desc"
+        );
+        return mergeCourseAccessRequestsLocal(rows || []);
+    }
+
+    async function updateCourseAccessRequestStatus(record, status) {
+        const profile = currentProfile || await restoreSession();
+        if (!isProfileAdmin(profile)) return null;
+        const normalized = normalizeCourseAccessRequestRecord(record);
+        if (!normalized || !normalized.requestToken) return null;
+
+        const nextStatus = status === "approved" ? "approved" : "revoked";
+        const rows = await restRequest(
+            `course_access_requests?request_token=eq.${encodeURIComponent(normalized.requestToken)}`,
+            {
+                method: "PATCH",
+                prefer: "return=representation",
+                body: {
+                    status: nextStatus,
+                    updated_at: new Date().toISOString(),
+                    updated_by: {
+                        uid: profile.id || "",
+                        name: profile.name || "",
+                        email: profile.email || "",
+                        role: profile.role || ""
+                    }
+                }
+            }
+        );
+        const saved = Array.isArray(rows) && rows[0] ? rows[0] : { ...normalized, status: nextStatus };
+        mergeCourseAccessRequestsLocal(saved);
+        dispatchBackendStatus("synced", { key: "asgCourseAccessRequests" });
+        return normalizeCourseAccessRequestRecord(saved);
     }
 
     async function publishContentSnapshot(data, options = {}) {
@@ -1003,6 +1135,15 @@
         }, 100);
     }
 
+    function scheduleCourseAccessRequestReload() {
+        clearTimeout(courseAccessReloadTimer);
+        courseAccessReloadTimer = setTimeout(() => {
+            loadCourseAccessRequests().catch((error) => {
+                console.warn("Supabase paid course request refresh failed.", error);
+            });
+        }, 100);
+    }
+
     function startActivitySync(profile, services) {
         if (activitySyncStarted) return;
         activitySyncStarted = true;
@@ -1025,6 +1166,20 @@
             .channel(ensureChannelName("asg-user-activity"))
             .on("postgres_changes", options, () => scheduleActivityReload(profile, services))
             .subscribe();
+
+        if (isProfileAdmin(profile)) {
+            loadCourseAccessRequests().catch((error) => {
+                console.warn("Supabase paid course request sync failed.", error);
+            });
+            services.client
+                .channel(ensureChannelName("asg-course-access-requests"))
+                .on("postgres_changes", {
+                    event: "*",
+                    schema: "public",
+                    table: "course_access_requests"
+                }, scheduleCourseAccessRequestReload)
+                .subscribe();
+        }
     }
 
     async function reloadUsers(services) {
@@ -1141,6 +1296,10 @@
         signOut,
         saveDataKey,
         saveUserActivityForUser,
+        submitCourseAccessRequest,
+        refreshCourseAccessRequest,
+        loadCourseAccessRequests,
+        updateCourseAccessRequestStatus,
         publishContentSnapshot,
         publishLocalContentBackup,
         getCloudContentStatus,

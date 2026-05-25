@@ -49,6 +49,7 @@
         let topicPyodideLoading = null;
         let lastTopicDataSignature = "";
         const topicMainShell = document.querySelector("main").innerHTML;
+        let courseAccessRefreshStarted = false;
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -66,7 +67,7 @@
             window.location.href = `login.html?next=${encodeURIComponent(next)}`;
         }
 
-        function requestCourseAccess() {
+        async function requestCourseAccess() {
             if (!course) return;
             if (!topicUser) {
                 redirectToCourseLogin();
@@ -76,7 +77,9 @@
                 alert("Payment QR is not available for this course yet.");
                 return;
             }
-            asgSaveCourseAccessRequest(topicUser, course, "Student marked payment as completed.");
+            const request = asgSaveCourseAccessRequest(topicUser, course, "Student marked payment as completed.");
+            renderTopic();
+            await asgSyncCourseAccessRequestToCloud(request);
             renderTopic();
         }
 
@@ -770,6 +773,14 @@ json.dumps(payload, default=str)
             renderTopic();
         }
 
+        async function refreshCourseAccessStatusFromCloud() {
+            if (!topicUser || !course || courseAccessRefreshStarted) return;
+            courseAccessRefreshStarted = true;
+            await asgRefreshCourseAccessRequestsForUser(topicUser, course.id);
+            reloadTopicFromStore();
+            renderTopic();
+        }
+
         function handleTopicDataUpdate(event) {
             const key = event.detail ? event.detail.key : event.key;
             const watchedKeys = [
@@ -793,6 +804,7 @@ json.dumps(payload, default=str)
         window.addEventListener("storage", handleTopicDataUpdate);
 
         renderTopic();
+        refreshCourseAccessStatusFromCloud();
         sessionStorage.removeItem("asgCourseFullscreen");
 
         document.addEventListener("fullscreenchange", () => {
