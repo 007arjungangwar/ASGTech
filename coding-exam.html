@@ -585,6 +585,16 @@ json.dumps(payload, default=str)
             renderExamStart();
         }
 
+        function handleCodingExamDataUpdate(event) {
+            const key = event.detail ? event.detail.key : event.key;
+            if (![ASG_LEARNING_KEYS.codingChallenges, ASG_LEARNING_KEYS.examRetakePermissions].includes(key)) return;
+            if (examStarted && !examSubmitted) return;
+            loadExam();
+        }
+
+        window.addEventListener("asg:data-updated", handleCodingExamDataUpdate);
+        window.addEventListener("storage", handleCodingExamDataUpdate);
+
         loadExam();
     </script>
 </body>

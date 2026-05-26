@@ -77,6 +77,7 @@
     let activityReloadTimer = null;
     let usersReloadTimer = null;
     let courseAccessReloadTimer = null;
+    let examRetakeReloadTimer = null;
     const pendingWrites = new Map();
     const missingRemoteKeys = new Set();
     const channelNames = new Set();
@@ -775,6 +776,166 @@
         return merged;
     }
 
+    function normalizeExamTypeValue(value) {
+        return String(value || "").toLowerCase().includes("coding") ? "coding-exam" : "quiz";
+    }
+
+    function slugExamValue(value, fallback = "exam") {
+        const slug = String(value || "")
+            .toLowerCase()
+            .replace(/&/g, "and")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+        return slug || fallback;
+    }
+
+    function examRetakePermissionKey(record) {
+        const existingKey = String(record && (record.permissionKey || record.permission_key) || "").trim().toLowerCase();
+        if (existingKey) return existingKey;
+
+        const userKey = String(record && (record.userId || record.user_id || record.email) || "student").trim().toLowerCase() || "student";
+        return [
+            userKey,
+            normalizeExamTypeValue(record && (record.examType || record.exam_type)),
+            slugExamValue(record && (record.examId || record.exam_id), "exam")
+        ].join("::").toLowerCase();
+    }
+
+    function normalizeExamRetakePermissionRecord(record) {
+        if (!record || typeof record !== "object") return null;
+        const examType = normalizeExamTypeValue(record.examType || record.exam_type);
+        const examId = slugExamValue(record.examId || record.exam_id, "exam");
+        const email = normalizeEmail(record.email);
+        const userId = String(record.userId || record.user_id || "").trim();
+        const updatedBy = record.updatedBy || record.updated_by || {};
+
+        return {
+            id: String(record.id || ""),
+            permissionKey: examRetakePermissionKey({
+                ...record,
+                userId,
+                email,
+                examType,
+                examId
+            }),
+            userId,
+            name: String(record.name || "").trim(),
+            email,
+            examType,
+            examId,
+            examTitle: String(record.examTitle || record.exam_title || examId).trim(),
+            allowed: record.allowed === true || record.allowed === "true",
+            note: String(record.note || "").trim(),
+            allowedAt: toIsoDate(record.allowedAt || record.allowed_at) || "",
+            usedAt: toIsoDate(record.usedAt || record.used_at) || "",
+            updatedAt: toIsoDate(record.updatedAt || record.updated_at) || "",
+            updatedBy: typeof updatedBy === "string" ? updatedBy : cleanClone(updatedBy)
+        };
+    }
+
+    function examRetakePermissionBody(record, profile) {
+        const normalized = normalizeExamRetakePermissionRecord(record);
+        if (!normalized || (!normalized.email && !normalized.userId) || !normalized.examId) return null;
+        const updatedBy = normalized.updatedBy && typeof normalized.updatedBy === "object"
+            ? normalized.updatedBy
+            : {
+                uid: profile ? profile.id || "" : "",
+                name: profile ? profile.name || "" : "",
+                email: profile ? profile.email || "" : "",
+                role: profile ? profile.role || "" : ""
+            };
+
+        return {
+            permission_key: normalized.permissionKey,
+            user_id: normalized.userId,
+            name: normalized.name,
+            email: normalized.email,
+            exam_type: normalized.examType,
+            exam_id: normalized.examId,
+            exam_title: normalized.examTitle,
+            allowed: Boolean(normalized.allowed),
+            note: normalized.note,
+            allowed_at: normalized.allowed ? (normalized.allowedAt || new Date().toISOString()) : null,
+            used_at: normalized.usedAt || null,
+            updated_at: new Date().toISOString(),
+            updated_by: updatedBy
+        };
+    }
+
+    function mergeExamRetakePermissionsLocal(records) {
+        const normalized = (Array.isArray(records) ? records : [records])
+            .map(normalizeExamRetakePermissionRecord)
+            .filter(Boolean);
+        if (!normalized.length) return readLocalJSON("asgExamRetakePermissions", {});
+
+        const nextValue = normalized.reduce((permissions, record) => {
+            permissions[record.permissionKey] = record;
+            return permissions;
+        }, {});
+        const current = readLocalJSON("asgExamRetakePermissions", {});
+        const merged = mergeActivityValue("asgExamRetakePermissions", current, nextValue);
+        writeLocalJSON("asgExamRetakePermissions", merged, "supabase-retake-permissions");
+        return merged;
+    }
+
+    async function loadExamRetakePermissions() {
+        const services = await loadServices();
+        const profile = currentProfile || await restoreSession();
+        if (!profile) return readLocalJSON("asgExamRetakePermissions", {});
+
+        const rows = await restRequest(
+            "exam_retake_permissions?select=*&order=updated_at.desc",
+            { services }
+        );
+        return mergeExamRetakePermissionsLocal(rows || []);
+    }
+
+    async function saveExamRetakePermission(record) {
+        const profile = currentProfile || await restoreSession();
+        if (!isProfileAdmin(profile)) return false;
+
+        const body = examRetakePermissionBody(record, profile);
+        if (!body) return false;
+
+        const result = await restRequest("exam_retake_permissions?on_conflict=permission_key", {
+            method: "POST",
+            prefer: "resolution=merge-duplicates,return=representation",
+            body
+        });
+        const saved = Array.isArray(result) ? result[0] : result;
+        mergeExamRetakePermissionsLocal(saved || body);
+        dispatchBackendStatus("synced", { key: "asgExamRetakePermissions" });
+        return normalizeExamRetakePermissionRecord(saved || body);
+    }
+
+    async function consumeExamRetakePermission(record) {
+        const profile = currentProfile || await restoreSession();
+        if (!profile) return null;
+
+        const normalized = normalizeExamRetakePermissionRecord({
+            ...(record || {}),
+            userId: (record && (record.userId || record.user_id)) || profile.id || "",
+            email: (record && record.email) || profile.email || ""
+        });
+        if (!normalized) return null;
+
+        const result = await restRequest("rpc/asg_consume_exam_retake_permission", {
+            method: "POST",
+            body: {
+                p_user_id: normalized.userId || profile.id || "",
+                p_email: normalized.email || profile.email || "",
+                p_exam_type: normalized.examType,
+                p_exam_id: normalized.examId
+            }
+        });
+        const saved = Array.isArray(result) ? result[0] : result;
+        if (saved) {
+            mergeExamRetakePermissionsLocal(saved);
+            dispatchBackendStatus("synced", { key: "asgExamRetakePermissions" });
+        }
+        return normalizeExamRetakePermissionRecord(saved);
+    }
+
     async function saveUserActivityKey(key, value, profile) {
         const services = await loadServices();
         const cleanedValue = filterActivityForProfile(key, value, profile);
@@ -1145,6 +1306,15 @@
         }, 100);
     }
 
+    function scheduleExamRetakePermissionsReload() {
+        clearTimeout(examRetakeReloadTimer);
+        examRetakeReloadTimer = setTimeout(() => {
+            loadExamRetakePermissions().catch((error) => {
+                console.warn("Supabase exam retake permission refresh failed.", error);
+            });
+        }, 100);
+    }
+
     function startActivitySync(profile, services) {
         if (activitySyncStarted) return;
         activitySyncStarted = true;
@@ -1152,6 +1322,9 @@
         reloadActivityRows(profile, services).catch((error) => {
             console.warn("Supabase activity sync failed.", error);
             dispatchBackendStatus("sync-error", { key: "activity", error: error.message || String(error) });
+        });
+        loadExamRetakePermissions().catch((error) => {
+            console.warn("Supabase exam retake permission sync failed.", error);
         });
 
         const options = {
@@ -1166,6 +1339,20 @@
         services.client
             .channel(ensureChannelName("asg-user-activity"))
             .on("postgres_changes", options, () => scheduleActivityReload(profile, services))
+            .subscribe();
+
+        const retakeOptions = {
+            event: "*",
+            schema: "public",
+            table: "exam_retake_permissions"
+        };
+        if (!isProfileAdmin(profile) && profile.email) {
+            retakeOptions.filter = `email=eq.${normalizeEmail(profile.email)}`;
+        }
+
+        services.client
+            .channel(ensureChannelName("asg-exam-retake-permissions"))
+            .on("postgres_changes", retakeOptions, scheduleExamRetakePermissionsReload)
             .subscribe();
 
         if (isProfileAdmin(profile)) {
@@ -1314,6 +1501,9 @@
         signOut,
         saveDataKey,
         saveUserActivityForUser,
+        loadExamRetakePermissions,
+        saveExamRetakePermission,
+        consumeExamRetakePermission,
         submitCourseAccessRequest,
         refreshCourseAccessRequest,
         loadCourseAccessRequests,

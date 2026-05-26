@@ -1920,24 +1920,34 @@ function asgGetExamRetakePermissions() {
 function asgFindExamRetakePermissionEntry(user, examType, examId) {
     const permissions = asgGetExamRetakePermissions();
     const key = asgGetExamAccessKey(user, examType, examId);
-    if (permissions[key]) return { key, permission: permissions[key] };
-
     const normalizedType = asgNormalizeExamType(examType);
     const normalizedId = asgNormalizeExamId(examId, "exam");
     const userId = String(user && user.id || "").toLowerCase();
     const email = String(user && user.email || "").toLowerCase();
-    const fallbackKey = Object.keys(permissions).find((permissionKey) => {
+    const candidates = Object.keys(permissions).reduce((matches, permissionKey) => {
         const permission = permissions[permissionKey] || {};
+        const exactKey = String(permissionKey || "").toLowerCase() === key;
         const matchesUser = (
             (userId && String(permission.userId || "").toLowerCase() === userId) ||
             (email && String(permission.email || "").toLowerCase() === email)
         );
-        return matchesUser
+        const matchesExam = (exactKey || matchesUser)
             && asgNormalizeExamType(permission.examType) === normalizedType
             && asgNormalizeExamId(permission.examId, "exam") === normalizedId;
+        if (matchesExam) matches.push({ key: permissionKey, permission });
+        return matches;
+    }, []);
+
+    candidates.sort((left, right) => {
+        const leftActive = asgIsExamRetakePermissionActive(left.permission) ? 1 : 0;
+        const rightActive = asgIsExamRetakePermissionActive(right.permission) ? 1 : 0;
+        if (leftActive !== rightActive) return rightActive - leftActive;
+        const leftTime = new Date(left.permission.updatedAt || left.permission.allowedAt || left.permission.usedAt || 0).getTime() || 0;
+        const rightTime = new Date(right.permission.updatedAt || right.permission.allowedAt || right.permission.usedAt || 0).getTime() || 0;
+        return rightTime - leftTime;
     });
 
-    return fallbackKey ? { key: fallbackKey, permission: permissions[fallbackKey] } : null;
+    return candidates[0] || null;
 }
 
 function asgGetExamRetakePermission(user, examType, examId) {
@@ -1945,9 +1955,13 @@ function asgGetExamRetakePermission(user, examType, examId) {
     return entry ? entry.permission : null;
 }
 
+function asgIsExamRetakePermissionActive(permission) {
+    return Boolean(permission && (permission.allowed === true || permission.allowed === "true") && !permission.usedAt);
+}
+
 function asgHasExamRetakeAccess(user, examType, examId) {
     const permission = asgGetExamRetakePermission(user, examType, examId);
-    return Boolean(permission && permission.allowed && !permission.usedAt);
+    return asgIsExamRetakePermissionActive(permission);
 }
 
 function asgCanStartExam(user, examType, examId) {
@@ -1963,6 +1977,7 @@ function asgSaveExamRetakePermission(user, examType, examId, examTitle, allowed,
     const key = asgGetExamAccessKey(user, normalizedType, normalizedId);
 
     permissions[key] = {
+        permissionKey: key,
         userId: user ? user.id || "" : "",
         email: user ? user.email || "" : "",
         name: user ? user.name || "" : "",
@@ -1984,17 +1999,27 @@ function asgSaveExamRetakePermission(user, examType, examId, examTitle, allowed,
 function asgConsumeExamRetakePermission(user, examType, examId) {
     const entry = asgFindExamRetakePermissionEntry(user, examType, examId);
     const permission = entry ? entry.permission : null;
-    if (!permission || !permission.allowed || permission.usedAt) return null;
+    if (!asgIsExamRetakePermissionActive(permission)) return null;
 
     const permissions = asgReadJSON(ASG_LEARNING_KEYS.examRetakePermissions, {});
     const key = entry.key || asgGetExamAccessKey(user, examType, examId);
     permissions[key] = {
         ...permission,
+        permissionKey: permission.permissionKey || key,
         allowed: false,
         usedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
     asgWriteJSON(ASG_LEARNING_KEYS.examRetakePermissions, permissions);
+    if (
+        typeof window !== "undefined" &&
+        window.ASG_BACKEND &&
+        typeof window.ASG_BACKEND.consumeExamRetakePermission === "function"
+    ) {
+        window.ASG_BACKEND.consumeExamRetakePermission(permissions[key]).catch((error) => {
+            console.warn("Could not consume exam retake permission in Supabase.", error);
+        });
+    }
     return permissions[key];
 }
 

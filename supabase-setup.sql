@@ -83,12 +83,33 @@ create table if not exists public.course_access_requests (
     updated_by jsonb not null default '{}'::jsonb
 );
 
+create table if not exists public.exam_retake_permissions (
+    id uuid primary key default gen_random_uuid(),
+    permission_key text not null unique,
+    user_id text not null default '',
+    name text not null default '',
+    email text not null default '',
+    exam_type text not null check (exam_type in ('quiz', 'coding-exam')),
+    exam_id text not null,
+    exam_title text not null default '',
+    allowed boolean not null default false,
+    note text not null default '',
+    allowed_at timestamptz,
+    used_at timestamptz,
+    updated_at timestamptz not null default now(),
+    updated_by jsonb not null default '{}'::jsonb
+);
+
 create index if not exists profiles_email_idx on public.profiles (lower(email));
 create index if not exists profiles_role_idx on public.profiles (role);
 create index if not exists user_activity_key_idx on public.user_activity (key);
 create index if not exists course_access_requests_email_idx on public.course_access_requests (lower(email));
 create index if not exists course_access_requests_course_idx on public.course_access_requests (course_id);
 create index if not exists course_access_requests_status_idx on public.course_access_requests (status);
+create index if not exists exam_retake_permissions_email_idx on public.exam_retake_permissions (lower(email));
+create index if not exists exam_retake_permissions_user_idx on public.exam_retake_permissions (user_id);
+create index if not exists exam_retake_permissions_exam_idx on public.exam_retake_permissions (exam_type, exam_id);
+create index if not exists exam_retake_permissions_allowed_idx on public.exam_retake_permissions (allowed, used_at);
 
 create or replace function public.asg_is_admin()
 returns boolean
@@ -142,6 +163,7 @@ alter table public.profiles enable row level security;
 alter table public.site_data enable row level security;
 alter table public.user_activity enable row level security;
 alter table public.course_access_requests enable row level security;
+alter table public.exam_retake_permissions enable row level security;
 
 update public.profiles
 set role = 'student',
@@ -156,6 +178,7 @@ grant select, insert, update, delete on public.user_activity to authenticated;
 grant insert, update, delete on public.site_data to authenticated;
 grant insert on public.course_access_requests to anon, authenticated;
 grant select, update, delete on public.course_access_requests to authenticated;
+grant select, insert, update, delete on public.exam_retake_permissions to authenticated;
 
 drop policy if exists "Users can read their own profile or admins read all" on public.profiles;
 create policy "Users can read their own profile or admins read all"
@@ -284,6 +307,25 @@ on public.course_access_requests
 for delete
 to authenticated
 using (public.asg_is_admin());
+
+drop policy if exists "Students read own retake permissions or admins read all" on public.exam_retake_permissions;
+create policy "Students read own retake permissions or admins read all"
+on public.exam_retake_permissions
+for select
+to authenticated
+using (
+    public.asg_is_admin()
+    or lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+    or user_id = auth.uid()::text
+);
+
+drop policy if exists "Admins write retake permissions" on public.exam_retake_permissions;
+create policy "Admins write retake permissions"
+on public.exam_retake_permissions
+for all
+to authenticated
+using (public.asg_is_admin())
+with check (public.asg_is_admin());
 
 create or replace function public.asg_get_course_access_request(p_request_token text)
 returns table (
@@ -419,6 +461,84 @@ $$;
 grant execute on function public.asg_list_course_access_requests(text) to anon, authenticated;
 grant execute on function public.asg_update_course_access_request_status(text, text, text) to anon, authenticated;
 
+create or replace function public.asg_consume_exam_retake_permission(
+    p_user_id text,
+    p_email text,
+    p_exam_type text,
+    p_exam_id text
+)
+returns table (
+    id uuid,
+    permission_key text,
+    user_id text,
+    name text,
+    email text,
+    exam_type text,
+    exam_id text,
+    exam_title text,
+    allowed boolean,
+    note text,
+    allowed_at timestamptz,
+    used_at timestamptz,
+    updated_at timestamptz,
+    updated_by jsonb
+)
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+    actor_id text := coalesce(auth.uid()::text, '');
+    actor_email text := lower(coalesce(auth.jwt() ->> 'email', ''));
+    normalized_type text := case when lower(coalesce(p_exam_type, '')) like '%coding%' then 'coding-exam' else 'quiz' end;
+    normalized_exam text := lower(regexp_replace(coalesce(p_exam_id, 'exam'), '[^a-z0-9]+', '-', 'g'));
+begin
+    normalized_exam := trim(both '-' from normalized_exam);
+    if normalized_exam = '' then
+        normalized_exam := 'exam';
+    end if;
+
+    return query
+    update public.exam_retake_permissions erp
+    set
+        allowed = false,
+        used_at = now(),
+        updated_at = now(),
+        updated_by = jsonb_build_object(
+            'uid', actor_id,
+            'email', actor_email,
+            'role', case when public.asg_is_admin() then 'admin' else 'student' end
+        )
+    where erp.exam_type = normalized_type
+      and erp.exam_id = normalized_exam
+      and erp.allowed = true
+      and erp.used_at is null
+      and (
+          public.asg_is_admin()
+          or (actor_id <> '' and erp.user_id = actor_id)
+          or (actor_email <> '' and lower(erp.email) = actor_email)
+      )
+    returning
+        erp.id,
+        erp.permission_key,
+        erp.user_id,
+        erp.name,
+        erp.email,
+        erp.exam_type,
+        erp.exam_id,
+        erp.exam_title,
+        erp.allowed,
+        erp.note,
+        erp.allowed_at,
+        erp.used_at,
+        erp.updated_at,
+        erp.updated_by;
+end;
+$$;
+
+grant execute on function public.asg_consume_exam_retake_permission(text, text, text, text) to authenticated;
+
 create or replace function public.asg_list_student_directory(p_admin_email text)
 returns table (
     id text,
@@ -547,6 +667,14 @@ $$;
 do $$
 begin
     alter publication supabase_realtime add table public.course_access_requests;
+exception
+    when duplicate_object then null;
+end;
+$$;
+
+do $$
+begin
+    alter publication supabase_realtime add table public.exam_retake_permissions;
 exception
     when duplicate_object then null;
 end;

@@ -2372,6 +2372,10 @@
             if (!student) return;
 
             const selected = getSelectedRetakeExam(studentId, type);
+            if (!selected) {
+                alert("Choose an exam before changing retake access.");
+                return;
+            }
             const exam = type === "quiz"
                 ? asgGetQuizById(selected)
                 : { id: asgNormalizeExamId(selected, "coding-exam"), title: `${selected} Coding Exam` };
@@ -2386,14 +2390,21 @@
                 adminUser
             );
 
-            if (permission && window.ASG_BACKEND && typeof window.ASG_BACKEND.saveUserActivityForUser === "function") {
-                window.ASG_BACKEND.saveUserActivityForUser(
-                    ASG_LEARNING_KEYS.examRetakePermissions,
-                    getRetakePermissionsForStudent(student),
-                    student
-                ).catch((error) => {
-                    console.warn("Could not sync exam retake access for student.", error);
-                });
+            if (permission && window.ASG_BACKEND) {
+                if (typeof window.ASG_BACKEND.saveExamRetakePermission === "function") {
+                    window.ASG_BACKEND.saveExamRetakePermission(permission).catch((error) => {
+                        console.warn("Could not sync exam retake permission table.", error);
+                    });
+                }
+                if (typeof window.ASG_BACKEND.saveUserActivityForUser === "function") {
+                    window.ASG_BACKEND.saveUserActivityForUser(
+                        ASG_LEARNING_KEYS.examRetakePermissions,
+                        getRetakePermissionsForStudent(student),
+                        student
+                    ).catch((error) => {
+                        console.warn("Could not sync exam retake access for student.", error);
+                    });
+                }
             }
 
             refreshDashboard();
@@ -2422,16 +2433,20 @@
                     <tbody>
                         ${students.map((student) => {
                             const examAttempts = asgGetExamAttempts(student);
+                            const quizAttempts = asgGetQuizAttempts(student);
                             const latestExam = asgGetLatestRecord(examAttempts, "submittedAt");
                             const latestQuizExam = asgGetLatestRecord(
                                 examAttempts.filter((attempt) => attempt.examType === "quiz"),
                                 "submittedAt"
                             );
+                            const latestLegacyQuiz = asgGetLatestRecord(quizAttempts, "submittedAt");
                             const latestCodingExam = asgGetLatestRecord(
                                 examAttempts.filter((attempt) => attempt.examType === "coding-exam"),
                                 "submittedAt"
                             );
-                            const selectedQuizId = latestQuizExam ? asgNormalizeExamId(latestQuizExam.examId, "quiz") : "";
+                            const selectedQuizId = latestQuizExam
+                                ? asgNormalizeExamId(latestQuizExam.examId, "quiz")
+                                : (latestLegacyQuiz ? asgNormalizeExamId(latestLegacyQuiz.quizId, "quiz") : "");
                             const selectedCodingId = latestCodingExam ? asgNormalizeExamId(latestCodingExam.examId, "coding-exam") : "";
                             return `
                                 <tr>
@@ -2440,7 +2455,7 @@
                                         <small>${escapeHtml(student.email)}</small>
                                     </td>
                                     <td>
-                                        ${examAttempts.length} exam submissions
+                                        ${examAttempts.length} exam submissions${quizAttempts.length ? `, ${quizAttempts.length} quiz records` : ""}
                                         <small>${latestExam ? `${escapeHtml(latestExam.examTitle)} | ${percentage(latestExam.percentage)} | ${formatDate(latestExam.submittedAt)}` : "No exam submitted yet"}</small>
                                     </td>
                                     <td>
