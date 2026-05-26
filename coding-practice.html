@@ -167,7 +167,7 @@
 
             details.innerHTML = `
                 <div class="asg-question-head">
-                    <span>${escapeHtml(challenge.topic)}</span>
+                    <span>${escapeHtml(challenge.examTopic || challenge.topic)}</span>
                     <small>${escapeHtml(challenge.difficulty)}</small>
                 </div>
                 <h2>${escapeHtml(challenge.title)}</h2>

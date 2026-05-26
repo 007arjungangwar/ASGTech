@@ -22,7 +22,7 @@
             </div>
             <div class="asg-hero-metrics">
                 <div><strong id="roadmapCount">0</strong><span>Milestones</span></div>
-                <div><strong id="roadmapDuration">0</strong><span>Active phases</span></div>
+                <div><strong id="roadmapDuration">0%</strong><span>Progress</span></div>
                 <div><strong>Live</strong><span>Admin editable</span></div>
             </div>
         </section>
@@ -37,6 +37,11 @@
                 <a class="btn-secondary" href="resources.html">Open Resources</a>
                 <a class="btn-primary" href="courses.html">Start Course</a>
             </div>
+        </section>
+
+        <section class="asg-roadmap-compass">
+            <article class="asg-roadmap-focus" id="roadmapFocus"></article>
+            <div class="asg-roadmap-rail" id="roadmapRail" aria-label="Roadmap milestones"></div>
         </section>
 
         <section class="asg-roadmap-board" id="roadmapBoard"></section>
@@ -56,13 +61,72 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function getRoadmapUser() {
+            return typeof getCurrentUser === "function" ? getCurrentUser() : null;
+        }
+
+        function getRoadmapProgress() {
+            const user = getRoadmapUser();
+            if (!user || typeof asgGetCourseProgressSummary !== "function") {
+                return { progressPercent: 0, completedTopics: 0, totalTopics: 0 };
+            }
+            return asgGetCourseProgressSummary(user);
+        }
+
+        function getCurrentMilestoneIndex(items, progressPercent) {
+            if (!items.length) return 0;
+            if (progressPercent >= 100) return items.length - 1;
+            return Math.min(items.length - 1, Math.floor((progressPercent / 100) * items.length));
+        }
+
+        function scrollRoadmapCard(itemId) {
+            const target = document.getElementById(`roadmap_${itemId}`);
+            if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+
+        function renderRoadmapCompass(items, progress) {
+            const focus = document.getElementById("roadmapFocus");
+            const rail = document.getElementById("roadmapRail");
+            if (!items.length) {
+                focus.innerHTML = "";
+                rail.innerHTML = "";
+                return 0;
+            }
+
+            const progressPercent = Math.round(Number(progress.progressPercent || 0));
+            const currentIndex = getCurrentMilestoneIndex(items, progressPercent);
+            const current = items[currentIndex];
+            focus.innerHTML = `
+                <div>
+                    <span class="asg-item-kicker">Current focus</span>
+                    <h2>${escapeHtml(current.title)}</h2>
+                    <p>${escapeHtml(current.focus)}</p>
+                </div>
+                <dl>
+                    <div><dt>Progress</dt><dd>${progressPercent}%</dd></div>
+                    <div><dt>Topics</dt><dd>${Number(progress.completedTopics || 0)}/${Number(progress.totalTopics || 0)}</dd></div>
+                    <div><dt>Phase</dt><dd>${currentIndex + 1}/${items.length}</dd></div>
+                </dl>
+            `;
+
+            rail.innerHTML = items.map((item, index) => `
+                <button class="${index < currentIndex ? "is-reached" : ""} ${index === currentIndex ? "is-current" : ""}" type="button" onclick="scrollRoadmapCard('${escapeHtml(item.id)}')">
+                    <strong>${String(index + 1).padStart(2, "0")}</strong>
+                    <span>${escapeHtml(item.stage)}</span>
+                </button>
+            `).join("");
+            return currentIndex;
+        }
+
         function renderRoadmap() {
             const items = asgGetRoadmapItems();
+            const progress = getRoadmapProgress();
+            const currentIndex = renderRoadmapCompass(items, progress);
             document.getElementById("roadmapCount").textContent = items.length;
-            document.getElementById("roadmapDuration").textContent = items.length;
+            document.getElementById("roadmapDuration").textContent = `${Math.round(Number(progress.progressPercent || 0))}%`;
 
             document.getElementById("roadmapBoard").innerHTML = items.map((item, index) => `
-                <article class="asg-roadmap-card">
+                <article class="asg-roadmap-card ${index === currentIndex ? "is-current" : ""}" id="roadmap_${escapeHtml(item.id)}">
                     <div class="asg-roadmap-index">${index + 1}</div>
                     <div>
                         <div class="asg-question-head">
@@ -71,6 +135,11 @@
                         </div>
                         <h2>${escapeHtml(item.title)}</h2>
                         <p>${escapeHtml(item.focus)}</p>
+                        <div class="asg-roadmap-proof">
+                            <span>Learn</span>
+                            <span>Practice</span>
+                            <span>Build</span>
+                        </div>
                         <ul class="asg-clean-list">
                             ${item.outcomes.map((outcome) => `<li>${escapeHtml(outcome)}</li>`).join("")}
                         </ul>
@@ -89,10 +158,10 @@
         }
 
         window.addEventListener("asg:data-updated", (event) => {
-            if (event.detail && event.detail.key === ASG_LEARNING_KEYS.roadmapItems) renderRoadmap();
+            if (event.detail && [ASG_LEARNING_KEYS.roadmapItems, ASG_LEARNING_KEYS.courseProgress].includes(event.detail.key)) renderRoadmap();
         });
         window.addEventListener("storage", (event) => {
-            if (event.key === ASG_LEARNING_KEYS.roadmapItems) renderRoadmap();
+            if ([ASG_LEARNING_KEYS.roadmapItems, ASG_LEARNING_KEYS.courseProgress].includes(event.key)) renderRoadmap();
         });
 
         renderRoadmap();

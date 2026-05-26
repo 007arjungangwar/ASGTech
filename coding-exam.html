@@ -145,7 +145,7 @@
             asgRefreshPythonEditor(editor);
             document.getElementById("challengeDetails").innerHTML = `
                 <div class="asg-question-head">
-                    <span>${escapeHtml(challenge.topic)}</span>
+                    <span>${escapeHtml(challenge.examTopic || challenge.topic)}</span>
                     <small>${escapeHtml(challenge.difficulty)}</small>
                 </div>
                 <h2>${escapeHtml(challenge.title)}</h2>
@@ -568,7 +568,9 @@ json.dumps(payload, default=str)
 
         function loadExam() {
             document.getElementById("examTitle").textContent = `${activeTopic} Coding Exam`;
-            challenges = asgGetCodingChallenges(false, { globalOnly: true }).filter((challenge) => challenge.topic.toLowerCase() === activeTopic.toLowerCase());
+            challenges = asgGetCodingChallenges(false, { globalOnly: true }).filter((challenge) => (
+                String(challenge.examTopic || challenge.topic || "").toLowerCase() === activeTopic.toLowerCase()
+            ));
             updateStats();
             if (!challenges.length) {
                 renderChallengeList();

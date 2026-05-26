@@ -1729,13 +1729,30 @@ function asgNormalizeCodingChallenge(challenge, index) {
     const tests = Array.isArray(challenge.tests) ? challenge.tests : [];
     const courseId = challenge.courseId ? asgSlugify(challenge.courseId, "course") : "";
     const topicId = challenge.topicId ? asgSlugify(challenge.topicId, "topic") : "";
-    const scope = courseId && topicId ? "course-topic" : "global";
+    const hasCourseTopic = Boolean(courseId && topicId);
+    const storedScope = String(challenge.scope || "").trim();
+    const hasExamFields = Object.prototype.hasOwnProperty.call(challenge, "examEnabled")
+        || Object.prototype.hasOwnProperty.call(challenge, "examTopic");
+    const legacyGlobal = !hasCourseTopic && storedScope !== "course-topic";
+    const legacyShared = hasCourseTopic && storedScope === "shared";
+    const examEnabled = hasExamFields ? Boolean(challenge.examEnabled || challenge.examTopic) : (legacyGlobal || legacyShared);
+    const examTopic = examEnabled
+        ? String(challenge.examTopic || challenge.topic || "Python").trim()
+        : "";
+    const topic = String(challenge.topic || examTopic || challenge.topicTitle || "Python").trim();
+    const scope = examEnabled && hasCourseTopic
+        ? "shared"
+        : hasCourseTopic
+            ? "course-topic"
+            : "global";
 
     return {
         id: challenge.id || asgCreateId("practice"),
         title: String(challenge.title || `Coding Challenge ${index + 1}`).trim(),
-        topic: String(challenge.topic || "Python").trim(),
+        topic,
         scope,
+        examEnabled,
+        examTopic,
         courseId,
         courseTitle: String(challenge.courseTitle || "").trim(),
         topicId,
@@ -1761,7 +1778,7 @@ function asgGetCodingChallenges(includeDrafts = false, filters = {}) {
     const courseId = filters.courseId ? asgSlugify(filters.courseId, "course") : "";
     const topicId = filters.topicId ? asgSlugify(filters.topicId, "topic") : "";
     const scopeFiltered = statusFiltered.filter((challenge) => {
-        if (filters.globalOnly) return !challenge.courseId && !challenge.topicId;
+        if (filters.globalOnly) return Boolean(challenge.examEnabled);
         if (courseId && challenge.courseId !== courseId) return false;
         if (topicId && challenge.topicId !== topicId) return false;
         return true;
@@ -1783,7 +1800,7 @@ function asgGetCodingExamSubjects(includeDrafts = false) {
     const challenges = asgGetCodingChallenges(includeDrafts, { globalOnly: true });
     const subjects = new Map();
     challenges.forEach((challenge) => {
-        const topic = String(challenge.topic || "").trim();
+        const topic = String(challenge.examTopic || challenge.topic || "").trim();
         if (!topic) return;
         const key = topic.toLowerCase();
         const current = subjects.get(key) || {

@@ -424,7 +424,7 @@
                         <input id="codingTitle" type="text" placeholder="Sum of Two Numbers">
                     </label>
                     <label>
-                        <span>Topic</span>
+                        <span>Topic / exam subject</span>
                         <input id="codingTopic" type="text" list="codingExamTopicOptions" placeholder="Python, Machine Learning, or Pandas">
                         <datalist id="codingExamTopicOptions"></datalist>
                     </label>
@@ -437,6 +437,7 @@
                         <select id="codingPlacement" onchange="toggleCodingPlacementFields()">
                             <option value="global">General practice/exam</option>
                             <option value="course-topic">Inside course topic</option>
+                            <option value="shared">General practice/exam + course topic</option>
                         </select>
                     </label>
                     <label class="asg-coding-topic-field" hidden>
@@ -979,23 +980,43 @@
                 .filter(Boolean);
         }
 
+        function nameFromEmail(email) {
+            return String(email || "")
+                .split("@")[0]
+                .split(/[._-]+/)
+                .filter(Boolean)
+                .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join(" ") || "Student";
+        }
+
+        function addStudentRecord(byEmail, user, provider = "supabase") {
+            const email = String(user && user.email || "").trim().toLowerCase();
+            if (!email) return;
+            const current = byEmail.get(email) || {};
+            const nextProvider = user.provider || provider;
+            byEmail.set(email, {
+                ...current,
+                id: user.id || user.userId || current.id || email,
+                name: user.name || current.name || nameFromEmail(email),
+                email,
+                role: email === "arjungangwariitpkd@gmail.com" ? "admin" : "student",
+                joinDate: user.joinDate || user.requestedAt || user.updatedAt || current.joinDate || "",
+                lastSeenAt: user.lastSeenAt || user.updatedAt || current.lastSeenAt || "",
+                provider: nextProvider
+            });
+        }
+
         function getUsers() {
             const users = readJSON("users", []);
             const legacyUsers = readJSON("asgLegacyUsers", []);
+            const certificateRequests = readJSON("asgCertificateRequests", []);
             const byEmail = new Map();
-            [...legacyUsers, ...users].forEach((user) => {
-                const email = String(user.email || "").trim().toLowerCase();
-                if (!email) return;
-                byEmail.set(email, {
-                    id: user.id || email,
-                    name: user.name || email.split("@")[0],
-                    email,
-                    role: email === "arjungangwariitpkd@gmail.com" ? "admin" : "student",
-                    joinDate: user.joinDate || "",
-                    lastSeenAt: user.lastSeenAt || "",
-                    provider: user.provider || "supabase"
-                });
-            });
+
+            asgGetCourseAccessRequests().forEach((request) => addStudentRecord(byEmail, request, "paid-course-request"));
+            Object.values(asgGetCourseAccessPermissions()).forEach((permission) => addStudentRecord(byEmail, permission, "paid-course-permission"));
+            certificateRequests.forEach((request) => addStudentRecord(byEmail, request, "certificate-request"));
+            [...legacyUsers, ...users].forEach((user) => addStudentRecord(byEmail, user, user.provider || "supabase"));
+
             return [...byEmail.values()];
         }
 
@@ -1485,7 +1506,7 @@
             asgGetCodingSubmissions().forEach((submission) => {
                 if (Number(submission.percentage || 0) >= 70) return;
                 const challenge = challengeById.get(submission.challengeId) || {};
-                addWeakTopic(challenge.topic || submission.examId || "Coding", "coding runs below 70%");
+                addWeakTopic(challenge.examTopic || challenge.topic || submission.examId || "Coding", "coding runs below 70%");
             });
 
             return Array.from(topics.values())
@@ -1749,7 +1770,7 @@
                                 <tr>
                                     <td>
                                         <strong>${escapeHtml(student.name)}</strong>
-                                        <small>${escapeHtml(student.email)}${student.provider === "legacy-local" ? " | legacy local" : ""}</small>
+                                        <small>${escapeHtml(student.email)}${student.provider === "legacy-local" ? " | legacy local" : ""}${student.provider === "paid-course-request" ? " | paid request" : ""}${student.provider === "certificate-request" ? " | certificate request" : ""}</small>
                                     </td>
                                     <td>${percentage(progress.progressPercent)}</td>
                                     <td>${percentage(progress.bestQuiz)} (${progress.quizAttempts} attempts)</td>
@@ -1945,7 +1966,7 @@
                                 <tr>
                                     <td>
                                         <strong>${escapeHtml(student.name)}</strong>
-                                        <small>${escapeHtml(student.email)}</small>
+                                        <small>${escapeHtml(student.email)}${student.provider === "paid-course-request" ? " | paid request" : ""}${student.provider === "certificate-request" ? " | certificate request" : ""}</small>
                                     </td>
                                     <td>
                                         <input id="certificateName_${escapeHtml(student.id)}" type="text" value="${escapeHtml(nameLock && nameLock.name ? nameLock.name : student.name)}">
@@ -2182,6 +2203,8 @@
                 title: title || `${topic} Starter Question`,
                 topic,
                 scope: "global",
+                examEnabled: true,
+                examTopic: topic,
                 courseId: "",
                 courseTitle: "",
                 topicId: "",
@@ -2210,16 +2233,15 @@
             let nextChallenges = codingChallenges;
             if (editTopic) {
                 nextChallenges = nextChallenges.map((challenge) => (
-                    !challenge.courseId && !challenge.topicId && String(challenge.topic || "").toLowerCase() === editTopic.toLowerCase()
-                        ? { ...challenge, topic }
+                    challenge.examEnabled && String(challenge.examTopic || challenge.topic || "").toLowerCase() === editTopic.toLowerCase()
+                        ? { ...challenge, topic, examTopic: topic }
                         : challenge
                 ));
             }
 
             const hasGlobalQuestion = nextChallenges.some((challenge) => (
-                !challenge.courseId &&
-                !challenge.topicId &&
-                String(challenge.topic || "").toLowerCase() === topic.toLowerCase()
+                challenge.examEnabled &&
+                String(challenge.examTopic || challenge.topic || "").toLowerCase() === topic.toLowerCase()
             ));
             if (!hasGlobalQuestion) {
                 nextChallenges = [...nextChallenges, createStarterCodingChallenge(topic, starterTitle)];
@@ -2238,19 +2260,31 @@
             const normalizedTopic = String(topic || "").trim().toLowerCase();
             if (!normalizedTopic) return;
             const matchingChallenges = codingChallenges.filter((challenge) => (
-                !challenge.courseId &&
-                !challenge.topicId &&
-                String(challenge.topic || "").trim().toLowerCase() === normalizedTopic
+                challenge.examEnabled &&
+                String(challenge.examTopic || challenge.topic || "").trim().toLowerCase() === normalizedTopic
             ));
             if (!matchingChallenges.length) return;
-            if (!confirm(`Delete ${topic} Coding Exam and its ${matchingChallenges.length} question(s)?`)) return;
+            if (!confirm(`Remove ${topic} Coding Exam from ${matchingChallenges.length} question(s)? Shared course-topic questions will stay attached to their course topics.`)) return;
 
             const currentBuilderTopic = String(document.getElementById("codingTopic").value || "").trim().toLowerCase();
-            asgSaveCodingChallenges(codingChallenges.filter((challenge) => (
-                challenge.courseId ||
-                challenge.topicId ||
-                String(challenge.topic || "").trim().toLowerCase() !== normalizedTopic
-            )));
+            asgSaveCodingChallenges(codingChallenges.reduce((items, challenge) => {
+                const matchesExamTopic = challenge.examEnabled
+                    && String(challenge.examTopic || challenge.topic || "").trim().toLowerCase() === normalizedTopic;
+                if (!matchesExamTopic) {
+                    items.push(challenge);
+                    return items;
+                }
+                if (challenge.courseId && challenge.topicId) {
+                    items.push({
+                        ...challenge,
+                        scope: "course-topic",
+                        examEnabled: false,
+                        examTopic: "",
+                        topic: challenge.topicTitle || challenge.topic
+                    });
+                }
+                return items;
+            }, []));
             if (String(document.getElementById("codingExamSubjectEdit").value || "").trim().toLowerCase() === normalizedTopic) {
                 resetCodingExamSubjectForm();
             }
@@ -2278,7 +2312,7 @@
         }
 
         function syncCodingTopicFromExam() {
-            if (document.getElementById("codingPlacement").value !== "global") return;
+            if (document.getElementById("codingPlacement").value === "course-topic") return;
             const selected = document.getElementById("codingExamSubjectSelect").value;
             if (selected) document.getElementById("codingTopic").value = selected;
         }
@@ -2291,7 +2325,9 @@
                     .map((subject) => `<option value="${escapeHtml(subject.topic)}"></option>`)
                     .join("");
             }
-            renderCodingExamSubjectPicker(document.getElementById("codingTopic") ? document.getElementById("codingTopic").value : "");
+            const placementSelect = document.getElementById("codingPlacement");
+            const selectedBuilderTopic = document.getElementById("codingTopic") ? document.getElementById("codingTopic").value : "";
+            renderCodingExamSubjectPicker(placementSelect && placementSelect.value === "course-topic" ? "" : selectedBuilderTopic);
             if (!target) return;
             const subjects = asgGetCodingExamSubjects(true);
             target.innerHTML = subjects.map((subject, index) => {
@@ -2666,13 +2702,13 @@
         function toggleCodingPlacementFields() {
             const placement = document.getElementById("codingPlacement").value;
             document.querySelectorAll(".asg-coding-topic-field").forEach((field) => {
-                field.hidden = placement !== "course-topic";
+                field.hidden = placement === "global";
             });
             document.querySelectorAll(".asg-coding-exam-field").forEach((field) => {
-                field.hidden = placement !== "global";
+                field.hidden = placement === "course-topic";
             });
             if (placement === "course-topic") syncCodingTopicFromCourseTopic();
-            if (placement === "global") syncCodingTopicFromExam();
+            if (placement !== "course-topic") syncCodingTopicFromExam();
         }
 
         function syncCodingTopicFromCourseTopic() {
@@ -2759,24 +2795,29 @@
             }
 
             const placement = document.getElementById("codingPlacement").value;
+            const attachesToCourse = placement !== "global";
+            const examEnabled = placement !== "course-topic";
             const selectedCourse = adminCourses.find((course) => course.id === document.getElementById("codingCourse").value) || null;
             const selectedTopic = selectedCourse
                 ? selectedCourse.topics.find((topic) => topic.id === document.getElementById("codingTopicId").value) || null
                 : null;
-            if (placement === "course-topic" && (!selectedCourse || !selectedTopic)) {
+            if (attachesToCourse && (!selectedCourse || !selectedTopic)) {
                 alert("Choose a course and topic for this coding task.");
                 return;
             }
+            const examTopic = document.getElementById("codingTopic").value.trim() || "Python";
 
             const challenge = {
                 id: editId || asgCreateId("practice"),
                 title: document.getElementById("codingTitle").value.trim(),
-                topic: document.getElementById("codingTopic").value.trim() || "Python",
+                topic: examEnabled ? examTopic : selectedTopic.title,
                 scope: placement,
-                courseId: placement === "course-topic" ? selectedCourse.id : "",
-                courseTitle: placement === "course-topic" ? selectedCourse.title : "",
-                topicId: placement === "course-topic" ? selectedTopic.id : "",
-                topicTitle: placement === "course-topic" ? selectedTopic.title : "",
+                examEnabled,
+                examTopic: examEnabled ? examTopic : "",
+                courseId: attachesToCourse ? selectedCourse.id : "",
+                courseTitle: attachesToCourse ? selectedCourse.title : "",
+                topicId: attachesToCourse ? selectedTopic.id : "",
+                topicTitle: attachesToCourse ? selectedTopic.title : "",
                 difficulty: document.getElementById("codingDifficulty").value,
                 prompt: document.getElementById("codingPrompt").value,
                 starterCode: document.getElementById("codingStarter").value,
@@ -2800,12 +2841,21 @@
             const challenge = codingChallenges.find((item) => item.id === challengeId);
             if (!challenge) return;
 
+            const hasCourseTopic = Boolean(challenge.courseId && challenge.topicId);
+            const hasExam = Boolean(challenge.examEnabled);
+            const placement = hasExam && hasCourseTopic
+                ? "shared"
+                : hasCourseTopic
+                    ? "course-topic"
+                    : "global";
+            const examTopic = challenge.examTopic || challenge.topic;
+
             document.getElementById("codingEditId").value = challenge.id;
             document.getElementById("codingTitle").value = challenge.title;
-            document.getElementById("codingTopic").value = challenge.topic;
-            document.getElementById("codingPlacement").value = challenge.courseId && challenge.topicId ? "course-topic" : "global";
+            document.getElementById("codingTopic").value = hasExam ? examTopic : challenge.topic;
+            document.getElementById("codingPlacement").value = placement;
             renderCodingCourseOptions(challenge.courseId || (adminCourses[0] ? adminCourses[0].id : ""), challenge.topicId || "");
-            renderCodingExamSubjectPicker(challenge.courseId && challenge.topicId ? "" : challenge.topic);
+            renderCodingExamSubjectPicker(hasExam ? examTopic : "");
             toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = challenge.difficulty;
             document.getElementById("codingStatus").value = challenge.status;
@@ -2837,9 +2887,12 @@
         function renderCodingChallenges() {
             const list = document.getElementById("codingChallengeList");
             list.innerHTML = codingChallenges.map((challenge, index) => {
-                const placement = challenge.courseId && challenge.topicId
-                    ? `${challenge.courseTitle || challenge.courseId} > ${challenge.topicTitle || challenge.topicId}`
-                    : "General practice/exam";
+                const placements = [];
+                if (challenge.examEnabled) placements.push(`${challenge.examTopic || challenge.topic} exam/practice`);
+                if (challenge.courseId && challenge.topicId) {
+                    placements.push(`${challenge.courseTitle || challenge.courseId} > ${challenge.topicTitle || challenge.topicId}`);
+                }
+                const placement = placements.join(" + ") || "General practice/exam";
                 return `
                     <article class="asg-admin-list-item">
                         <div>

@@ -195,6 +195,10 @@
         return Boolean(profile && isAdminEmail(profile.email));
     }
 
+    function isUuid(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+    }
+
     function cleanClone(value) {
         return JSON.parse(JSON.stringify(value ?? null));
     }
@@ -794,6 +798,7 @@
 
     async function saveUserActivityForUser(key, value, targetUser) {
         if (!ASG_ACTIVITY_KEY_SET.has(key) || !targetUser || !targetUser.id) return false;
+        if (!isUuid(targetUser.id)) return false;
 
         const profile = currentProfile || await restoreSession();
         if (!isProfileAdmin(profile)) return false;
@@ -1175,18 +1180,35 @@
     }
 
     async function reloadUsers(services) {
-        const data = await restRequest(
-            "profiles?select=id,name,email,role,join_date,updated_at&order=updated_at.desc",
-            { services }
-        );
+        const profile = currentProfile || getStoredSessionUser();
+        let data = null;
+
+        if (profile && profile.email) {
+            data = await restRequest("rpc/asg_list_student_directory", {
+                services,
+                method: "POST",
+                body: { p_admin_email: profile.email || "" }
+            }).catch((error) => {
+                console.warn("Supabase student directory RPC failed; falling back to profiles only.", error);
+                return null;
+            });
+        }
+
+        if (!Array.isArray(data)) {
+            data = await restRequest(
+                "profiles?select=id,name,email,role,join_date,updated_at&order=updated_at.desc",
+                { services }
+            );
+        }
 
         const users = (data || []).map((row) => ({
-            id: row.id,
+            id: String(row.id || row.email || ""),
             name: String(row.name || localNameFromEmail(row.email)).trim(),
             email: normalizeEmail(row.email),
             role: row.role === "admin" ? "admin" : "student",
             joinDate: toIsoDate(row.join_date) || "",
-            lastSeenAt: toIsoDate(row.updated_at) || ""
+            lastSeenAt: toIsoDate(row.updated_at) || "",
+            provider: row.provider || "supabase"
         })).filter((user) => user.email);
         const legacyUsers = captureLegacyUsers(users);
         const visibleUsers = mergeUserLists(users, legacyUsers);

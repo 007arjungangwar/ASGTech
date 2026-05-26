@@ -419,6 +419,64 @@ $$;
 grant execute on function public.asg_list_course_access_requests(text) to anon, authenticated;
 grant execute on function public.asg_update_course_access_request_status(text, text, text) to anon, authenticated;
 
+create or replace function public.asg_list_student_directory(p_admin_email text)
+returns table (
+    id text,
+    name text,
+    email text,
+    role text,
+    join_date timestamptz,
+    updated_at timestamptz,
+    provider text
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    with authorized as (
+        select lower(coalesce(p_admin_email, '')) = any(public.asg_admin_emails()) as ok
+    ),
+    profile_rows as (
+        select
+            p.id::text as id,
+            p.name,
+            lower(p.email) as email,
+            p.role,
+            p.join_date,
+            p.updated_at,
+            'supabase'::text as provider
+        from public.profiles p, authorized a
+        where a.ok
+    ),
+    request_rows as (
+        select distinct on (lower(car.email))
+            coalesce(nullif(car.user_id, ''), lower(car.email)) as id,
+            coalesce(nullif(car.name, ''), split_part(lower(car.email), '@', 1), 'Student') as name,
+            lower(car.email) as email,
+            'student'::text as role,
+            car.requested_at as join_date,
+            car.updated_at as updated_at,
+            'paid-course-request'::text as provider
+        from public.course_access_requests car, authorized a
+        where a.ok
+          and length(trim(car.email)) > 3
+        order by lower(car.email), car.updated_at desc, car.requested_at desc
+    )
+    select * from profile_rows
+    union all
+    select request_rows.*
+    from request_rows
+    where not exists (
+        select 1
+        from profile_rows
+        where profile_rows.email = request_rows.email
+    )
+    order by updated_at desc nulls last, join_date desc nulls last;
+$$;
+
+grant execute on function public.asg_list_student_directory(text) to anon, authenticated;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
     'asg-content',
