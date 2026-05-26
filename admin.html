@@ -2367,6 +2367,54 @@
             }, {});
         }
 
+        function getRetakePermissionState(student, type, examId) {
+            const normalizedType = type === "quiz" ? "quiz" : "coding-exam";
+            const permission = examId ? asgGetExamRetakePermission(student, normalizedType, examId) : null;
+            const allowed = asgIsExamRetakePermissionActive(permission);
+            const revoked = Boolean(permission && !allowed);
+            const dateText = permission ? formatDate(permission.allowedAt || permission.usedAt || permission.updatedAt) : "";
+            return {
+                allowed,
+                revoked,
+                label: allowed ? "Granted" : (revoked ? "Revoked" : "Locked"),
+                note: allowed
+                    ? `Retake access granted${dateText ? ` on ${dateText}` : ""}.`
+                    : revoked
+                        ? `Retake access revoked${dateText ? ` on ${dateText}` : ""}.`
+                        : "No retake permission granted yet."
+            };
+        }
+
+        function updateRetakeControlState(studentId, type) {
+            const student = getStudents().find((item) => String(item.id) === String(studentId));
+            if (!student) return;
+            const selected = getSelectedRetakeExam(studentId, type);
+            const state = getRetakePermissionState(student, type, selected);
+            const control = document.getElementById(`retakeControl_${type}_${studentId}`);
+            const badge = document.getElementById(`retakeBadge_${type}_${studentId}`);
+            const note = document.getElementById(`retakeNote_${type}_${studentId}`);
+            const allowButton = document.getElementById(`retakeAllow_${type}_${studentId}`);
+            const revokeButton = document.getElementById(`retakeRevoke_${type}_${studentId}`);
+
+            if (control) {
+                control.classList.toggle("is-granted", state.allowed);
+                control.classList.toggle("is-revoked", state.revoked);
+            }
+            if (badge) {
+                badge.className = `asg-retake-status ${state.allowed ? "is-granted" : state.revoked ? "is-revoked" : "is-locked"}`;
+                badge.textContent = state.label;
+            }
+            if (note) note.textContent = state.note;
+            if (allowButton) {
+                allowButton.disabled = !selected || state.allowed;
+                allowButton.classList.toggle("is-active", state.allowed);
+            }
+            if (revokeButton) {
+                revokeButton.disabled = !selected || state.revoked || !state.allowed;
+                revokeButton.classList.toggle("is-active", state.revoked);
+            }
+        }
+
         function setExamRetakeAccess(studentId, type, allowed) {
             const student = getStudents().find((item) => String(item.id) === String(studentId));
             if (!student) return;
@@ -2448,6 +2496,8 @@
                                 ? asgNormalizeExamId(latestQuizExam.examId, "quiz")
                                 : (latestLegacyQuiz ? asgNormalizeExamId(latestLegacyQuiz.quizId, "quiz") : "");
                             const selectedCodingId = latestCodingExam ? asgNormalizeExamId(latestCodingExam.examId, "coding-exam") : "";
+                            const quizState = getRetakePermissionState(student, "quiz", selectedQuizId);
+                            const codingState = getRetakePermissionState(student, "coding", selectedCodingId);
                             return `
                                 <tr>
                                     <td>
@@ -2459,25 +2509,37 @@
                                         <small>${latestExam ? `${escapeHtml(latestExam.examTitle)} | ${percentage(latestExam.percentage)} | ${formatDate(latestExam.submittedAt)}` : "No exam submitted yet"}</small>
                                     </td>
                                     <td>
-                                        <select id="retake_quiz_${escapeHtml(student.id)}" class="asg-admin-search">
-                                            ${adminQuizCatalog.map((quiz) => `
-                                                <option value="${escapeHtml(quiz.id)}" ${asgNormalizeExamId(quiz.id, "quiz") === selectedQuizId ? "selected" : ""}>${escapeHtml(quiz.title)}</option>
-                                            `).join("")}
-                                        </select>
-                                        <div class="asg-form-actions">
-                                            <button class="asg-link-button" type="button" onclick="setExamRetakeAccess('${student.id}', 'quiz', true)">Allow</button>
-                                            <button class="asg-link-button danger" type="button" onclick="setExamRetakeAccess('${student.id}', 'quiz', false)">Revoke</button>
+                                        <div class="asg-retake-control ${quizState.allowed ? "is-granted" : quizState.revoked ? "is-revoked" : ""}" id="retakeControl_quiz_${escapeHtml(student.id)}">
+                                            <select id="retake_quiz_${escapeHtml(student.id)}" class="asg-admin-search" onchange="updateRetakeControlState('${student.id}', 'quiz')">
+                                                ${adminQuizCatalog.map((quiz) => `
+                                                    <option value="${escapeHtml(quiz.id)}" ${asgNormalizeExamId(quiz.id, "quiz") === selectedQuizId ? "selected" : ""}>${escapeHtml(quiz.title)}</option>
+                                                `).join("")}
+                                            </select>
+                                            <div class="asg-retake-state-row">
+                                                <span class="asg-retake-status ${quizState.allowed ? "is-granted" : quizState.revoked ? "is-revoked" : "is-locked"}" id="retakeBadge_quiz_${escapeHtml(student.id)}">${escapeHtml(quizState.label)}</span>
+                                                <small id="retakeNote_quiz_${escapeHtml(student.id)}">${escapeHtml(quizState.note)}</small>
+                                            </div>
+                                            <div class="asg-form-actions">
+                                                <button class="asg-link-button asg-retake-allow ${quizState.allowed ? "is-active" : ""}" id="retakeAllow_quiz_${escapeHtml(student.id)}" type="button" onclick="setExamRetakeAccess('${student.id}', 'quiz', true)" ${(!selectedQuizId || quizState.allowed) ? "disabled" : ""}>Allow</button>
+                                                <button class="asg-link-button danger asg-retake-revoke ${quizState.revoked ? "is-active" : ""}" id="retakeRevoke_quiz_${escapeHtml(student.id)}" type="button" onclick="setExamRetakeAccess('${student.id}', 'quiz', false)" ${(!selectedQuizId || !quizState.allowed || quizState.revoked) ? "disabled" : ""}>Revoke</button>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <select id="retake_coding_${escapeHtml(student.id)}" class="asg-admin-search">
-                                            ${codingTopics.map((topic) => `
-                                                <option value="${escapeHtml(topic)}" ${asgNormalizeExamId(topic, "coding-exam") === selectedCodingId ? "selected" : ""}>${escapeHtml(topic)} Coding Exam</option>
-                                            `).join("")}
-                                        </select>
-                                        <div class="asg-form-actions">
-                                            <button class="asg-link-button" type="button" onclick="setExamRetakeAccess('${student.id}', 'coding', true)">Allow</button>
-                                            <button class="asg-link-button danger" type="button" onclick="setExamRetakeAccess('${student.id}', 'coding', false)">Revoke</button>
+                                        <div class="asg-retake-control ${codingState.allowed ? "is-granted" : codingState.revoked ? "is-revoked" : ""}" id="retakeControl_coding_${escapeHtml(student.id)}">
+                                            <select id="retake_coding_${escapeHtml(student.id)}" class="asg-admin-search" onchange="updateRetakeControlState('${student.id}', 'coding')">
+                                                ${codingTopics.map((topic) => `
+                                                    <option value="${escapeHtml(topic)}" ${asgNormalizeExamId(topic, "coding-exam") === selectedCodingId ? "selected" : ""}>${escapeHtml(topic)} Coding Exam</option>
+                                                `).join("")}
+                                            </select>
+                                            <div class="asg-retake-state-row">
+                                                <span class="asg-retake-status ${codingState.allowed ? "is-granted" : codingState.revoked ? "is-revoked" : "is-locked"}" id="retakeBadge_coding_${escapeHtml(student.id)}">${escapeHtml(codingState.label)}</span>
+                                                <small id="retakeNote_coding_${escapeHtml(student.id)}">${escapeHtml(codingState.note)}</small>
+                                            </div>
+                                            <div class="asg-form-actions">
+                                                <button class="asg-link-button asg-retake-allow ${codingState.allowed ? "is-active" : ""}" id="retakeAllow_coding_${escapeHtml(student.id)}" type="button" onclick="setExamRetakeAccess('${student.id}', 'coding', true)" ${(!selectedCodingId || codingState.allowed) ? "disabled" : ""}>Allow</button>
+                                                <button class="asg-link-button danger asg-retake-revoke ${codingState.revoked ? "is-active" : ""}" id="retakeRevoke_coding_${escapeHtml(student.id)}" type="button" onclick="setExamRetakeAccess('${student.id}', 'coding', false)" ${(!selectedCodingId || !codingState.allowed || codingState.revoked) ? "disabled" : ""}>Revoke</button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

@@ -204,7 +204,7 @@
                 </div>
                 <a class="btn-secondary" href="courses.html">All courses</a>
             </section>
-            <div class="asg-home-course-grid" id="homeCourseGrid"></div>
+            <div class="asg-course-grid" id="homeCourseGrid"></div>
 
             <section class="asg-section-header">
                 <div>
@@ -230,7 +230,10 @@
                 <article class="asg-policy-card">
                     <h3>Practice queue</h3>
                     <p>Use quiz and coding exams to prove what you remember, not just what you watched.</p>
-                    <a class="asg-card-link primary" href="quiz.html">Start quiz</a>
+                    <div class="asg-study-action-stack">
+                        <a class="asg-card-link primary" href="quiz.html">Start quiz</a>
+                        <a class="asg-card-link secondary" href="coding-practice.html">Start Code</a>
+                    </div>
                 </article>
 
                 <article class="asg-policy-card">
@@ -297,18 +300,49 @@
 
             document.getElementById("homeCourseGrid").innerHTML = courses.map((course) => {
                 const courseProgress = asgGetCourseProgress(user, course.id);
+                const activeTopics = course.topics.filter((topic) => topic.status !== "draft");
+                const previewTopics = activeTopics.slice(0, 4);
+                const paid = asgIsPaidCourse(course);
+                const hasAccess = asgHasCourseAccess(user, course);
+                const hasRequest = Boolean(user && asgGetLatestCourseAccessRequest(user, course.id));
                 const href = courseProgress && courseProgress.topicId
                     ? `topic-detail.html?course=${encodeURIComponent(course.id)}&topic=${encodeURIComponent(courseProgress.topicId)}`
                     : `course-detail.html?course=${encodeURIComponent(course.id)}`;
+                const actionHref = paid && !hasAccess ? "courses.html" : href;
+                const actionText = paid && !hasAccess
+                    ? (hasRequest ? "Request Pending" : "Pay & Request Access")
+                    : (courseProgress ? "Continue" : "Start Learning");
                 return `
-                    <article class="asg-home-course-card">
-                        <h3>${escapeHtml(course.title)}</h3>
+                    <article class="asg-course-card asg-course-brochure ${paid && !hasAccess ? "is-locked" : ""}">
+                        <div class="asg-course-card-top">
+                            <div>
+                                <span class="asg-course-label">${escapeHtml(course.price)}</span>
+                                <h2>${escapeHtml(course.title)}</h2>
+                            </div>
+                            <strong>${activeTopics.length}</strong>
+                        </div>
                         <p>${escapeHtml(course.summary)}</p>
-                        ${courseProgress ? `<p class="asg-progress-note">Last opened: ${escapeHtml(courseProgress.topicTitle)}</p>` : ""}
-                        <a class="asg-card-link secondary" href="${href}">${courseProgress ? "Continue" : "Open course"}</a>
+                        <div class="asg-course-card-meta">
+                            <span>${activeTopics.length} lessons</span>
+                            <span>${paid ? (hasAccess ? "Paid access" : hasRequest ? "Request pending" : "Payment required") : "Free access"}</span>
+                            <span>${courseProgress ? `Last: ${escapeHtml(courseProgress.topicTitle)}` : "PDF, HTML, video"}</span>
+                        </div>
+                        ${previewTopics.length ? `
+                            <div class="asg-course-topic-chips">
+                                ${previewTopics.map((topic) => `<span>${escapeHtml(topic.title)}</span>`).join("")}
+                            </div>
+                        ` : ""}
+                        <div class="asg-course-card-footer compact">
+                            <a class="btn-primary" href="${escapeHtml(actionHref)}">${escapeHtml(actionText)}</a>
+                        </div>
                     </article>
                 `;
-            }).join("");
+            }).join("") || `
+                <div class="asg-empty-state">
+                    <h2>No active courses</h2>
+                    <p>Your admin can publish courses from the dashboard.</p>
+                </div>
+            `;
         }
 
         let timerInterval;

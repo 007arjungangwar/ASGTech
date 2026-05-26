@@ -23,7 +23,7 @@
             <div class="asg-hero-metrics">
                 <div><strong id="resourceCount">0</strong><span>Resources</span></div>
                 <div><strong id="resourceCategoryCount">0</strong><span>Categories</span></div>
-                <div><strong>Live</strong><span>Admin editable</span></div>
+                <div><strong id="resourceFormatCount">0</strong><span>Formats</span></div>
             </div>
         </section>
 
@@ -32,9 +32,16 @@
                 <h2>Find the right material</h2>
                 <p>Use category filters to quickly move between Python, data analysis, machine learning, and career material.</p>
             </div>
-            <div class="asg-resource-filters" id="resourceFilters"></div>
+            <div class="asg-resource-command-tools">
+                <label class="asg-resource-search">
+                    <span>Search resources</span>
+                    <input id="resourceSearch" type="search" placeholder="Search notes, templates, SQL, ML..." oninput="setResourceSearch(this.value)">
+                </label>
+                <div class="asg-resource-filters" id="resourceFilters"></div>
+            </div>
         </section>
 
+        <section class="asg-resource-insight" id="resourceInsight"></section>
         <section class="asg-resource-grid" id="resourceGrid"></section>
     </main>
 
@@ -44,6 +51,7 @@
 
     <script>
         let activeCategory = "All";
+        let activeSearch = "";
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -59,34 +67,73 @@
             renderResources();
         }
 
+        function setResourceSearch(value) {
+            activeSearch = String(value || "").trim().toLowerCase();
+            renderResources();
+        }
+
+        function resourceMatchesSearch(resource) {
+            if (!activeSearch) return true;
+            return [
+                resource.title,
+                resource.description,
+                resource.category,
+                resource.format,
+                resource.actionLabel
+            ].join(" ").toLowerCase().includes(activeSearch);
+        }
+
         function renderResources() {
             const resources = asgGetResourceLibrary();
-            const categories = ["All", ...new Set(resources.map((resource) => resource.category))];
-            const visible = activeCategory === "All"
-                ? resources
-                : resources.filter((resource) => resource.category === activeCategory);
+            const categories = ["All", ...new Set(resources.map((resource) => resource.category).filter(Boolean))];
+            const formats = new Set(resources.map((resource) => resource.format).filter(Boolean));
+            if (!categories.includes(activeCategory)) activeCategory = "All";
+            const visible = resources.filter((resource) => (
+                (activeCategory === "All" || resource.category === activeCategory) &&
+                resourceMatchesSearch(resource)
+            ));
+            const featured = visible[0] || resources[0] || null;
 
             document.getElementById("resourceCount").textContent = resources.length;
             document.getElementById("resourceCategoryCount").textContent = Math.max(categories.length - 1, 0);
+            document.getElementById("resourceFormatCount").textContent = formats.size;
             document.getElementById("resourceFilters").innerHTML = categories.map((category) => {
                 const categoryValue = escapeHtml(JSON.stringify(category));
                 return `<button class="${category === activeCategory ? "active" : ""}" type="button" onclick="setResourceCategory(${categoryValue})">${escapeHtml(category)}</button>`;
             }).join("");
 
+            document.getElementById("resourceInsight").innerHTML = featured ? `
+                <article class="asg-resource-spotlight">
+                    <div>
+                        <span class="asg-item-kicker">Recommended now</span>
+                        <h2>${escapeHtml(featured.title)}</h2>
+                        <p>${escapeHtml(featured.description)}</p>
+                    </div>
+                    <div class="asg-resource-rhythm">
+                        <span>${escapeHtml(featured.category)}</span>
+                        <span>${escapeHtml(featured.format)}</span>
+                        <a class="btn-primary" href="${escapeHtml(featured.url || "courses.html")}" target="${/^https?:/i.test(featured.url) ? "_blank" : "_self"}" rel="noopener">${escapeHtml(featured.actionLabel)}</a>
+                    </div>
+                </article>
+            ` : "";
+
             document.getElementById("resourceGrid").innerHTML = visible.map((resource) => `
-                <article class="asg-resource-card">
+                <article class="asg-resource-card asg-resource-card-enhanced">
                     <div class="asg-question-head">
                         <span>${escapeHtml(resource.category)}</span>
                         <small>${escapeHtml(resource.format)}</small>
                     </div>
                     <h2>${escapeHtml(resource.title)}</h2>
                     <p>${escapeHtml(resource.description)}</p>
-                    <a class="btn-secondary" href="${escapeHtml(resource.url || "courses.html")}" target="${/^https?:/i.test(resource.url) ? "_blank" : "_self"}" rel="noopener">${escapeHtml(resource.actionLabel)}</a>
+                    <div class="asg-resource-card-foot">
+                        <span>${/^https?:/i.test(resource.url) ? "External link" : "ASG resource"}</span>
+                        <a class="btn-secondary" href="${escapeHtml(resource.url || "courses.html")}" target="${/^https?:/i.test(resource.url) ? "_blank" : "_self"}" rel="noopener">${escapeHtml(resource.actionLabel)}</a>
+                    </div>
                 </article>
             `).join("") || `
                 <div class="asg-empty-state">
                     <h2>No resources found</h2>
-                    <p>Your admin can publish resources from the dashboard.</p>
+                    <p>Try another category or search term. Your admin can publish more resources from the dashboard.</p>
                 </div>
             `;
         }

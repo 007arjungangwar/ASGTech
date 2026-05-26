@@ -1749,6 +1749,9 @@ body.asg-theme-dark .asg-career-checkpoints article,
 body.asg-theme-dark .asg-career-role-card,
 body.asg-theme-dark .asg-career-mini-grid div,
 body.asg-theme-dark .asg-career-support-grid article,
+body.asg-theme-dark .asg-retake-status,
+body.asg-theme-dark .asg-retake-state,
+body.asg-theme-dark .asg-resource-spotlight,
 body.asg-theme-dark .asg-roadmap-focus,
 body.asg-theme-dark .asg-roadmap-focus dl div,
 body.asg-theme-dark .asg-roadmap-rail,
@@ -3947,6 +3950,24 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     gap: 8px;
 }
 
+.asg-resource-command-tools {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+}
+
+.asg-resource-search {
+    display: grid;
+    gap: 6px;
+}
+
+.asg-resource-search span {
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
 .asg-resource-filters button {
     min-height: 38px;
     padding: 0 12px;
@@ -3965,6 +3986,47 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     color: #ffffff;
 }
 
+.asg-resource-insight {
+    display: grid;
+}
+
+.asg-resource-spotlight {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.38fr);
+    gap: 16px;
+    align-items: center;
+    padding: clamp(18px, 2.3vw, 28px);
+    border: 1px solid color-mix(in srgb, var(--asg-primary) 26%, var(--asg-border));
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--asg-primary) 9%, transparent), color-mix(in srgb, var(--asg-accent) 8%, transparent)),
+        var(--asg-surface-raised);
+    box-shadow: var(--asg-card-shadow);
+}
+
+.asg-resource-spotlight h2 {
+    margin: 0.35rem 0 0.45rem;
+}
+
+.asg-resource-rhythm {
+    display: grid;
+    gap: 8px;
+}
+
+.asg-resource-rhythm span {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 0 0.7rem;
+    border: 1px solid var(--asg-border);
+    border-radius: 999px;
+    background: var(--asg-surface);
+    color: var(--asg-muted);
+    font-size: 0.8rem;
+    font-weight: 900;
+}
+
 .asg-resource-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
@@ -3981,6 +4043,26 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     border-radius: 8px;
     background: #ffffff;
     box-shadow: 0 16px 44px rgba(23, 32, 51, 0.06);
+}
+
+.asg-resource-card-enhanced {
+    grid-template-rows: auto auto 1fr auto;
+}
+
+.asg-resource-card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.asg-resource-card-foot > span {
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
 }
 
 .asg-admin-dashboard {
@@ -4169,6 +4251,60 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 
 .asg-admin-layout > .asg-assessment-retake {
     order: 50;
+}
+
+.asg-retake-control {
+    display: grid;
+    gap: 10px;
+    min-width: min(100%, 260px);
+}
+
+.asg-retake-state-row {
+    display: grid;
+    gap: 4px;
+}
+
+.asg-retake-state-row small {
+    color: var(--asg-muted);
+    line-height: 1.45;
+}
+
+.asg-retake-status,
+.asg-retake-state {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--asg-border);
+    border-radius: 999px;
+    background: var(--asg-surface-soft);
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.asg-retake-status.is-granted,
+.asg-retake-state.is-granted,
+.asg-retake-allow.is-active {
+    border-color: color-mix(in srgb, var(--asg-primary) 45%, var(--asg-border));
+    background: #ecfdf5;
+    color: #047857;
+    opacity: 1;
+}
+
+.asg-retake-status.is-revoked,
+.asg-retake-revoke.is-active {
+    border-color: color-mix(in srgb, var(--asg-danger) 45%, var(--asg-border));
+    background: #fef2f2;
+    color: var(--asg-danger);
+    opacity: 1;
+}
+
+.asg-retake-status.is-locked,
+.asg-retake-state.is-locked {
+    background: #f8fafc;
+    color: #475569;
 }
 
 .asg-admin-wide {
@@ -5086,6 +5222,11 @@ body.asg-lesson-focus .asg-topic-content h3 {
     padding: 1rem;
 }
 
+.asg-study-action-stack {
+    display: grid;
+    gap: 0.6rem;
+}
+
 .asg-progress-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -5203,6 +5344,11 @@ body.has-asg-shell .btn-primary:disabled,
 body.has-asg-shell .btn-secondary:disabled {
     cursor: not-allowed;
     opacity: 0.58;
+}
+
+body.has-asg-shell .asg-retake-allow.is-active:disabled,
+body.has-asg-shell .asg-retake-revoke.is-active:disabled {
+    opacity: 1;
 }
 
 @media (max-width: 900px) {
@@ -7436,6 +7582,7 @@ body.has-asg-shell .asg-reader-shell {
     .asg-roadmap-focus dl,
     .asg-roadmap-rail,
     .asg-career-checkpoints,
+    .asg-resource-spotlight,
     .asg-career-step-grid {
         grid-template-columns: 1fr;
     }

@@ -54,6 +54,7 @@
         let quizSubmitted = false;
         let quizExamStarted = false;
         let quizGuard = null;
+        let lastQuizResultAttempt = null;
 
         function getInitialQuizId() {
             const params = new URLSearchParams(window.location.search);
@@ -137,6 +138,7 @@
             activeQuizId = asgGetQuizById(quizId).id;
             quizSubmitted = false;
             quizExamStarted = false;
+            lastQuizResultAttempt = null;
             localStorage.setItem("asgSelectedQuizId", activeQuizId);
 
             const url = new URL(window.location.href);
@@ -206,6 +208,7 @@
                 return;
             }
 
+            lastQuizResultAttempt = null;
             quizGuard = ASGExamGuard.create({
                 requireFullscreen: true,
                 onViolation: (reason) => submitSkillQuiz({ reason, force: true, auto: true })
@@ -348,6 +351,7 @@
         function renderResult(attempt) {
             const mount = document.getElementById("quizMount");
             const result = document.getElementById("quizResult");
+            lastQuizResultAttempt = attempt;
             const baseMessage = attempt.percentage >= 80
                 ? "Strong work. You are ready for the next level."
                 : attempt.percentage >= 60
@@ -356,6 +360,7 @@
             const message = attempt.autoSubmitted
                 ? `Auto-submitted because exam focus was lost (${attempt.proctorReason}).`
                 : baseMessage;
+            const canRetake = canStartQuizExam();
 
             mount.hidden = true;
             result.hidden = false;
@@ -388,7 +393,9 @@
                 </div>
 
                 <div class="asg-form-actions">
-                    <button class="btn-secondary" type="button" onclick="retakeQuiz()">Retake Quiz</button>
+                    ${canRetake
+                        ? `<button class="btn-secondary" type="button" onclick="retakeQuiz()">Retake Quiz</button>`
+                        : `<span class="asg-retake-state is-locked">Retake locked until admin allows another attempt</span>`}
                     <a class="btn-secondary" href="tracker.html">View Progress</a>
                 </div>
             `;
@@ -402,6 +409,7 @@
             }
             quizSubmitted = false;
             quizExamStarted = false;
+            lastQuizResultAttempt = null;
             renderQuiz();
         }
 
@@ -409,6 +417,11 @@
             const key = event.detail ? event.detail.key : event.key;
             if (![ASG_LEARNING_KEYS.quizQuestions, ASG_LEARNING_KEYS.examRetakePermissions].includes(key)) return;
             if (quizExamStarted && !quizSubmitted) return;
+            if (key === ASG_LEARNING_KEYS.examRetakePermissions && quizSubmitted && lastQuizResultAttempt) {
+                renderResult(lastQuizResultAttempt);
+                renderQuizSelector();
+                return;
+            }
             renderQuiz();
         }
 
