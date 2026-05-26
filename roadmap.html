@@ -31,6 +31,25 @@
             <div>
                 <h2>Recommended sequence</h2>
                 <p>Each milestone contains a focus area, expected outcomes, and quick links into videos or resources.</p>
+                <div class="asg-roadmap-info-actions">
+                    <span class="asg-roadmap-info-wrap">
+                        <button class="asg-link-button asg-info-trigger" type="button" onclick="toggleRoadmapInfo('learning')" aria-expanded="false" aria-controls="learningRoadmapInfo">
+                            Learning Roadmap <span aria-hidden="true">i</span>
+                        </button>
+                        <article class="asg-roadmap-info-card" id="learningRoadmapInfo" hidden>
+                            Follow the course learning path with milestones, outcomes, practice, videos, and resources.
+                        </article>
+                    </span>
+                    <span class="asg-roadmap-info-wrap">
+                        <button class="asg-link-button asg-info-trigger" type="button" onclick="toggleRoadmapInfo('career')" aria-expanded="false" aria-controls="careerRoadmapInfo">
+                            Career Roadmap <span aria-hidden="true">i</span>
+                        </button>
+                        <article class="asg-roadmap-info-card" id="careerRoadmapInfo" hidden>
+                            Choose your career path and follow a step-by-step roadmap from beginner to job-ready level.
+                            <small>Explore complete career roadmaps for Data Analyst, Data Scientist, Data Engineer, ML Engineer, AI/ML Engineer, and GenAI Engineer.</small>
+                        </article>
+                    </span>
+                </div>
             </div>
             <div class="asg-form-actions">
                 <a class="btn-secondary" href="videos.html">Open Videos</a>
@@ -82,6 +101,21 @@
         function scrollRoadmapCard(itemId) {
             const target = document.getElementById(`roadmap_${itemId}`);
             if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+
+        function toggleRoadmapInfo(type) {
+            const ids = {
+                learning: "learningRoadmapInfo",
+                career: "careerRoadmapInfo"
+            };
+            Object.keys(ids).forEach((key) => {
+                const card = document.getElementById(ids[key]);
+                const button = document.querySelector(`[aria-controls="${ids[key]}"]`);
+                if (!card || !button) return;
+                const shouldOpen = key === type && card.hidden;
+                card.hidden = !shouldOpen;
+                button.setAttribute("aria-expanded", String(shouldOpen));
+            });
         }
 
         function renderRoadmapCompass(items, progress) {
@@ -162,6 +196,15 @@
         });
         window.addEventListener("storage", (event) => {
             if ([ASG_LEARNING_KEYS.roadmapItems, ASG_LEARNING_KEYS.courseProgress].includes(event.key)) renderRoadmap();
+        });
+        document.addEventListener("click", (event) => {
+            if (event.target.closest(".asg-roadmap-info-wrap")) return;
+            ["learning", "career"].forEach((type) => {
+                const card = document.getElementById(`${type}RoadmapInfo`);
+                const button = document.querySelector(`[aria-controls="${type}RoadmapInfo"]`);
+                if (card) card.hidden = true;
+                if (button) button.setAttribute("aria-expanded", "false");
+            });
         });
 
         renderRoadmap();

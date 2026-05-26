@@ -1917,10 +1917,32 @@ function asgGetExamRetakePermissions() {
     return asgReadJSON(ASG_LEARNING_KEYS.examRetakePermissions, {});
 }
 
-function asgGetExamRetakePermission(user, examType, examId) {
+function asgFindExamRetakePermissionEntry(user, examType, examId) {
     const permissions = asgGetExamRetakePermissions();
     const key = asgGetExamAccessKey(user, examType, examId);
-    return permissions[key] || null;
+    if (permissions[key]) return { key, permission: permissions[key] };
+
+    const normalizedType = asgNormalizeExamType(examType);
+    const normalizedId = asgNormalizeExamId(examId, "exam");
+    const userId = String(user && user.id || "").toLowerCase();
+    const email = String(user && user.email || "").toLowerCase();
+    const fallbackKey = Object.keys(permissions).find((permissionKey) => {
+        const permission = permissions[permissionKey] || {};
+        const matchesUser = (
+            (userId && String(permission.userId || "").toLowerCase() === userId) ||
+            (email && String(permission.email || "").toLowerCase() === email)
+        );
+        return matchesUser
+            && asgNormalizeExamType(permission.examType) === normalizedType
+            && asgNormalizeExamId(permission.examId, "exam") === normalizedId;
+    });
+
+    return fallbackKey ? { key: fallbackKey, permission: permissions[fallbackKey] } : null;
+}
+
+function asgGetExamRetakePermission(user, examType, examId) {
+    const entry = asgFindExamRetakePermissionEntry(user, examType, examId);
+    return entry ? entry.permission : null;
 }
 
 function asgHasExamRetakeAccess(user, examType, examId) {
@@ -1960,11 +1982,12 @@ function asgSaveExamRetakePermission(user, examType, examId, examTitle, allowed,
 }
 
 function asgConsumeExamRetakePermission(user, examType, examId) {
-    const permission = asgGetExamRetakePermission(user, examType, examId);
+    const entry = asgFindExamRetakePermissionEntry(user, examType, examId);
+    const permission = entry ? entry.permission : null;
     if (!permission || !permission.allowed || permission.usedAt) return null;
 
     const permissions = asgReadJSON(ASG_LEARNING_KEYS.examRetakePermissions, {});
-    const key = asgGetExamAccessKey(user, examType, examId);
+    const key = entry.key || asgGetExamAccessKey(user, examType, examId);
     permissions[key] = {
         ...permission,
         allowed: false,

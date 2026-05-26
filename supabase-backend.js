@@ -44,6 +44,7 @@
         "quizScores",
         "asgCodingSubmissions",
         "asgExamAttempts",
+        "asgExamRetakePermissions",
         "asgCourseProgress",
         "asgCourseAccessRequests",
         "asgCourseAccessPermissions",
@@ -647,8 +648,9 @@
 
     function canWriteKey(key, profile) {
         if (!ASG_SYNC_KEY_SET.has(key)) return false;
+        if (ASG_ACTIVITY_KEY_SET.has(key)) return Boolean(profile);
         if (ASG_CONTENT_KEY_SET.has(key) || ASG_ADMIN_KEY_SET.has(key)) return isProfileAdmin(profile);
-        return Boolean(profile);
+        return false;
     }
 
     function recordMatchesProfile(record, profile) {
@@ -671,7 +673,8 @@
         if ([
             "asgCourseProgress",
             "asgCertificateNameLocks",
-            "asgCourseAccessPermissions"
+            "asgCourseAccessPermissions",
+            "asgExamRetakePermissions"
         ].includes(key) && value && typeof value === "object") {
             const profileId = String(profile.id || "").toLowerCase();
             const profileEmail = normalizeEmail(profile.email);
@@ -695,7 +698,8 @@
         if ([
             "asgCourseProgress",
             "asgCertificateNameLocks",
-            "asgCourseAccessPermissions"
+            "asgCourseAccessPermissions",
+            "asgExamRetakePermissions"
         ].includes(key)) {
             return {
                 ...(currentValue && typeof currentValue === "object" && !Array.isArray(currentValue) ? currentValue : {}),

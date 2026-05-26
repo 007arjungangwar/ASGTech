@@ -2353,6 +2353,20 @@
             return element ? element.value : "";
         }
 
+        function getRetakePermissionsForStudent(student) {
+            const permissions = asgGetExamRetakePermissions();
+            return Object.keys(permissions).reduce((records, key) => {
+                const permission = permissions[key];
+                if (permission && (
+                    String(permission.userId || "") === String(student.id || "") ||
+                    String(permission.email || "").toLowerCase() === String(student.email || "").toLowerCase()
+                )) {
+                    records[key] = permission;
+                }
+                return records;
+            }, {});
+        }
+
         function setExamRetakeAccess(studentId, type, allowed) {
             const student = getStudents().find((item) => String(item.id) === String(studentId));
             if (!student) return;
@@ -2362,7 +2376,7 @@
                 ? asgGetQuizById(selected)
                 : { id: asgNormalizeExamId(selected, "coding-exam"), title: `${selected} Coding Exam` };
 
-            asgSaveExamRetakePermission(
+            const permission = asgSaveExamRetakePermission(
                 student,
                 type === "quiz" ? "quiz" : "coding-exam",
                 exam.id,
@@ -2371,6 +2385,17 @@
                 allowed ? "Admin allowed another exam attempt." : "Admin revoked exam retake access.",
                 adminUser
             );
+
+            if (permission && window.ASG_BACKEND && typeof window.ASG_BACKEND.saveUserActivityForUser === "function") {
+                window.ASG_BACKEND.saveUserActivityForUser(
+                    ASG_LEARNING_KEYS.examRetakePermissions,
+                    getRetakePermissionsForStudent(student),
+                    student
+                ).catch((error) => {
+                    console.warn("Could not sync exam retake access for student.", error);
+                });
+            }
+
             refreshDashboard();
         }
 
@@ -2398,6 +2423,16 @@
                         ${students.map((student) => {
                             const examAttempts = asgGetExamAttempts(student);
                             const latestExam = asgGetLatestRecord(examAttempts, "submittedAt");
+                            const latestQuizExam = asgGetLatestRecord(
+                                examAttempts.filter((attempt) => attempt.examType === "quiz"),
+                                "submittedAt"
+                            );
+                            const latestCodingExam = asgGetLatestRecord(
+                                examAttempts.filter((attempt) => attempt.examType === "coding-exam"),
+                                "submittedAt"
+                            );
+                            const selectedQuizId = latestQuizExam ? asgNormalizeExamId(latestQuizExam.examId, "quiz") : "";
+                            const selectedCodingId = latestCodingExam ? asgNormalizeExamId(latestCodingExam.examId, "coding-exam") : "";
                             return `
                                 <tr>
                                     <td>
@@ -2411,7 +2446,7 @@
                                     <td>
                                         <select id="retake_quiz_${escapeHtml(student.id)}" class="asg-admin-search">
                                             ${adminQuizCatalog.map((quiz) => `
-                                                <option value="${escapeHtml(quiz.id)}">${escapeHtml(quiz.title)}</option>
+                                                <option value="${escapeHtml(quiz.id)}" ${asgNormalizeExamId(quiz.id, "quiz") === selectedQuizId ? "selected" : ""}>${escapeHtml(quiz.title)}</option>
                                             `).join("")}
                                         </select>
                                         <div class="asg-form-actions">
@@ -2422,7 +2457,7 @@
                                     <td>
                                         <select id="retake_coding_${escapeHtml(student.id)}" class="asg-admin-search">
                                             ${codingTopics.map((topic) => `
-                                                <option value="${escapeHtml(topic)}">${escapeHtml(topic)} Coding Exam</option>
+                                                <option value="${escapeHtml(topic)}" ${asgNormalizeExamId(topic, "coding-exam") === selectedCodingId ? "selected" : ""}>${escapeHtml(topic)} Coding Exam</option>
                                             `).join("")}
                                         </select>
                                         <div class="asg-form-actions">

@@ -1742,6 +1742,7 @@ body.asg-theme-dark .asg-editor-toolbar,
 body.asg-theme-dark .asg-challenge-list,
 body.asg-theme-dark .asg-challenge-button,
 body.asg-theme-dark .asg-proctor-card,
+body.asg-theme-dark .asg-roadmap-info-card,
 body.asg-theme-dark .asg-roadmap-focus,
 body.asg-theme-dark .asg-roadmap-focus dl div,
 body.asg-theme-dark .asg-roadmap-rail,
@@ -3461,6 +3462,58 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 .asg-roadmap-board {
     display: grid;
     gap: 14px;
+}
+
+.asg-roadmap-info-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.asg-roadmap-info-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.asg-info-trigger {
+    align-items: center;
+    gap: 8px;
+}
+
+.asg-info-trigger span {
+    width: 20px;
+    height: 20px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.asg-roadmap-info-card {
+    position: absolute;
+    z-index: 12;
+    left: 0;
+    top: calc(100% + 8px);
+    width: min(320px, calc(100vw - 48px));
+    padding: 14px;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: var(--asg-surface-raised);
+    box-shadow: var(--asg-card-shadow);
+    color: var(--asg-ink);
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.asg-roadmap-info-card small {
+    display: block;
+    margin-top: 8px;
+    color: var(--asg-muted);
+    line-height: 1.5;
 }
 
 .asg-roadmap-compass {
@@ -7215,6 +7268,18 @@ body.has-asg-shell .asg-reader-shell {
     .asg-roadmap-focus dl,
     .asg-roadmap-rail {
         grid-template-columns: 1fr;
+    }
+
+    .asg-roadmap-info-actions,
+    .asg-roadmap-info-wrap,
+    .asg-info-trigger {
+        width: 100%;
+    }
+
+    .asg-roadmap-info-card {
+        position: static;
+        width: 100%;
+        margin-top: 8px;
     }
 
     .asg-admin-tabs {
