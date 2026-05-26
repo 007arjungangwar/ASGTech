@@ -1743,6 +1743,10 @@ body.asg-theme-dark .asg-challenge-list,
 body.asg-theme-dark .asg-challenge-button,
 body.asg-theme-dark .asg-proctor-card,
 body.asg-theme-dark .asg-roadmap-info-card,
+body.asg-theme-dark .asg-career-table,
+body.asg-theme-dark .asg-career-role-card,
+body.asg-theme-dark .asg-career-mini-grid div,
+body.asg-theme-dark .asg-career-support-grid article,
 body.asg-theme-dark .asg-roadmap-focus,
 body.asg-theme-dark .asg-roadmap-focus dl div,
 body.asg-theme-dark .asg-roadmap-rail,
@@ -3514,6 +3518,102 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     margin-top: 8px;
     color: var(--asg-muted);
     line-height: 1.5;
+}
+
+.asg-career-roadmap-panel {
+    display: grid;
+    gap: 18px;
+}
+
+.asg-career-roadmap-panel[hidden] {
+    display: none;
+}
+
+.asg-career-overview {
+    display: grid;
+    gap: 12px;
+}
+
+.asg-career-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--asg-surface-raised);
+}
+
+.asg-career-table th,
+.asg-career-table td {
+    padding: 13px 14px;
+    border: 1px solid var(--asg-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.asg-career-table th {
+    background: var(--asg-surface-soft);
+    color: var(--asg-ink);
+    font-size: 0.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.asg-career-role-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.asg-career-role-card {
+    display: grid;
+    gap: 16px;
+    padding: clamp(18px, 2.2vw, 28px);
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: var(--asg-surface-raised);
+    box-shadow: var(--asg-card-shadow);
+}
+
+.asg-career-role-card h3 {
+    margin: 0;
+}
+
+.asg-career-step-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.asg-career-step-grid section {
+    min-width: 0;
+}
+
+.asg-career-step-grid h4 {
+    margin: 0 0 10px;
+    color: var(--asg-ink);
+    font-size: 0.96rem;
+}
+
+.asg-career-mini-grid,
+.asg-career-support-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.asg-career-mini-grid div,
+.asg-career-support-grid article {
+    padding: 14px;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: var(--asg-surface-soft);
+}
+
+.asg-career-mini-grid strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.asg-career-mini-grid span {
+    color: var(--asg-muted);
+    line-height: 1.55;
 }
 
 .asg-roadmap-compass {
@@ -7266,7 +7366,8 @@ body.has-asg-shell .asg-reader-shell {
     }
 
     .asg-roadmap-focus dl,
-    .asg-roadmap-rail {
+    .asg-roadmap-rail,
+    .asg-career-step-grid {
         grid-template-columns: 1fr;
     }
 

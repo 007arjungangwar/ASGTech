@@ -32,29 +32,305 @@
                 <h2>Recommended sequence</h2>
                 <p>Each milestone contains a focus area, expected outcomes, and quick links into videos or resources.</p>
                 <div class="asg-roadmap-info-actions">
-                    <span class="asg-roadmap-info-wrap">
+                    <div class="asg-roadmap-info-wrap">
                         <button class="asg-link-button asg-info-trigger" type="button" onclick="toggleRoadmapInfo('learning')" aria-expanded="false" aria-controls="learningRoadmapInfo">
                             Learning Roadmap <span aria-hidden="true">i</span>
                         </button>
                         <article class="asg-roadmap-info-card" id="learningRoadmapInfo" hidden>
                             Follow the course learning path with milestones, outcomes, practice, videos, and resources.
                         </article>
-                    </span>
-                    <span class="asg-roadmap-info-wrap">
-                        <button class="asg-link-button asg-info-trigger" type="button" onclick="toggleRoadmapInfo('career')" aria-expanded="false" aria-controls="careerRoadmapInfo">
+                    </div>
+                    <div class="asg-roadmap-info-wrap">
+                        <button class="asg-link-button asg-info-trigger" type="button" onclick="toggleRoadmapInfo('career')" aria-expanded="false" aria-controls="careerRoadmapContent">
                             Career Roadmap <span aria-hidden="true">i</span>
                         </button>
-                        <article class="asg-roadmap-info-card" id="careerRoadmapInfo" hidden>
-                            Choose your career path and follow a step-by-step roadmap from beginner to job-ready level.
-                            <small>Explore complete career roadmaps for Data Analyst, Data Scientist, Data Engineer, ML Engineer, AI/ML Engineer, and GenAI Engineer.</small>
-                        </article>
-                    </span>
+                    </div>
                 </div>
             </div>
             <div class="asg-form-actions">
                 <a class="btn-secondary" href="videos.html">Open Videos</a>
                 <a class="btn-secondary" href="resources.html">Open Resources</a>
                 <a class="btn-primary" href="courses.html">Start Course</a>
+            </div>
+        </section>
+
+        <section class="asg-career-roadmap-panel" id="careerRoadmapContent" hidden>
+            <div class="asg-section-header">
+                <div>
+                    <div class="asg-eyebrow">Career roadmap</div>
+                    <h2>Complete Roadmaps for Data & AI Careers</h2>
+                    <p>Choose your career path and follow a step-by-step roadmap from beginner to job-ready level.</p>
+                </div>
+            </div>
+
+            <div class="asg-career-overview">
+                <p>The fields below are connected, but each role has a different focus.</p>
+                <div class="asg-table-wrap">
+                    <table class="asg-career-table">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Main Focus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Data Analyst</td><td>Business insights & dashboards</td></tr>
+                            <tr><td>Data Scientist</td><td>Prediction, statistics & ML</td></tr>
+                            <tr><td>Data Engineer</td><td>Data pipelines & infrastructure</td></tr>
+                            <tr><td>ML Engineer</td><td>Production ML systems</td></tr>
+                            <tr><td>AI/ML Engineer</td><td>Advanced ML + deep learning systems</td></tr>
+                            <tr><td>GenAI Engineer</td><td>LLMs, RAG, AI agents, multimodal AI</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="asg-career-role-grid">
+                <article class="asg-career-role-card">
+                    <span class="asg-item-kicker">1. Data Analyst</span>
+                    <h3>Goal: Turn raw data into business insights.</h3>
+                    <div class="asg-career-step-grid">
+                        <section>
+                            <h4>Basic Programming</h4>
+                            <ul class="asg-clean-list">
+                                <li>Python: variables, loops, functions, OOP basics, file handling</li>
+                                <li>Libraries: NumPy and Pandas</li>
+                                <li>SQL: SELECT, WHERE, GROUP BY, ORDER BY, JOIN, HAVING, subqueries, window functions</li>
+                            </ul>
+                            <pre class="asg-question-text compact">SELECT department, AVG(salary)
+FROM employee
+GROUP BY department;</pre>
+                        </section>
+                        <section>
+                            <h4>Analysis, Statistics & Visualization</h4>
+                            <ul class="asg-clean-list">
+                                <li>Pandas: data cleaning, missing values, groupby, merge, pivot table</li>
+                                <li>NumPy: arrays, matrix operations, broadcasting</li>
+                                <li>Statistics: mean, median, mode, variance, standard deviation, probability, normal distribution, hypothesis testing, correlation</li>
+                                <li>Visualization: Matplotlib, Plotly, Seaborn, Power BI, Tableau</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Business & Portfolio</h4>
+                            <ul class="asg-clean-list">
+                                <li>Excel: pivot table, VLOOKUP/XLOOKUP, conditional formatting, macros basics</li>
+                                <li>Business: KPIs, reporting, metrics, stakeholder communication</li>
+                                <li>Projects: Netflix analysis, e-commerce dashboard, COVID dashboard, banking customer analysis</li>
+                                <li>Interview: SQL queries, Pandas coding, case studies, dashboard explanation</li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div class="asg-career-mini-grid">
+                        <div><strong>Tools</strong><span>Python, SQL, Pandas, NumPy, Power BI, Tableau, MySQL, PostgreSQL, GitHub</span></div>
+                        <div><strong>Salary India</strong><span>Fresher Rs. 4-8 LPA | Mid Rs. 10-18 LPA | Senior Rs. 20+ LPA</span></div>
+                    </div>
+                </article>
+
+                <article class="asg-career-role-card">
+                    <span class="asg-item-kicker">2. Data Scientist</span>
+                    <h3>Goal: Build predictive models and extract intelligence from data.</h3>
+                    <div class="asg-career-step-grid">
+                        <section>
+                            <h4>Mathematics</h4>
+                            <ul class="asg-clean-list">
+                                <li>Linear algebra: vectors, matrices, eigenvalues</li>
+                                <li>Calculus: derivatives and gradient descent</li>
+                                <li>Probability & statistics: Bayes theorem, distributions, hypothesis testing</li>
+                            </ul>
+                            <pre class="asg-question-text compact">theta := theta - alpha * dJ(theta) / dtheta
+P(A|B) = P(B|A)P(A) / P(B)</pre>
+                        </section>
+                        <section>
+                            <h4>Machine Learning & Deep Learning</h4>
+                            <ul class="asg-clean-list">
+                                <li>Python, SQL, Pandas, NumPy, Matplotlib, SQL joins, window functions</li>
+                                <li>ML: linear regression, logistic regression, decision tree, random forest, XGBoost, SVM, KNN, clustering, PCA</li>
+                                <li>DL: ANN, CNN, RNN, LSTM, transformers with TensorFlow and PyTorch</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Specialization & Projects</h4>
+                            <ul class="asg-clean-list">
+                                <li>NLP: tokenization, embeddings, BERT, LLM basics</li>
+                                <li>Computer vision: OpenCV, object detection, segmentation</li>
+                                <li>MLOps basics: Docker, FastAPI, MLflow, deployment</li>
+                                <li>Projects: house price prediction, churn prediction, sentiment analysis, image classification, soil moisture prediction using PINN</li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div class="asg-career-mini-grid">
+                        <div><strong>Tools</strong><span>Scikit-learn, XGBoost, PyTorch, TensorFlow, Plotly, FastAPI, MLflow</span></div>
+                        <div><strong>Salary</strong><span>Fresher Rs. 6-12 LPA | Mid Rs. 15-30 LPA | Senior Rs. 40+ LPA</span></div>
+                    </div>
+                </article>
+
+                <article class="asg-career-role-card">
+                    <span class="asg-item-kicker">3. Data Engineer</span>
+                    <h3>Goal: Build scalable data systems and pipelines.</h3>
+                    <div class="asg-career-step-grid">
+                        <section>
+                            <h4>Core Skills</h4>
+                            <ul class="asg-clean-list">
+                                <li>SQL mastery: complex joins, CTE, stored procedures, query optimization</li>
+                                <li>Python: ETL scripting, APIs, automation</li>
+                                <li>Databases: PostgreSQL, MySQL, MongoDB, Cassandra</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Warehousing, Big Data & Cloud</h4>
+                            <ul class="asg-clean-list">
+                                <li>Warehousing: Snowflake, Redshift, BigQuery, OLTP vs OLAP, star schema, snowflake schema</li>
+                                <li>Big data: Hadoop, Spark, PySpark, Kafka</li>
+                                <li>Cloud: AWS, Azure, or GCP with S3, EC2, Lambda, Glue</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Production Projects</h4>
+                            <ul class="asg-clean-list">
+                                <li>Orchestration: Apache Airflow and Prefect</li>
+                                <li>DevOps: Docker, Kubernetes, Jenkins, GitHub Actions</li>
+                                <li>Projects: ETL pipeline, real-time streaming system, data lake architecture, Kafka pipeline</li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div class="asg-career-mini-grid">
+                        <div><strong>Salary</strong><span>Fresher Rs. 7-12 LPA | Mid Rs. 18-35 LPA | Senior Rs. 45+ LPA</span></div>
+                    </div>
+                </article>
+
+                <article class="asg-career-role-card">
+                    <span class="asg-item-kicker">4. ML Engineer</span>
+                    <h3>Goal: Deploy and scale ML models in production.</h3>
+                    <div class="asg-career-step-grid">
+                        <section>
+                            <h4>Core Difference</h4>
+                            <ul class="asg-clean-list">
+                                <li>Data Scientist builds models and focuses on accuracy</li>
+                                <li>ML Engineer deploys, scales, monitors, and improves production ML systems</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Learn</h4>
+                            <ul class="asg-clean-list">
+                                <li>Software engineering: DSA, APIs, OOP, system design</li>
+                                <li>Machine learning: model training, hyperparameter tuning, evaluation</li>
+                                <li>Deployment: FastAPI, Flask, Streamlit, Docker, Kubernetes</li>
+                                <li>MLOps: MLflow, Kubeflow, CI/CD, monitoring</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Cloud & Projects</h4>
+                            <ul class="asg-clean-list">
+                                <li>Cloud: AWS SageMaker, Vertex AI, Azure ML</li>
+                                <li>Projects: ML API deployment, recommendation system, fraud detection, real-time ML inference</li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div class="asg-career-mini-grid">
+                        <div><strong>Salary</strong><span>Fresher Rs. 8-15 LPA | Mid Rs. 20-40 LPA | Senior Rs. 50+ LPA</span></div>
+                    </div>
+                </article>
+
+                <article class="asg-career-role-card">
+                    <span class="asg-item-kicker">5. AI/ML Engineer</span>
+                    <h3>Goal: Build advanced AI systems using ML + DL.</h3>
+                    <div class="asg-career-step-grid">
+                        <section>
+                            <h4>Advanced Deep Learning</h4>
+                            <ul class="asg-clean-list">
+                                <li>Transformers, attention mechanism, diffusion models, GANs, GNNs, PINNs</li>
+                                <li>Frameworks: PyTorch, TensorFlow, Hugging Face</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>AI Domains</h4>
+                            <ul class="asg-clean-list">
+                                <li>NLP: BERT, GPT, T5</li>
+                                <li>Vision: YOLO, ViT, SAM</li>
+                                <li>Audio: Whisper, Deepgram, speech models</li>
+                                <li>Optimization: quantization, LoRA, fine-tuning</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Projects</h4>
+                            <ul class="asg-clean-list">
+                                <li>Chatbot, AI tutor, AI interviewer, medical AI system, multimodal assistant</li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div class="asg-career-mini-grid">
+                        <div><strong>Salary</strong><span>Fresher Rs. 10-18 LPA | Mid Rs. 25-50 LPA | Senior Rs. 60+ LPA</span></div>
+                    </div>
+                </article>
+
+                <article class="asg-career-role-card">
+                    <span class="asg-item-kicker">6. GenAI Engineer</span>
+                    <h3>Goal: Build systems using LLMs and Generative AI.</h3>
+                    <div class="asg-career-step-grid">
+                        <section>
+                            <h4>Foundation & LLMs</h4>
+                            <ul class="asg-clean-list">
+                                <li>Python, APIs, ML basics, deep learning basics, transformers</li>
+                                <li>LLMs: tokens, embeddings, attention, context window</li>
+                                <li>Models and providers: GPT, LLaMA, Gemini, Claude, Mistral, OpenAI, Google, Anthropic, Meta</li>
+                            </ul>
+                            <pre class="asg-question-text compact">Attention(Q,K,V) = softmax(QK^T / sqrt(d_k))V</pre>
+                        </section>
+                        <section>
+                            <h4>Build GenAI Systems</h4>
+                            <ul class="asg-clean-list">
+                                <li>Prompting: zero-shot, few-shot, chain-of-thought, structured prompting</li>
+                                <li>Embeddings and vector DBs: Pinecone, Weaviate, ChromaDB, FAISS</li>
+                                <li>RAG: chunking, retrieval, re-ranking, hybrid search</li>
+                                <li>Agents: LangChain, LangGraph, CrewAI, AutoGen</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>Advanced GenAI</h4>
+                            <ul class="asg-clean-list">
+                                <li>Fine-tuning: LoRA, QLoRA, PEFT, RLHF basics</li>
+                                <li>Multimodal AI: image generation, video AI, voice AI, Stable Diffusion, Whisper, Flux</li>
+                                <li>Deployment: vLLM, Ollama, FastAPI, Docker, Kubernetes</li>
+                                <li>Products: AI resume screener, AI coding assistant, AI PDF chatbot, AI research assistant, AI interviewer, AI teaching platform</li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div class="asg-career-mini-grid">
+                        <div><strong>Best Stack</strong><span>OpenAI, Gemini, LLaMA, Mistral, LangChain, Pinecone, Docker, FastAPI, React/Next.js</span></div>
+                    </div>
+                </article>
+            </div>
+
+            <div class="asg-career-support-grid">
+                <article>
+                    <h3>Best Certifications</h3>
+                    <ul class="asg-clean-list">
+                        <li>Data Analyst: Google Data Analytics, Microsoft Power BI</li>
+                        <li>Data Scientist: IBM Data Science, Andrew Ng ML</li>
+                        <li>Cloud: AWS Certified, Azure AI Engineer</li>
+                        <li>GenAI: DeepLearning.AI GenAI, LangChain courses</li>
+                    </ul>
+                </article>
+                <article>
+                    <h3>Best Platforms to Learn</h3>
+                    <ul class="asg-clean-list">
+                        <li>YouTube for free learning</li>
+                        <li>Coursera for structured learning</li>
+                        <li>Kaggle for practice</li>
+                        <li>LeetCode for DSA</li>
+                        <li>HackerRank for SQL/Python</li>
+                        <li>Hugging Face for GenAI</li>
+                    </ul>
+                </article>
+                <article>
+                    <h3>Recommended Order</h3>
+                    <ul class="asg-clean-list">
+                        <li>Phase 1: Python -> SQL -> Pandas -> Statistics</li>
+                        <li>Phase 2: Visualization -> ML -> Projects</li>
+                        <li>Phase 3: Deep Learning -> Deployment -> Cloud</li>
+                        <li>Phase 4: LLMs -> RAG -> AI Agents -> GenAI</li>
+                    </ul>
+                </article>
             </div>
         </section>
 
@@ -104,18 +380,24 @@
         }
 
         function toggleRoadmapInfo(type) {
-            const ids = {
-                learning: "learningRoadmapInfo",
-                career: "careerRoadmapInfo"
-            };
-            Object.keys(ids).forEach((key) => {
-                const card = document.getElementById(ids[key]);
-                const button = document.querySelector(`[aria-controls="${ids[key]}"]`);
-                if (!card || !button) return;
-                const shouldOpen = key === type && card.hidden;
-                card.hidden = !shouldOpen;
-                button.setAttribute("aria-expanded", String(shouldOpen));
-            });
+            const learningCard = document.getElementById("learningRoadmapInfo");
+            const learningButton = document.querySelector('[aria-controls="learningRoadmapInfo"]');
+            const careerPanel = document.getElementById("careerRoadmapContent");
+            const careerButton = document.querySelector('[aria-controls="careerRoadmapContent"]');
+
+            if (type === "learning") {
+                const shouldOpen = learningCard && learningCard.hidden;
+                if (learningCard) learningCard.hidden = !shouldOpen;
+                if (learningButton) learningButton.setAttribute("aria-expanded", String(shouldOpen));
+                return;
+            }
+
+            const shouldOpen = careerPanel && careerPanel.hidden;
+            if (learningCard) learningCard.hidden = true;
+            if (learningButton) learningButton.setAttribute("aria-expanded", "false");
+            if (careerPanel) careerPanel.hidden = !shouldOpen;
+            if (careerButton) careerButton.setAttribute("aria-expanded", String(shouldOpen));
+            if (shouldOpen && careerPanel) careerPanel.scrollIntoView({ behavior: "smooth", block: "start" });
         }
 
         function renderRoadmapCompass(items, progress) {
@@ -199,12 +481,10 @@
         });
         document.addEventListener("click", (event) => {
             if (event.target.closest(".asg-roadmap-info-wrap")) return;
-            ["learning", "career"].forEach((type) => {
-                const card = document.getElementById(`${type}RoadmapInfo`);
-                const button = document.querySelector(`[aria-controls="${type}RoadmapInfo"]`);
-                if (card) card.hidden = true;
-                if (button) button.setAttribute("aria-expanded", "false");
-            });
+            const card = document.getElementById("learningRoadmapInfo");
+            const button = document.querySelector('[aria-controls="learningRoadmapInfo"]');
+            if (card) card.hidden = true;
+            if (button) button.setAttribute("aria-expanded", "false");
         });
 
         renderRoadmap();
