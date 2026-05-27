@@ -82,8 +82,8 @@
         }
 
         function getQuizTimeLimitMinutes(quiz = getActiveQuiz()) {
-            const minutes = Math.round(Number(quiz && quiz.timeLimitMinutes || 0));
-            return Number.isFinite(minutes) && minutes > 0 ? minutes : 0;
+            const minutes = Math.round(Number(quiz && quiz.timeLimitMinutes || 15));
+            return Number.isFinite(minutes) && minutes > 0 ? minutes : 15;
         }
 
         function formatQuizTime(seconds) {

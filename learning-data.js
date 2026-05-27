@@ -25,8 +25,9 @@ const ASG_LEARNING_KEYS = {
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 14;
+const ASG_LEARNING_DATA_VERSION = 15;
 const ASG_CERTIFICATE_PROGRESS_REQUIRED = 70;
+const ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES = 15;
 const ASG_DEFAULT_CODING_QUESTION_SECONDS = 300;
 let ASG_LEARNING_SEEDING_DEFAULTS = false;
 
@@ -50,7 +51,7 @@ const ASG_QUIZ_CATALOG = [
         title: "Quiz 1: Python",
         topic: "Python",
         description: "Core Python syntax, functions, and language behavior.",
-        timeLimitMinutes: 0,
+        timeLimitMinutes: ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES,
         order: 1
     },
     {
@@ -58,7 +59,7 @@ const ASG_QUIZ_CATALOG = [
         title: "Quiz 2: Machine Learning",
         topic: "Machine Learning",
         description: "Models, training workflow, and evaluation fundamentals.",
-        timeLimitMinutes: 0,
+        timeLimitMinutes: ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES,
         order: 2
     },
     {
@@ -66,7 +67,7 @@ const ASG_QUIZ_CATALOG = [
         title: "Quiz 3: Pandas",
         topic: "Pandas",
         description: "DataFrame operations, cleaning, and analysis basics.",
-        timeLimitMinutes: 0,
+        timeLimitMinutes: ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES,
         order: 3
     },
     {
@@ -74,7 +75,7 @@ const ASG_QUIZ_CATALOG = [
         title: "Quiz 4: NumPy",
         topic: "NumPy",
         description: "Arrays, shapes, vectorization, and numerical operations.",
-        timeLimitMinutes: 0,
+        timeLimitMinutes: ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES,
         order: 4
     },
     {
@@ -82,7 +83,7 @@ const ASG_QUIZ_CATALOG = [
         title: "Quiz 5: Deep Learning",
         topic: "Deep Learning",
         description: "Neural networks, layers, activation, and training concepts.",
-        timeLimitMinutes: 0,
+        timeLimitMinutes: ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES,
         order: 5
     },
     {
@@ -90,7 +91,7 @@ const ASG_QUIZ_CATALOG = [
         title: "Quiz 6: SQL",
         topic: "SQL",
         description: "Queries, filters, joins, grouping, and database basics.",
-        timeLimitMinutes: 0,
+        timeLimitMinutes: ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES,
         order: 6
     }
 ];
@@ -1372,7 +1373,7 @@ function asgGetQuizCatalog() {
 
 function asgNormalizeTimerMinutes(value, fallback = 0) {
     const minutes = Math.round(Number(value));
-    if (!Number.isFinite(minutes) || minutes < 0) return fallback;
+    if (!Number.isFinite(minutes) || minutes <= 0) return fallback;
     return minutes;
 }
 
@@ -1390,7 +1391,10 @@ function asgNormalizeQuizCatalogItem(item, index) {
         title,
         topic,
         description: String(item.description || `${topic} assessment questions.`).trim(),
-        timeLimitMinutes: asgNormalizeTimerMinutes(item.timeLimitMinutes ?? item.timerMinutes ?? item.durationMinutes, 0),
+        timeLimitMinutes: asgNormalizeTimerMinutes(
+            item.timeLimitMinutes ?? item.timerMinutes ?? item.durationMinutes,
+            ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES
+        ),
         order: Number.isFinite(Number(item.order)) ? Number(item.order) : index + 1,
         status: item.status === "draft" ? "draft" : "active"
     };

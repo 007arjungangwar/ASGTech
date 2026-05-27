@@ -401,7 +401,7 @@
                     </label>
                     <label>
                         <span>Overall timer (minutes)</span>
-                        <input id="quizCatalogTimer" type="number" min="0" step="1" placeholder="0 for no timer">
+                        <input id="quizCatalogTimer" type="number" min="1" step="1" placeholder="15">
                     </label>
                     <div class="asg-form-actions asg-full-field">
                         <button class="btn-primary" type="submit">Save Quiz Exam</button>
@@ -2717,14 +2717,14 @@
             document.getElementById("quizCatalogTitle").value = "";
             document.getElementById("quizCatalogTopic").value = "";
             document.getElementById("quizCatalogDescription").value = "";
-            document.getElementById("quizCatalogTimer").value = "0";
+            document.getElementById("quizCatalogTimer").value = "15";
         }
 
         function saveQuizCatalogItem() {
             const editId = document.getElementById("quizCatalogEditId").value;
             const title = document.getElementById("quizCatalogTitle").value.trim();
             const topic = document.getElementById("quizCatalogTopic").value.trim();
-            const timeLimitMinutes = Math.max(0, Math.round(Number(document.getElementById("quizCatalogTimer").value || 0)));
+            const timeLimitMinutes = Math.max(1, Math.round(Number(document.getElementById("quizCatalogTimer").value || 15)));
             if (!title || !topic) {
                 alert("Add a quiz title and topic.");
                 return;
@@ -2758,7 +2758,7 @@
             document.getElementById("quizCatalogTitle").value = quiz.title;
             document.getElementById("quizCatalogTopic").value = quiz.topic;
             document.getElementById("quizCatalogDescription").value = quiz.description;
-            document.getElementById("quizCatalogTimer").value = String(quiz.timeLimitMinutes || 0);
+            document.getElementById("quizCatalogTimer").value = String(quiz.timeLimitMinutes || 15);
         }
 
         function deleteQuizCatalogItem(quizId) {
@@ -2778,7 +2778,7 @@
                 return `
                     <article class="asg-admin-list-item">
                         <div>
-                            <span class="asg-item-kicker">Quiz exam | ${count} questions | ${quiz.timeLimitMinutes ? `${quiz.timeLimitMinutes} min timer` : "No timer"}</span>
+                            <span class="asg-item-kicker">Quiz exam | ${count} questions | ${quiz.timeLimitMinutes || 15} min timer</span>
                             <h3>${index + 1}. ${escapeHtml(quiz.title)}</h3>
                             <p>${escapeHtml(quiz.description)}</p>
                         </div>
