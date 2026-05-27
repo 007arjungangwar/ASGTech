@@ -58,6 +58,8 @@
     </footer>
 
     <script>
+        let activeExamListType = "";
+
         function escapeHtml(value) {
             return String(value ?? "")
                 .replace(/&/g, "&amp;")
@@ -73,11 +75,13 @@
         }
 
         function showExamChoices() {
+            activeExamListType = "";
             document.getElementById("examChoices").hidden = false;
             document.getElementById("examList").hidden = true;
         }
 
         function showQuizExams() {
+            activeExamListType = "quiz";
             const quizzes = asgGetQuizCatalog().filter((quiz) => quiz.status !== "draft");
             const questions = asgGetQuizQuestions(false);
             const target = document.getElementById("examList");
@@ -92,11 +96,12 @@
                 <div class="asg-exam-list-grid">
                     ${quizzes.map((quiz) => {
                         const count = questions.filter((question) => question.quizId === quiz.id).length;
+                        const timer = quiz.timeLimitMinutes ? ` | ${quiz.timeLimitMinutes} min` : "";
                         return `
                             <a class="asg-exam-card" href="quiz.html?quiz=${encodeURIComponent(quiz.id)}">
                                 <span>${escapeHtml(quiz.topic)}</span>
                                 <strong>${escapeHtml(quiz.title)}</strong>
-                                <small>${count} questions</small>
+                                <small>${count} questions${timer}</small>
                             </a>
                         `;
                     }).join("")}
@@ -105,7 +110,9 @@
         }
 
         function showCodingExams() {
+            activeExamListType = "coding";
             const subjects = asgGetCodingExamSubjects(false).filter((subject) => subject.activeCount > 0);
+            const allChallenges = asgGetCodingChallenges(false, { globalOnly: true });
             const target = document.getElementById("examList");
             target.hidden = false;
             target.innerHTML = `
@@ -116,16 +123,38 @@
                     </div>
                 </div>
                 <div class="asg-exam-list-grid">
-                    ${subjects.map((subject) => `
+                    ${subjects.map((subject) => {
+                        const subjectChallenges = allChallenges.filter((challenge) => (
+                            String(challenge.examTopic || challenge.topic || "").toLowerCase() === subject.topic.toLowerCase()
+                        ));
+                        const totalMinutes = Math.ceil(subjectChallenges.reduce((sum, challenge) => {
+                            const seconds = typeof asgGetCodingQuestionTimeLimitSeconds === "function"
+                                ? asgGetCodingQuestionTimeLimitSeconds(challenge)
+                                : Number(challenge.timeLimitSeconds || 300);
+                            return sum + Math.max(0, Number(seconds) || 0);
+                        }, 0) / 60);
+                        return `
                             <a class="asg-exam-card" href="coding-exam.html?topic=${encodeURIComponent(subject.topic)}">
                                 <span>${escapeHtml(subject.topic)}</span>
                                 <strong>${escapeHtml(subject.topic)} Coding Exam</strong>
-                                <small>${subject.activeCount} questions</small>
+                                <small>${subject.activeCount} questions${totalMinutes ? ` | about ${totalMinutes} min` : ""}</small>
                             </a>
-                    `).join("") || `<div class="asg-empty-state"><h2>No coding exams yet</h2><p>Admin can create coding exam subjects from the dashboard.</p></div>`}
+                        `;
+                    }).join("") || `<div class="asg-empty-state"><h2>No coding exams yet</h2><p>Admin can create coding exam subjects from the dashboard.</p></div>`}
                 </div>
             `;
         }
+
+        function handleExamCenterDataUpdate(event) {
+            const key = event.detail ? event.detail.key : event.key;
+            if (![ASG_LEARNING_KEYS.quizCatalog, ASG_LEARNING_KEYS.quizQuestions, ASG_LEARNING_KEYS.codingChallenges].includes(key)) return;
+            updateExamStats();
+            if (activeExamListType === "quiz") showQuizExams();
+            if (activeExamListType === "coding") showCodingExams();
+        }
+
+        window.addEventListener("asg:data-updated", handleExamCenterDataUpdate);
+        window.addEventListener("storage", handleExamCenterDataUpdate);
 
         updateExamStats();
     </script>

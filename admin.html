@@ -399,6 +399,10 @@
                         <span>Description</span>
                         <textarea id="quizCatalogDescription" rows="3" placeholder="What this quiz exam covers."></textarea>
                     </label>
+                    <label>
+                        <span>Overall timer (minutes)</span>
+                        <input id="quizCatalogTimer" type="number" min="0" step="1" placeholder="0 for no timer">
+                    </label>
                     <div class="asg-form-actions asg-full-field">
                         <button class="btn-primary" type="submit">Save Quiz Exam</button>
                         <button class="btn-secondary" type="button" onclick="resetQuizCatalogForm()">Clear</button>
@@ -455,6 +459,10 @@
                             <option>Intermediate</option>
                             <option>Advanced</option>
                         </select>
+                    </label>
+                    <label>
+                        <span>Exam question timer (minutes)</span>
+                        <input id="codingTimeLimit" type="number" min="1" step="1" placeholder="5">
                     </label>
                     <label>
                         <span>Status</span>
@@ -2709,12 +2717,14 @@
             document.getElementById("quizCatalogTitle").value = "";
             document.getElementById("quizCatalogTopic").value = "";
             document.getElementById("quizCatalogDescription").value = "";
+            document.getElementById("quizCatalogTimer").value = "0";
         }
 
         function saveQuizCatalogItem() {
             const editId = document.getElementById("quizCatalogEditId").value;
             const title = document.getElementById("quizCatalogTitle").value.trim();
             const topic = document.getElementById("quizCatalogTopic").value.trim();
+            const timeLimitMinutes = Math.max(0, Math.round(Number(document.getElementById("quizCatalogTimer").value || 0)));
             if (!title || !topic) {
                 alert("Add a quiz title and topic.");
                 return;
@@ -2725,6 +2735,7 @@
                 title,
                 topic,
                 description: document.getElementById("quizCatalogDescription").value.trim(),
+                timeLimitMinutes,
                 order: editId
                     ? (adminQuizCatalog.find((quiz) => quiz.id === editId) || {}).order
                     : adminQuizCatalog.length + 1,
@@ -2747,6 +2758,7 @@
             document.getElementById("quizCatalogTitle").value = quiz.title;
             document.getElementById("quizCatalogTopic").value = quiz.topic;
             document.getElementById("quizCatalogDescription").value = quiz.description;
+            document.getElementById("quizCatalogTimer").value = String(quiz.timeLimitMinutes || 0);
         }
 
         function deleteQuizCatalogItem(quizId) {
@@ -2766,7 +2778,7 @@
                 return `
                     <article class="asg-admin-list-item">
                         <div>
-                            <span class="asg-item-kicker">Quiz exam | ${count} questions</span>
+                            <span class="asg-item-kicker">Quiz exam | ${count} questions | ${quiz.timeLimitMinutes ? `${quiz.timeLimitMinutes} min timer` : "No timer"}</span>
                             <h3>${index + 1}. ${escapeHtml(quiz.title)}</h3>
                             <p>${escapeHtml(quiz.description)}</p>
                         </div>
@@ -2864,6 +2876,7 @@
             renderCodingExamSubjectPicker(defaultExamTopic);
             toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = "Beginner";
+            document.getElementById("codingTimeLimit").value = "5";
             document.getElementById("codingStatus").value = "active";
             document.getElementById("codingPrompt").value = "";
             document.getElementById("codingStarter").value = "def solution():\n    pass\n";
@@ -2918,6 +2931,7 @@
                 return;
             }
             const examTopic = document.getElementById("codingTopic").value.trim() || "Python";
+            const timeLimitMinutes = Math.max(1, Math.round(Number(document.getElementById("codingTimeLimit").value || 5)));
 
             const challenge = {
                 id: editId || asgCreateId("practice"),
@@ -2934,6 +2948,7 @@
                 prompt: document.getElementById("codingPrompt").value,
                 starterCode: document.getElementById("codingStarter").value,
                 tests,
+                timeLimitSeconds: timeLimitMinutes * 60,
                 status: document.getElementById("codingStatus").value,
                 order: editId
                     ? (codingChallenges.find((item) => item.id === editId) || {}).order
@@ -2970,6 +2985,7 @@
             renderCodingExamSubjectPicker(hasExam ? examTopic : "");
             toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = challenge.difficulty;
+            document.getElementById("codingTimeLimit").value = String(Math.max(1, Math.round(Number(challenge.timeLimitSeconds || 300) / 60)));
             document.getElementById("codingStatus").value = challenge.status;
             document.getElementById("codingPrompt").value = challenge.prompt;
             document.getElementById("codingStarter").value = challenge.starterCode;
@@ -3005,10 +3021,11 @@
                     placements.push(`${challenge.courseTitle || challenge.courseId} > ${challenge.topicTitle || challenge.topicId}`);
                 }
                 const placement = placements.join(" + ") || "General practice/exam";
+                const timerMinutes = Math.max(1, Math.round(Number(challenge.timeLimitSeconds || 300) / 60));
                 return `
                     <article class="asg-admin-list-item">
                         <div>
-                            <span class="asg-item-kicker">${challenge.status} | ${escapeHtml(placement)} | ${escapeHtml(challenge.difficulty)}</span>
+                            <span class="asg-item-kicker">${challenge.status} | ${escapeHtml(placement)} | ${escapeHtml(challenge.difficulty)} | ${timerMinutes} min/question</span>
                             <h3>${index + 1}. ${escapeHtml(challenge.title)}</h3>
                             <pre class="asg-question-text compact">${escapeHtml(challenge.prompt)}</pre>
                             <small>${challenge.tests.length} tests</small>

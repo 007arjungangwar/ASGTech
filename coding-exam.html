@@ -25,6 +25,7 @@
                 <div><strong id="examQuestionCount">0</strong><span>Questions</span></div>
                 <div><strong id="examSolvedCount">0</strong><span>Solved</span></div>
                 <div><strong id="examRunCount">0</strong><span>Runs</span></div>
+                <div><strong id="examTimerMetric">--:--</strong><span>Question timer</span></div>
             </div>
         </section>
 
@@ -32,6 +33,7 @@
             <aside class="asg-challenge-list" id="challengeList"></aside>
 
             <section class="asg-code-workspace">
+                <div class="asg-assessment-timer" id="codingExamTimer" hidden></div>
                 <div id="challengeDetails" class="asg-live-panel"></div>
                 <div class="asg-editor-toolbar">
                     <span id="engineStatus">Python engine loads when you run code.</span>
@@ -70,6 +72,9 @@
         let examGuard = null;
         let examSessionId = asgCreateId("coding_exam_session");
         let lastCodingResultAttempt = null;
+        let questionTimerInterval = null;
+        let questionRemainingSeconds = {};
+        let questionLocked = {};
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -100,6 +105,159 @@
             });
         }
 
+        function formatTimer(seconds) {
+            const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+            const minutes = Math.floor(safeSeconds / 60);
+            const rest = safeSeconds % 60;
+            return `${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+        }
+
+        function getQuestionLimitSeconds(challenge) {
+            if (typeof asgGetCodingQuestionTimeLimitSeconds === "function") {
+                return asgGetCodingQuestionTimeLimitSeconds(challenge);
+            }
+            const seconds = Math.round(Number(challenge && challenge.timeLimitSeconds || 300));
+            return Number.isFinite(seconds) && seconds >= 0 ? seconds : 300;
+        }
+
+        function saveCurrentDraft() {
+            const challenge = challenges[currentChallengeIndex];
+            if (challenge) localStorage.setItem(draftKey(challenge.id), editor.value);
+        }
+
+        function getDraftForChallenge(challenge) {
+            if (!challenge) return "";
+            if (challenges[currentChallengeIndex] && challenges[currentChallengeIndex].id === challenge.id) {
+                return editor.value || localStorage.getItem(draftKey(challenge.id)) || challenge.starterCode || "def solution():\n    pass\n";
+            }
+            return localStorage.getItem(draftKey(challenge.id)) || challenge.starterCode || "def solution():\n    pass\n";
+        }
+
+        function initQuestionTimers() {
+            questionRemainingSeconds = {};
+            questionLocked = {};
+            challenges.forEach((challenge) => {
+                questionRemainingSeconds[challenge.id] = getQuestionLimitSeconds(challenge);
+                questionLocked[challenge.id] = false;
+            });
+            updateQuestionTimerUI();
+        }
+
+        function clearQuestionTimer() {
+            if (questionTimerInterval) {
+                clearInterval(questionTimerInterval);
+                questionTimerInterval = null;
+            }
+        }
+
+        function setQuestionControlsForTimer() {
+            const challenge = challenges[currentChallengeIndex];
+            const locked = Boolean(challenge && questionLocked[challenge.id]);
+            editor.disabled = locked || !examStarted || examSubmitted;
+            document.querySelectorAll(".asg-editor-toolbar button").forEach((button) => {
+                button.disabled = locked || !examStarted || examSubmitted;
+            });
+        }
+
+        function updateQuestionTimerUI() {
+            const timer = document.getElementById("codingExamTimer");
+            const metric = document.getElementById("examTimerMetric");
+            const challenge = challenges[currentChallengeIndex];
+            if (!examStarted || examSubmitted || !challenge) {
+                timer.hidden = true;
+                metric.textContent = "--:--";
+                return;
+            }
+
+            const remaining = questionRemainingSeconds[challenge.id] ?? getQuestionLimitSeconds(challenge);
+            const total = getQuestionLimitSeconds(challenge);
+            const isWarning = total > 0 && remaining <= 30;
+            const isLocked = Boolean(questionLocked[challenge.id]);
+            timer.hidden = false;
+            timer.className = `asg-assessment-timer ${isWarning ? "is-warning" : ""} ${isLocked ? "is-expired" : ""}`;
+            timer.innerHTML = `
+                <div>
+                    <span>Question ${currentChallengeIndex + 1} timer</span>
+                    <strong>${formatTimer(remaining)}</strong>
+                </div>
+                <small>${escapeHtml(challenge.title)}${isLocked ? " | Time completed" : " | Auto-advances when time ends"}</small>
+            `;
+            metric.textContent = formatTimer(remaining);
+            setQuestionControlsForTimer();
+        }
+
+        function findNextUnlockedQuestion(startIndex = currentChallengeIndex + 1) {
+            for (let offset = 0; offset < challenges.length; offset += 1) {
+                const index = (startIndex + offset) % challenges.length;
+                const challenge = challenges[index];
+                if (challenge && !questionLocked[challenge.id]) return index;
+            }
+            return -1;
+        }
+
+        function startQuestionTimer() {
+            clearQuestionTimer();
+            const challenge = challenges[currentChallengeIndex];
+            if (!examStarted || examSubmitted || !challenge) {
+                updateQuestionTimerUI();
+                return;
+            }
+
+            const limit = getQuestionLimitSeconds(challenge);
+            if (!Object.prototype.hasOwnProperty.call(questionRemainingSeconds, challenge.id)) {
+                questionRemainingSeconds[challenge.id] = limit;
+            }
+            if (limit <= 0) {
+                updateQuestionTimerUI();
+                return;
+            }
+            if (questionRemainingSeconds[challenge.id] <= 0) {
+                handleQuestionTimeExpired();
+                return;
+            }
+
+            updateQuestionTimerUI();
+            questionTimerInterval = setInterval(() => {
+                const activeChallenge = challenges[currentChallengeIndex];
+                if (!activeChallenge || !examStarted || examSubmitted) {
+                    clearQuestionTimer();
+                    updateQuestionTimerUI();
+                    return;
+                }
+
+                questionRemainingSeconds[activeChallenge.id] = Math.max(0, Number(questionRemainingSeconds[activeChallenge.id] || 0) - 1);
+                updateQuestionTimerUI();
+                if (questionRemainingSeconds[activeChallenge.id] <= 0) {
+                    handleQuestionTimeExpired();
+                }
+            }, 1000);
+        }
+
+        function handleQuestionTimeExpired() {
+            clearQuestionTimer();
+            const challenge = challenges[currentChallengeIndex];
+            if (!challenge || examSubmitted || !examStarted) return;
+            saveCurrentDraft();
+            questionRemainingSeconds[challenge.id] = 0;
+            questionLocked[challenge.id] = true;
+            renderChallengeList();
+
+            const nextIndex = findNextUnlockedQuestion(currentChallengeIndex + 1);
+            if (nextIndex >= 0) {
+                currentChallengeIndex = nextIndex;
+                renderChallengeList();
+                renderChallengeDetails();
+                document.getElementById("runOutput").innerHTML = `
+                    <h3>Question moved</h3>
+                    <p>The previous question timer finished. Continue with the next available question.</p>
+                `;
+                startQuestionTimer();
+                return;
+            }
+
+            finalizeCodingExam("all-question-time-used", true);
+        }
+
         function updateStats() {
             const submissions = asgGetCodingSubmissions(examUser).filter((submission) => {
                 const challenge = challenges.find((item) => item.id === submission.challengeId);
@@ -119,12 +277,16 @@
                     <h2>${escapeHtml(activeTopic)}</h2>
                     <a href="exam-center.html">Exam Center</a>
                 </div>
-                ${challenges.map((challenge, index) => `
-                    <button class="asg-challenge-button ${index === currentChallengeIndex ? "active" : ""}" type="button" onclick="selectChallenge(${index})">
-                        <span>${escapeHtml(challenge.title)}</span>
-                        <small>${escapeHtml(challenge.difficulty)} | ${solvedIds.has(challenge.id) ? "Solved" : "Open"}</small>
-                    </button>
-                `).join("")}
+                ${challenges.map((challenge, index) => {
+                    const locked = Boolean(questionLocked[challenge.id]);
+                    const remaining = questionRemainingSeconds[challenge.id] ?? getQuestionLimitSeconds(challenge);
+                    return `
+                        <button class="asg-challenge-button ${index === currentChallengeIndex ? "active" : ""} ${locked ? "is-locked" : ""}" type="button" onclick="selectChallenge(${index})" ${locked ? "disabled" : ""}>
+                            <span>${escapeHtml(challenge.title)}</span>
+                            <small>${escapeHtml(challenge.difficulty)} | ${solvedIds.has(challenge.id) ? "Solved" : "Open"} | ${locked ? "Time completed" : formatTimer(remaining)}</small>
+                        </button>
+                    `;
+                }).join("")}
             `;
         }
 
@@ -147,7 +309,7 @@
             document.getElementById("challengeDetails").innerHTML = `
                 <div class="asg-question-head">
                     <span>${escapeHtml(challenge.examTopic || challenge.topic)}</span>
-                    <small>${escapeHtml(challenge.difficulty)}</small>
+                    <small>${escapeHtml(challenge.difficulty)} | ${formatTimer(questionRemainingSeconds[challenge.id] ?? getQuestionLimitSeconds(challenge))}</small>
                 </div>
                 <h2>${escapeHtml(challenge.title)}</h2>
                 <pre class="asg-question-text">${escapeHtml(challenge.prompt)}</pre>
@@ -166,10 +328,14 @@
 
         function selectChallenge(index) {
             if (!examStarted || examSubmitted) return;
+            const nextChallenge = challenges[index];
+            if (!nextChallenge || questionLocked[nextChallenge.id]) return;
+            saveCurrentDraft();
             currentChallengeIndex = index;
             renderChallengeList();
             renderChallengeDetails();
             renderOutputIdle();
+            startQuestionTimer();
         }
 
         function renderOutputIdle() {
@@ -177,6 +343,10 @@
         }
 
         function renderExamStart() {
+            clearQuestionTimer();
+            document.getElementById("codingExamTimer").hidden = true;
+            document.getElementById("examTimerMetric").textContent = "--:--";
+            const totalMinutes = Math.ceil(challenges.reduce((total, challenge) => total + getQuestionLimitSeconds(challenge), 0) / 60);
             document.getElementById("challengeList").innerHTML = `
                 <div class="asg-challenge-list-head">
                     <h2>${escapeHtml(activeTopic)}</h2>
@@ -191,7 +361,7 @@
                 <div class="asg-proctor-card">
                     <span class="asg-proctor-pill">Fullscreen coding exam</span>
                     <h2>${escapeHtml(activeTopic)} Coding Exam</h2>
-                    <p>Start opens the coding exam in fullscreen. If you switch tabs, minimize the browser, or exit fullscreen, your current code will submit automatically.</p>
+                    <p>Start opens the coding exam in fullscreen. Each question has its own timer and moves forward automatically when time finishes. Total available time is about ${totalMinutes} minute${totalMinutes === 1 ? "" : "s"}.</p>
                     <button class="btn-primary" type="button" onclick="startCodingExam()">Start Coding Exam</button>
                 </div>
             `;
@@ -202,6 +372,9 @@
         }
 
         function renderExamLocked() {
+            clearQuestionTimer();
+            document.getElementById("codingExamTimer").hidden = true;
+            document.getElementById("examTimerMetric").textContent = "--:--";
             document.getElementById("challengeList").innerHTML = `
                 <div class="asg-challenge-list-head">
                     <h2>${escapeHtml(activeTopic)}</h2>
@@ -253,10 +426,12 @@
             examStarted = true;
             examSubmitted = false;
             examSessionId = asgCreateId("coding_exam_session");
+            initQuestionTimers();
             setExamControlsDisabled(false);
             renderChallengeList();
             renderChallengeDetails();
             renderOutputIdle();
+            startQuestionTimer();
         }
 
         function resetStarterCode() {
@@ -427,15 +602,19 @@ json.dumps(payload, default=str)
             `;
         }
 
-        function saveCodingExamSubmission(challenge, payload, reason = "manual-run") {
+        function saveCodingExamSubmission(challenge, payload, reason = "manual-run", codeValue = editor.value) {
             const percentage = payload.total ? Math.round((payload.passed / payload.total) * 100) : 0;
             return asgSaveCodingSubmission({
                 challengeId: challenge.id,
                 challengeTitle: `${activeTopic} Exam: ${challenge.title}`,
+                courseId: challenge.courseId || "",
+                courseTitle: challenge.courseTitle || "",
+                topicId: challenge.topicId || "",
+                topicTitle: challenge.topicTitle || "",
                 passed: payload.passed,
                 total: payload.total,
                 percentage,
-                code: editor.value,
+                code: codeValue,
                 results: payload.results,
                 stdout: payload.stdout,
                 examType: "coding-exam",
@@ -460,9 +639,43 @@ json.dumps(payload, default=str)
             };
         }
 
+        async function evaluateAllChallengeDrafts(reason = "final-submit") {
+            saveCurrentDraft();
+            document.getElementById("runOutput").innerHTML = `
+                <h3>Submitting exam</h3>
+                <p>Checking saved code for every question before the final score is calculated.</p>
+            `;
+
+            let engine = null;
+            let engineError = null;
+            try {
+                engine = await getPyodideEngine();
+            } catch (error) {
+                engineError = error;
+            }
+
+            for (const challenge of challenges) {
+                const codeValue = getDraftForChallenge(challenge);
+                let payload = null;
+                if (engine) {
+                    try {
+                        payload = JSON.parse(await engine.runPythonAsync(buildHarness(codeValue, challenge.tests)));
+                    } catch (error) {
+                        payload = buildFallbackPayload(challenge, error);
+                    }
+                } else {
+                    payload = buildFallbackPayload(challenge, engineError);
+                }
+
+                saveCodingExamSubmission(challenge, payload, reason, codeValue);
+            }
+        }
+
         async function runExamCode(options = {}) {
             const challenge = challenges[currentChallengeIndex];
             if (!challenge || !examStarted || examSubmitted) return null;
+            if (questionLocked[challenge.id]) return null;
+            saveCurrentDraft();
             const runButton = document.querySelector(".asg-editor-toolbar .btn-primary");
             runButton.disabled = true;
             runButton.textContent = "Running...";
@@ -474,8 +687,10 @@ json.dumps(payload, default=str)
             try {
                 const engine = await getPyodideEngine();
                 const payload = JSON.parse(await engine.runPythonAsync(buildHarness(editor.value, challenge.tests)));
-                const savedSubmission = saveCodingExamSubmission(challenge, payload, options.reason || "manual-run");
-                renderRunResult(payload);
+                const savedSubmission = saveCodingExamSubmission(challenge, payload, options.reason || "manual-run", editor.value);
+                if (challenges[currentChallengeIndex] && challenges[currentChallengeIndex].id === challenge.id && !examSubmitted) {
+                    renderRunResult(payload);
+                }
                 updateStats();
                 renderChallengeList();
                 return savedSubmission;
@@ -483,15 +698,19 @@ json.dumps(payload, default=str)
                 document.getElementById("engineStatus").textContent = "Python engine failed to load.";
                 if (options.finalRun) {
                     const payload = buildFallbackPayload(challenge, error);
-                    const savedSubmission = saveCodingExamSubmission(challenge, payload, options.reason || "auto-submit");
+                    const savedSubmission = saveCodingExamSubmission(challenge, payload, options.reason || "auto-submit", editor.value);
                     renderRunResult(payload);
                     return savedSubmission;
                 }
                 document.getElementById("runOutput").innerHTML = `<h3>Run output</h3>${asgRenderPythonError(error.message || error)}`;
                 return null;
             } finally {
-                runButton.disabled = false;
                 runButton.textContent = "Run Code";
+                if (examStarted && !examSubmitted && challenges[currentChallengeIndex] && challenges[currentChallengeIndex].id === challenge.id && !questionLocked[challenge.id]) {
+                    runButton.disabled = false;
+                } else {
+                    setQuestionControlsForTimer();
+                }
             }
         }
 
@@ -518,6 +737,9 @@ json.dumps(payload, default=str)
         function renderCodingExamResult(attempt) {
             lastCodingResultAttempt = attempt;
             const canRetake = canStartCodingExam();
+            const timeMessage = String(attempt.reason || "").includes("time")
+                ? "Submitted because all question timers finished."
+                : `Submitted because exam focus was lost (${escapeHtml(attempt.reason)}).`;
             document.getElementById("challengeDetails").innerHTML = `
                 <div class="asg-proctor-card">
                     <span class="asg-proctor-pill">${attempt.status === "auto-submitted" ? "Auto-submitted" : "Submitted"}</span>
@@ -525,7 +747,7 @@ json.dumps(payload, default=str)
                     <div class="asg-result-summary">
                         <div><span>Score</span><strong>${attempt.score}/${attempt.total}</strong></div>
                         <div><span>Percentage</span><strong>${Math.round(attempt.percentage)}%</strong></div>
-                        <p>${attempt.status === "auto-submitted" ? `Submitted because exam focus was lost (${escapeHtml(attempt.reason)}).` : "Exam submitted and saved to progress."}</p>
+                        <p>${attempt.status === "auto-submitted" ? timeMessage : "Exam submitted and saved to progress."}</p>
                     </div>
                     <div class="asg-form-actions">
                         ${canRetake
@@ -551,15 +773,20 @@ json.dumps(payload, default=str)
             currentChallengeIndex = 0;
             examSessionId = asgCreateId("coding_exam_session");
             lastCodingResultAttempt = null;
+            questionRemainingSeconds = {};
+            questionLocked = {};
             renderExamStart();
         }
 
         async function finalizeCodingExam(reason = "manual-submit", auto = false) {
             if (examSubmitting || examSubmitted || !examStarted) return;
             examSubmitting = true;
+            clearQuestionTimer();
+            saveCurrentDraft();
+            setExamControlsDisabled(true);
             if (examGuard) examGuard.stop();
 
-            await runExamCode({ finalRun: true, reason });
+            await evaluateAllChallengeDrafts(reason);
             const summary = getCodingExamScore();
             const percentage = summary.total ? Math.round((summary.score / summary.total) * 100) : 0;
             const attempt = asgSaveExamAttempt({
@@ -578,6 +805,8 @@ json.dumps(payload, default=str)
             examSubmitted = true;
             examStarted = false;
             examSubmitting = false;
+            document.getElementById("codingExamTimer").hidden = true;
+            document.getElementById("examTimerMetric").textContent = "--:--";
             if (!auto) ASGExamGuard.exitFullscreen();
             renderCodingExamResult(attempt);
             updateStats();
@@ -589,6 +818,9 @@ json.dumps(payload, default=str)
         }
 
         function loadExam() {
+            clearQuestionTimer();
+            questionRemainingSeconds = {};
+            questionLocked = {};
             document.getElementById("examTitle").textContent = `${activeTopic} Coding Exam`;
             challenges = asgGetCodingChallenges(false, { globalOnly: true }).filter((challenge) => (
                 String(challenge.examTopic || challenge.topic || "").toLowerCase() === activeTopic.toLowerCase()

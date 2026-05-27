@@ -2896,10 +2896,65 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
     color: #991b1b;
 }
 
+.asg-assessment-timer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(15, 118, 110, 0.22);
+    border-radius: 8px;
+    background: #ecfdf5;
+    color: var(--asg-ink);
+}
+
+.asg-assessment-timer.compact {
+    min-width: min(240px, 100%);
+    margin: 0;
+}
+
+.asg-assessment-timer div {
+    display: grid;
+    gap: 2px;
+}
+
+.asg-assessment-timer span,
+.asg-assessment-timer small {
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.asg-assessment-timer strong {
+    color: var(--asg-primary-dark);
+    font-size: 1.55rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.asg-assessment-timer.is-warning {
+    border-color: rgba(245, 158, 11, 0.45);
+    background: #fffbeb;
+}
+
+.asg-assessment-timer.is-warning strong {
+    color: #92400e;
+}
+
+.asg-assessment-timer.is-expired {
+    border-color: rgba(220, 38, 38, 0.35);
+    background: #fef2f2;
+}
+
+.asg-assessment-timer.is-expired strong {
+    color: var(--asg-danger);
+}
+
 .asg-hero-metrics,
 .asg-admin-status {
     display: grid;
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 10px;
     min-width: min(420px, 100%);
 }
@@ -3191,6 +3246,55 @@ body.asg-theme-dark.asg-lesson-focus .asg-topic-content {
 .asg-challenge-button:hover {
     border-color: var(--asg-primary);
     background: #f0fdfa;
+}
+
+.asg-subject-list {
+    display: grid;
+    gap: 8px;
+}
+
+.asg-subject-button {
+    width: 100%;
+    min-height: 58px;
+    padding: 12px;
+    border: 1px solid var(--asg-border);
+    border-radius: 8px;
+    background: white;
+    color: var(--asg-ink);
+    cursor: pointer;
+    text-align: left;
+}
+
+.asg-subject-button span,
+.asg-subject-button small {
+    display: block;
+}
+
+.asg-subject-button span {
+    font-weight: 850;
+}
+
+.asg-subject-button small {
+    color: var(--asg-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.asg-subject-button.active,
+.asg-subject-button:hover {
+    border-color: var(--asg-primary);
+    background: #ecfeff;
+}
+
+.asg-challenge-list-subhead {
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--asg-border);
+}
+
+.asg-challenge-button.is-locked {
+    cursor: not-allowed;
+    opacity: 0.68;
 }
 
 .asg-code-workspace {
@@ -5992,6 +6096,28 @@ body.dark-mode:not(.has-asg-shell) footer {
 .asg-ai-message p {
     margin: 0;
     color: var(--asg-ink);
+}
+
+.asg-ai-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.asg-ai-sources a {
+    padding: 0.28rem 0.5rem;
+    border: 1px solid var(--asg-border);
+    border-radius: 999px;
+    background: var(--asg-surface-tint);
+    color: var(--asg-primary-dark);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.asg-ai-sources a:hover {
+    border-color: var(--asg-primary);
+    background: var(--asg-surface-soft);
 }
 
 .asg-ai-message.user {

@@ -79,6 +79,8 @@
         let pyodideInstance = null;
         let pyodideLoading = null;
         let codingChallenges = [];
+        let practiceSubjects = [];
+        let activeSubjectKey = localStorage.getItem("asgCodingPracticeSubject") || "";
         let currentChallengeIndex = 0;
 
         function escapeHtml(value) {
@@ -95,33 +97,92 @@
             return `codingDraft_${userId}_${challengeId}`;
         }
 
+        function practiceSubjectKey(parts) {
+            return parts.map((part) => String(part || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")).join("::");
+        }
+
+        function buildPracticeSubjects() {
+            const allChallenges = asgGetCodingChallenges(false);
+            const subjects = [];
+            const courses = asgGetCourses(false);
+
+            courses.forEach((course) => {
+                (course.topics || []).forEach((topic) => {
+                    const topicChallenges = allChallenges.filter((challenge) => (
+                        challenge.courseId === course.id &&
+                        challenge.topicId === topic.id
+                    ));
+                    if (!topicChallenges.length) return;
+                    subjects.push({
+                        key: practiceSubjectKey(["course", course.id, topic.id]),
+                        kind: "course",
+                        title: topic.title,
+                        subtitle: course.title,
+                        challenges: topicChallenges
+                    });
+                });
+            });
+
+            asgGetCodingExamSubjects(false).forEach((subject) => {
+                const topicChallenges = allChallenges.filter((challenge) => (
+                    challenge.examEnabled &&
+                    String(challenge.examTopic || challenge.topic || "").toLowerCase() === subject.topic.toLowerCase()
+                ));
+                if (!topicChallenges.length) return;
+                subjects.push({
+                    key: practiceSubjectKey(["exam", subject.topic]),
+                    kind: "exam",
+                    title: subject.topic,
+                    subtitle: "General practice and coding exam subject",
+                    challenges: topicChallenges
+                });
+            });
+
+            return subjects;
+        }
+
+        function getActiveSubject() {
+            return practiceSubjects.find((subject) => subject.key === activeSubjectKey) || practiceSubjects[0] || null;
+        }
+
+        function getChallengeScopeLabel(challenge) {
+            if (challenge.courseTitle && challenge.topicTitle) {
+                return `${challenge.courseTitle} / ${challenge.topicTitle}`;
+            }
+            return challenge.examTopic || challenge.topic || "Coding";
+        }
+
         function updatePracticeStats() {
             const submissions = asgGetCodingSubmissions(practiceUser);
+            const activeIds = new Set(codingChallenges.map((challenge) => challenge.id));
             const solvedIds = new Set(
                 submissions
-                    .filter((submission) => submission.total > 0 && submission.passed === submission.total)
+                    .filter((submission) => activeIds.has(submission.challengeId) && submission.total > 0 && submission.passed === submission.total)
                     .map((submission) => submission.challengeId)
             );
+            const activeAttempts = submissions.filter((submission) => activeIds.has(submission.challengeId));
 
             document.getElementById("practiceCount").textContent = codingChallenges.length;
             document.getElementById("practiceSolved").textContent = solvedIds.size;
-            document.getElementById("practiceAttempts").textContent = submissions.length;
+            document.getElementById("practiceAttempts").textContent = activeAttempts.length;
         }
 
         function renderChallengeList() {
             const submissions = asgGetCodingSubmissions(practiceUser);
+            const activeIds = new Set(codingChallenges.map((challenge) => challenge.id));
             const solvedIds = new Set(
                 submissions
-                    .filter((submission) => submission.total > 0 && submission.passed === submission.total)
+                    .filter((submission) => activeIds.has(submission.challengeId) && submission.total > 0 && submission.passed === submission.total)
                     .map((submission) => submission.challengeId)
             );
+            const activeSubject = getActiveSubject();
 
             const list = document.getElementById("challengeList");
-            if (!codingChallenges.length) {
+            if (!practiceSubjects.length) {
                 list.innerHTML = `
                     <div class="asg-empty-state">
                         <h2>No active challenges</h2>
-                        <p>Your admin can publish Python questions from the dashboard.</p>
+                        <p>Your admin can attach coding tasks to course topics or publish general practice questions from the dashboard.</p>
                     </div>
                 `;
                 return;
@@ -129,7 +190,23 @@
 
             list.innerHTML = `
                 <div class="asg-challenge-list-head">
-                    <h2>Practice set</h2>
+                    <h2>Subjects</h2>
+                    <span>${practiceSubjects.length}</span>
+                </div>
+                <div class="asg-subject-list">
+                    ${practiceSubjects.map((subject) => `
+                        <button
+                            type="button"
+                            class="asg-subject-button ${subject.key === activeSubjectKey ? "active" : ""}"
+                            onclick="selectPracticeSubject('${escapeHtml(subject.key)}')"
+                        >
+                            <span>${escapeHtml(subject.title)}</span>
+                            <small>${escapeHtml(subject.subtitle)} | ${subject.challenges.length} question${subject.challenges.length === 1 ? "" : "s"}</small>
+                        </button>
+                    `).join("")}
+                </div>
+                <div class="asg-challenge-list-head asg-challenge-list-subhead">
+                    <h2>${escapeHtml(activeSubject ? activeSubject.title : "Questions")}</h2>
                     <span>${codingChallenges.length} active</span>
                 </div>
                 ${codingChallenges.map((challenge, index) => `
@@ -141,7 +218,7 @@
                         <span>${escapeHtml(challenge.title)}</span>
                         <small>${escapeHtml(challenge.difficulty)} | ${solvedIds.has(challenge.id) ? "Solved" : "Open"}</small>
                     </button>
-                `).join("")}
+                `).join("") || `<div class="asg-empty-state"><h2>No questions in this subject</h2><p>Choose another subject or ask admin to publish questions here.</p></div>`}
             `;
         }
 
@@ -167,7 +244,7 @@
 
             details.innerHTML = `
                 <div class="asg-question-head">
-                    <span>${escapeHtml(challenge.examTopic || challenge.topic)}</span>
+                    <span>${escapeHtml(getChallengeScopeLabel(challenge))}</span>
                     <small>${escapeHtml(challenge.difficulty)}</small>
                 </div>
                 <h2>${escapeHtml(challenge.title)}</h2>
@@ -187,6 +264,19 @@
 
         function selectChallenge(index) {
             currentChallengeIndex = index;
+            renderChallengeList();
+            renderChallengeDetails();
+            renderOutputIdle();
+        }
+
+        function selectPracticeSubject(subjectKey) {
+            const subject = practiceSubjects.find((item) => item.key === subjectKey);
+            if (!subject) return;
+            activeSubjectKey = subject.key;
+            localStorage.setItem("asgCodingPracticeSubject", activeSubjectKey);
+            codingChallenges = subject.challenges;
+            currentChallengeIndex = 0;
+            updatePracticeStats();
             renderChallengeList();
             renderChallengeDetails();
             renderOutputIdle();
@@ -446,6 +536,10 @@ json.dumps(payload, default=str)
                 const savedSubmission = asgSaveCodingSubmission({
                     challengeId: challenge.id,
                     challengeTitle: challenge.title,
+                    courseId: challenge.courseId || "",
+                    courseTitle: challenge.courseTitle || "",
+                    topicId: challenge.topicId || "",
+                    topicTitle: challenge.topicTitle || "",
                     passed: payload.passed,
                     total: payload.total,
                     percentage,
@@ -471,7 +565,16 @@ json.dumps(payload, default=str)
         }
 
         function loadPracticeData(keepChallengeId = "") {
-            codingChallenges = asgGetCodingChallenges(false, { globalOnly: true });
+            practiceSubjects = buildPracticeSubjects();
+            if (!practiceSubjects.some((subject) => subject.key === activeSubjectKey)) {
+                activeSubjectKey = practiceSubjects[0] ? practiceSubjects[0].key : "";
+            }
+
+            const activeSubject = getActiveSubject();
+            codingChallenges = activeSubject ? activeSubject.challenges : [];
+            if (activeSubjectKey) {
+                localStorage.setItem("asgCodingPracticeSubject", activeSubjectKey);
+            }
 
             if (keepChallengeId) {
                 const nextIndex = codingChallenges.findIndex((challenge) => challenge.id === keepChallengeId);
@@ -488,7 +591,7 @@ json.dumps(payload, default=str)
 
         function handleCodingDataUpdate(event) {
             const key = event.detail ? event.detail.key : event.key;
-            if (key !== ASG_LEARNING_KEYS.codingChallenges) return;
+            if (![ASG_LEARNING_KEYS.codingChallenges, ASG_LEARNING_KEYS.courses].includes(key)) return;
             const currentId = codingChallenges[currentChallengeIndex] ? codingChallenges[currentChallengeIndex].id : "";
             loadPracticeData(currentId);
         }

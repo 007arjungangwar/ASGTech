@@ -23,7 +23,7 @@
             <div class="asg-hero-metrics">
                 <div><strong id="aiSessionCount">0</strong><span>Messages</span></div>
                 <div><strong id="aiTopicCount">8</strong><span>Topics</span></div>
-                <div><strong>Live</strong><span>Assistant</span></div>
+                <div><strong>Web</strong><span>Assisted</span></div>
             </div>
         </section>
 
@@ -125,6 +125,10 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function escapeAssistantAttribute(value) {
+            return escapeAssistantText(value).replace(/`/g, "&#096;");
+        }
+
         function readAssistantHistory() {
             try {
                 const history = JSON.parse(localStorage.getItem(assistantStorageKey) || "[]");
@@ -148,20 +152,35 @@
             `).join("");
         }
 
-        function addMessage(text, role, persist = true) {
+        function renderAssistantSources(sources = []) {
+            const cleanSources = (Array.isArray(sources) ? sources : [])
+                .filter((source) => source && source.url && source.title)
+                .slice(0, 3);
+            if (!cleanSources.length) return "";
+            return `
+                <div class="asg-ai-sources">
+                    ${cleanSources.map((source) => `
+                        <a href="${escapeAssistantAttribute(source.url)}" target="_blank" rel="noopener">${escapeAssistantText(source.title)}</a>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        function addMessage(text, role, persist = true, sources = []) {
             const messagesDiv = document.getElementById("chatMessages");
             const message = document.createElement("article");
             message.className = `asg-ai-message ${role === "user" ? "user" : "assistant"}`;
             message.innerHTML = `
                 <span>${role === "user" ? "You" : "ASG Tutor"}</span>
                 <p>${escapeAssistantText(text)}</p>
+                ${role === "assistant" ? renderAssistantSources(sources) : ""}
             `;
             messagesDiv.appendChild(message);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
             if (persist) {
                 const history = readAssistantHistory();
-                history.push({ role, text, at: new Date().toISOString() });
+                history.push({ role, text, sources, at: new Date().toISOString() });
                 saveAssistantHistory(history);
                 updateAssistantStats();
             }
@@ -176,11 +195,11 @@
                 updateAssistantStats();
                 return;
             }
-            history.forEach((item) => addMessage(item.text, item.role, false));
+            history.forEach((item) => addMessage(item.text, item.role, false, item.sources || []));
             updateAssistantStats();
         }
 
-        function getBotResponse(question) {
+        function getLocalTutorResponse(question) {
             const q = String(question || "").toLowerCase();
             const matched = assistantKnowledge.find((entry) => entry.match.some((word) => q.includes(word)));
 
@@ -199,20 +218,121 @@
             return "Here is a practical next step: write down the topic, the exact confusion, and one example. Then open the matching course lesson or coding practice. If you ask with the topic name, I can give a more direct explanation.";
         }
 
-        function sendMessage() {
+        function cleanAssistantQuery(question) {
+            return String(question || "")
+                .replace(/[^\w\s+#.-]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 120);
+        }
+
+        async function fetchJsonWithTimeout(url, timeout = 6500) {
+            const controller = new AbortController();
+            const timer = window.setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+                return await response.json();
+            } finally {
+                window.clearTimeout(timer);
+            }
+        }
+
+        async function fetchWikipediaContext(query) {
+            const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&namespace=0&limit=1&format=json&origin=*&search=${encodeURIComponent(query)}`;
+            const search = await fetchJsonWithTimeout(searchUrl);
+            const title = search && search[1] && search[1][0];
+            if (!title) return null;
+
+            const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+            const summary = await fetchJsonWithTimeout(summaryUrl);
+            if (!summary || !summary.extract) return null;
+
+            return {
+                title: summary.title || title,
+                snippet: summary.extract,
+                url: summary.content_urls && summary.content_urls.desktop ? summary.content_urls.desktop.page : `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`
+            };
+        }
+
+        async function fetchDuckDuckGoContext(query) {
+            const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1&no_redirect=1`;
+            const data = await fetchJsonWithTimeout(url);
+            const text = data && (data.AbstractText || data.Answer || data.Definition);
+            const title = data && (data.Heading || data.AbstractSource || "DuckDuckGo Instant Answer");
+            const sourceUrl = data && (data.AbstractURL || data.DefinitionURL || `https://duckduckgo.com/?q=${encodeURIComponent(query)}`);
+            if (!text) return null;
+            return { title, snippet: text, url: sourceUrl };
+        }
+
+        async function getWebTutorContext(question) {
+            const query = cleanAssistantQuery(question);
+            if (!query || query.length < 3) return { snippets: [], sources: [] };
+
+            const results = await Promise.allSettled([
+                fetchWikipediaContext(query),
+                fetchDuckDuckGoContext(query)
+            ]);
+
+            const contexts = results
+                .filter((result) => result.status === "fulfilled" && result.value)
+                .map((result) => result.value);
+            const unique = [];
+            const seenUrls = new Set();
+            contexts.forEach((context) => {
+                if (!context.url || seenUrls.has(context.url)) return;
+                seenUrls.add(context.url);
+                unique.push(context);
+            });
+
+            return {
+                snippets: unique.map((item) => item.snippet).filter(Boolean),
+                sources: unique.map((item) => ({ title: item.title, url: item.url }))
+            };
+        }
+
+        function buildTutorAnswer(question, localAnswer, webContext) {
+            const snippets = (webContext.snippets || [])
+                .map((snippet) => String(snippet || "").replace(/\s+/g, " ").trim())
+                .filter(Boolean);
+            if (!snippets.length) {
+                return {
+                    text: `${localAnswer} I could not fetch a live reference just now, so I am answering from the built-in ASG study guide.`,
+                    sources: []
+                };
+            }
+
+            const reference = snippets[0].split(". ").slice(0, 2).join(". ");
+            return {
+                text: `${reference}. Study angle: ${localAnswer}`,
+                sources: webContext.sources || []
+            };
+        }
+
+        async function getBotResponse(question) {
+            const localAnswer = getLocalTutorResponse(question);
+            const webContext = await getWebTutorContext(question);
+            return buildTutorAnswer(question, localAnswer, webContext);
+        }
+
+        async function sendMessage() {
             const input = document.getElementById("chatInput");
             const question = input.value.trim();
             if (!question) return;
 
             addMessage(question, "user");
             input.value = "";
-            document.getElementById("assistantStatus").textContent = "Thinking through your study question...";
+            document.getElementById("assistantStatus").textContent = "Looking up a live reference...";
 
-            window.setTimeout(() => {
-                const response = getBotResponse(question);
-                addMessage(response, "assistant");
+            try {
+                const response = await getBotResponse(question);
+                addMessage(response.text, "assistant", true, response.sources);
                 document.getElementById("assistantStatus").textContent = "Ready to help with your next learning step.";
-            }, 240);
+            } catch (error) {
+                const fallback = getLocalTutorResponse(question);
+                addMessage(`${fallback} Live lookup is unavailable right now, so I used the built-in ASG study guide.`, "assistant");
+                document.getElementById("assistantStatus").textContent = "Ready to help with your next learning step.";
+            }
         }
 
         function handleAssistantInput(event) {

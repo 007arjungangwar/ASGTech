@@ -48,13 +48,15 @@
 
     <script>
         const quizUser = getCurrentUser();
-        const quizCatalog = asgGetQuizCatalog();
+        let quizCatalog = asgGetQuizCatalog();
         let quizQuestions = [];
         let activeQuizId = getInitialQuizId();
         let quizSubmitted = false;
         let quizExamStarted = false;
         let quizGuard = null;
         let lastQuizResultAttempt = null;
+        let quizTimerInterval = null;
+        let quizRemainingSeconds = 0;
 
         function getInitialQuizId() {
             const params = new URLSearchParams(window.location.search);
@@ -77,6 +79,55 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function getQuizTimeLimitMinutes(quiz = getActiveQuiz()) {
+            const minutes = Math.round(Number(quiz && quiz.timeLimitMinutes || 0));
+            return Number.isFinite(minutes) && minutes > 0 ? minutes : 0;
+        }
+
+        function formatQuizTime(seconds) {
+            const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
+            const minutes = Math.floor(safeSeconds / 60);
+            const rest = safeSeconds % 60;
+            return `${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+        }
+
+        function clearQuizTimer() {
+            if (quizTimerInterval) {
+                clearInterval(quizTimerInterval);
+                quizTimerInterval = null;
+            }
+        }
+
+        function updateQuizTimerDisplay() {
+            const timer = document.getElementById("quizTimer");
+            if (!timer) return;
+            const isWarning = quizRemainingSeconds > 0 && quizRemainingSeconds <= 60;
+            timer.className = `asg-assessment-timer ${isWarning ? "is-warning" : ""}`;
+            timer.innerHTML = `
+                <div>
+                    <span>Overall timer</span>
+                    <strong>${formatQuizTime(quizRemainingSeconds)}</strong>
+                </div>
+                <small>Auto-submits when the quiz time finishes</small>
+            `;
+        }
+
+        function startQuizTimer() {
+            clearQuizTimer();
+            const minutes = getQuizTimeLimitMinutes();
+            if (!minutes) return;
+            quizRemainingSeconds = minutes * 60;
+            updateQuizTimerDisplay();
+            quizTimerInterval = setInterval(() => {
+                quizRemainingSeconds = Math.max(0, quizRemainingSeconds - 1);
+                updateQuizTimerDisplay();
+                if (quizRemainingSeconds <= 0) {
+                    clearQuizTimer();
+                    submitSkillQuiz({ reason: "time-limit", force: true, auto: true });
+                }
+            }, 1000);
         }
 
         function answerTextClass(value) {
@@ -114,6 +165,7 @@
                     ? Math.round(Math.max(...attempts.map((attempt) => Number(attempt.percentage || 0))))
                     : 0;
                 const locked = questionCount > 0 && !canStartQuizExam(quiz.id);
+                const timerLabel = quiz.timeLimitMinutes ? ` | ${quiz.timeLimitMinutes} min` : "";
 
                 return `
                     <button
@@ -123,7 +175,7 @@
                     >
                         <span>${escapeHtml(quiz.title)}</span>
                         <strong>${questionCount} questions</strong>
-                        <small>${attempts.length} attempts | Best ${best}% ${locked ? "| Retake locked" : ""}</small>
+                        <small>${attempts.length} attempts | Best ${best}%${timerLabel} ${locked ? "| Retake locked" : ""}</small>
                     </button>
                 `;
             }).join("");
@@ -138,6 +190,8 @@
             activeQuizId = asgGetQuizById(quizId).id;
             quizSubmitted = false;
             quizExamStarted = false;
+            clearQuizTimer();
+            quizRemainingSeconds = 0;
             lastQuizResultAttempt = null;
             localStorage.setItem("asgSelectedQuizId", activeQuizId);
 
@@ -149,6 +203,7 @@
         }
 
         function renderQuiz() {
+            quizCatalog = asgGetQuizCatalog();
             const activeQuiz = getActiveQuiz();
             quizQuestions = asgGetQuizQuestions(false, activeQuiz.id);
             const mount = document.getElementById("quizMount");
@@ -158,6 +213,10 @@
             updateQuizStats();
             result.hidden = true;
             mount.hidden = false;
+            if (!quizExamStarted) {
+                clearQuizTimer();
+                quizRemainingSeconds = 0;
+            }
 
             if (!quizQuestions.length) {
                 mount.innerHTML = `
@@ -185,11 +244,12 @@
             }
 
             if (!quizExamStarted) {
+                const timerMinutes = getQuizTimeLimitMinutes(activeQuiz);
                 mount.innerHTML = `
                     <div class="asg-proctor-card">
                         <span class="asg-proctor-pill">Fullscreen exam mode</span>
                         <h2>${escapeHtml(activeQuiz.title)}</h2>
-                        <p>Start opens the quiz in fullscreen. If you switch tabs, minimize the browser, or exit fullscreen, your current answers will submit automatically.</p>
+                        <p>Start opens the quiz in fullscreen. If you switch tabs, minimize the browser, or exit fullscreen, your current answers will submit automatically.${timerMinutes ? ` This quiz has an overall ${timerMinutes} minute timer.` : ""}</p>
                         <div class="asg-form-actions">
                             <button class="btn-primary" type="button" onclick="startQuizExam()">Start Quiz Exam</button>
                             <a class="btn-secondary" href="exam-center.html">Back to Exam Center</a>
@@ -230,6 +290,7 @@
             quizExamStarted = true;
             quizSubmitted = false;
             renderQuizForm();
+            startQuizTimer();
         }
 
         function renderQuizForm() {
@@ -242,6 +303,7 @@
                         <h2>${escapeHtml(activeQuiz.title)}</h2>
                         <p>${escapeHtml(activeQuiz.description)} This attempt is protected by fullscreen exam mode.</p>
                     </div>
+                    ${getQuizTimeLimitMinutes(activeQuiz) ? `<div class="asg-assessment-timer compact" id="quizTimer"></div>` : ""}
                     <button class="btn-secondary" type="button" onclick="clearQuizSelection()">Clear answers</button>
                 </div>
 
@@ -311,6 +373,7 @@
                 if (!confirmed) return;
             }
 
+            clearQuizTimer();
             if (quizGuard) quizGuard.stop();
 
             const score = answers.filter((answer) => answer.isCorrect).length;
@@ -358,7 +421,9 @@
                     ? "Good base. Review the missed questions and try again."
                     : "Keep practicing. Start with the explanations below and rebuild momentum.";
             const message = attempt.autoSubmitted
-                ? `Auto-submitted because exam focus was lost (${attempt.proctorReason}).`
+                ? (String(attempt.proctorReason || "").includes("time")
+                    ? "Auto-submitted because the quiz timer finished."
+                    : `Auto-submitted because exam focus was lost (${attempt.proctorReason}).`)
                 : baseMessage;
             const canRetake = canStartQuizExam();
 
@@ -409,13 +474,15 @@
             }
             quizSubmitted = false;
             quizExamStarted = false;
+            clearQuizTimer();
+            quizRemainingSeconds = 0;
             lastQuizResultAttempt = null;
             renderQuiz();
         }
 
         function handleQuizDataUpdate(event) {
             const key = event.detail ? event.detail.key : event.key;
-            if (![ASG_LEARNING_KEYS.quizQuestions, ASG_LEARNING_KEYS.examRetakePermissions].includes(key)) return;
+            if (![ASG_LEARNING_KEYS.quizCatalog, ASG_LEARNING_KEYS.quizQuestions, ASG_LEARNING_KEYS.examRetakePermissions].includes(key)) return;
             if (quizExamStarted && !quizSubmitted) return;
             if (key === ASG_LEARNING_KEYS.examRetakePermissions && quizSubmitted && lastQuizResultAttempt) {
                 renderResult(lastQuizResultAttempt);
