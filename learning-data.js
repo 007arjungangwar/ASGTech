@@ -25,7 +25,7 @@ const ASG_LEARNING_KEYS = {
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 15;
+const ASG_LEARNING_DATA_VERSION = 16;
 const ASG_CERTIFICATE_PROGRESS_REQUIRED = 70;
 const ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES = 15;
 const ASG_DEFAULT_CODING_QUESTION_SECONDS = 300;
@@ -932,6 +932,792 @@ const ASG_DEFAULT_CODING_CHALLENGES = [
         ],
         status: "active",
         order: 16
+    },
+    {
+        id: "topic_python_basics_full_name",
+        title: "Build a Full Name",
+        topic: "Python Basics",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-1",
+        topicTitle: "Python Basics: Variables, Data Types, Operators, and Input/Output",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives first_name and last_name and returns the full name with one space between them.",
+        starterCode: "def solution(first_name, last_name):\n    # combine first and last name\n    pass\n",
+        tests: [
+            { args: ["Asha", "Kumar"], expected: "Asha Kumar" },
+            { args: ["Ravi", "Singh"], expected: "Ravi Singh" },
+            { args: ["Mina", "Das"], expected: "Mina Das" }
+        ],
+        status: "active",
+        order: 17
+    },
+    {
+        id: "topic_python_basics_bill_total",
+        title: "Simple Bill Total",
+        topic: "Python Basics",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-1",
+        topicTitle: "Python Basics: Variables, Data Types, Operators, and Input/Output",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives price and quantity and returns the total bill amount.",
+        starterCode: "def solution(price, quantity):\n    # multiply price by quantity\n    pass\n",
+        tests: [
+            { args: [50, 3], expected: 150 },
+            { args: [99, 2], expected: 198 },
+            { args: [12.5, 4], expected: 50.0 }
+        ],
+        status: "active",
+        order: 18
+    },
+    {
+        id: "topic_python_flow_grade",
+        title: "Marks to Grade",
+        topic: "Control Flow",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-2",
+        topicTitle: "Control Flow: Conditional Statements (if, elif, else), Loops (for, while)",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns 'A' for marks 90 or above, 'B' for 75 or above, 'C' for 50 or above, and 'Fail' otherwise.",
+        starterCode: "def solution(marks):\n    # use if, elif, and else\n    pass\n",
+        tests: [
+            { args: [95], expected: "A" },
+            { args: [82], expected: "B" },
+            { args: [49], expected: "Fail" }
+        ],
+        status: "active",
+        order: 19
+    },
+    {
+        id: "topic_python_flow_sum_evens",
+        title: "Sum Even Numbers",
+        topic: "Control Flow",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-2",
+        topicTitle: "Control Flow: Conditional Statements (if, elif, else), Loops (for, while)",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives a list of numbers and returns the sum of only the even numbers.",
+        starterCode: "def solution(numbers):\n    total = 0\n    # loop through numbers and add only evens\n    pass\n",
+        tests: [
+            { args: [[1, 2, 3, 4]], expected: 6 },
+            { args: [[10, 11, 12]], expected: 22 },
+            { args: [[1, 3, 5]], expected: 0 }
+        ],
+        status: "active",
+        order: 20
+    },
+    {
+        id: "topic_python_structures_unique_sorted",
+        title: "Unique Sorted Items",
+        topic: "Data Structures",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-3",
+        topicTitle: "Data Structures: Lists, Tuples, Sets, Dictionaries",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives a list and returns sorted unique values.",
+        starterCode: "def solution(items):\n    # use a set, then sort the result\n    pass\n",
+        tests: [
+            { args: [[3, 1, 3, 2]], expected: [1, 2, 3] },
+            { args: [["b", "a", "b"]], expected: ["a", "b"] },
+            { args: [[5, 5, 5]], expected: [5] }
+        ],
+        status: "active",
+        order: 21
+    },
+    {
+        id: "topic_python_structures_inventory_total",
+        title: "Inventory Total",
+        topic: "Data Structures",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-3",
+        topicTitle: "Data Structures: Lists, Tuples, Sets, Dictionaries",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives a dictionary of item quantities and returns the total quantity.",
+        starterCode: "def solution(inventory):\n    # add all dictionary values\n    pass\n",
+        tests: [
+            { args: [{ "pen": 4, "book": 2 }], expected: 6 },
+            { args: [{ "a": 1, "b": 2, "c": 3 }], expected: 6 },
+            { args: [{}], expected: 0 }
+        ],
+        status: "active",
+        order: 22
+    },
+    {
+        id: "topic_python_functions_apply_discount",
+        title: "Apply Discount",
+        topic: "Functions",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-4",
+        topicTitle: "Functions: Definition, Parameters, Return Values, Scope, Lambda Functions",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives price and discount_percent and returns the final price rounded to two decimals.",
+        starterCode: "def solution(price, discount_percent):\n    # return price after discount\n    pass\n",
+        tests: [
+            { args: [100, 10], expected: 90.0 },
+            { args: [250, 20], expected: 200.0 },
+            { args: [99, 5], expected: 94.05 }
+        ],
+        status: "active",
+        order: 23
+    },
+    {
+        id: "topic_python_functions_lambda_square",
+        title: "Square Every Number",
+        topic: "Functions",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-4",
+        topicTitle: "Functions: Definition, Parameters, Return Values, Scope, Lambda Functions",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives a list of numbers and returns a list containing each number squared.",
+        starterCode: "def solution(numbers):\n    # return a new list of squares\n    pass\n",
+        tests: [
+            { args: [[1, 2, 3]], expected: [1, 4, 9] },
+            { args: [[0, -2, 5]], expected: [0, 4, 25] },
+            { args: [[]], expected: [] }
+        ],
+        status: "active",
+        order: 24
+    },
+    {
+        id: "topic_python_files_count_lines",
+        title: "Count Text Lines",
+        topic: "File Handling",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-5",
+        topicTitle: "File Handling: Reading from and Writing to Files",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives a text string and returns how many lines it contains.",
+        starterCode: "def solution(text):\n    # count lines in the text\n    pass\n",
+        tests: [
+            { args: ["a\nb\nc"], expected: 3 },
+            { args: ["single"], expected: 1 },
+            { args: [""], expected: 0 }
+        ],
+        status: "active",
+        order: 25
+    },
+    {
+        id: "topic_python_files_csv_names",
+        title: "Read CSV Names",
+        topic: "File Handling",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-5",
+        topicTitle: "File Handling: Reading from and Writing to Files",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives CSV-style text with one name per line and returns a list of non-empty names.",
+        starterCode: "def solution(text):\n    # split lines and ignore empty lines\n    pass\n",
+        tests: [
+            { args: ["Asha\nRavi\n"], expected: ["Asha", "Ravi"] },
+            { args: ["Meera\n\nOmar"], expected: ["Meera", "Omar"] },
+            { args: [""], expected: [] }
+        ],
+        status: "active",
+        order: 26
+    },
+    {
+        id: "topic_python_errors_safe_divide",
+        title: "Safe Divide",
+        topic: "Exception Handling",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-6",
+        topicTitle: "Error and Exception Handling: Try, Except, Finally",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that divides a by b and returns 'Cannot divide' when b is zero.",
+        starterCode: "def solution(a, b):\n    # use try/except or an if check\n    pass\n",
+        tests: [
+            { args: [10, 2], expected: 5.0 },
+            { args: [5, 0], expected: "Cannot divide" },
+            { args: [9, 3], expected: 3.0 }
+        ],
+        status: "active",
+        order: 27
+    },
+    {
+        id: "topic_python_errors_parse_ints",
+        title: "Parse Valid Integers",
+        topic: "Exception Handling",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-6",
+        topicTitle: "Error and Exception Handling: Try, Except, Finally",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that receives strings and returns only the values that can be converted to integers.",
+        starterCode: "def solution(values):\n    result = []\n    # convert valid integer strings only\n    pass\n",
+        tests: [
+            { args: [["1", "x", "3"]], expected: [1, 3] },
+            { args: [["10", "-2", "a"]], expected: [10, -2] },
+            { args: [["hi"]], expected: [] }
+        ],
+        status: "active",
+        order: 28
+    },
+    {
+        id: "topic_python_modules_math_distance",
+        title: "Distance from Origin",
+        topic: "Modules",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-7",
+        topicTitle: "Modules and Packages: Importing, Creating, and Using Libraries",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives x and y and returns the distance from origin rounded to two decimals.",
+        starterCode: "def solution(x, y):\n    # you may import math and use square root\n    pass\n",
+        tests: [
+            { args: [3, 4], expected: 5.0 },
+            { args: [1, 1], expected: 1.41 },
+            { args: [0, 0], expected: 0.0 }
+        ],
+        status: "active",
+        order: 29
+    },
+    {
+        id: "topic_python_modules_random_pick",
+        title: "Pick First Sorted Name",
+        topic: "Modules",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-7",
+        topicTitle: "Modules and Packages: Importing, Creating, and Using Libraries",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives names and returns the alphabetically first name. This prepares you to think about library helpers like sorted.",
+        starterCode: "def solution(names):\n    # return the first item after sorting\n    pass\n",
+        tests: [
+            { args: [["Ravi", "Asha", "Meera"]], expected: "Asha" },
+            { args: [["z", "b", "a"]], expected: "a" },
+            { args: [["Only"]], expected: "Only" }
+        ],
+        status: "active",
+        order: 30
+    },
+    {
+        id: "topic_python_oop_student_class",
+        title: "Student Class Average",
+        topic: "OOP",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-8",
+        topicTitle: "Introduction to Object-Oriented Programming (OOP): Classes and Objects",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that defines a Student class with an average method and returns the average mark rounded to two decimals.",
+        starterCode: "def solution(name, marks):\n    class Student:\n        def __init__(self, name, marks):\n            self.name = name\n            self.marks = marks\n\n        # add average method\n\n    student = Student(name, marks)\n    # return the average\n    pass\n",
+        tests: [
+            { args: ["Asha", [80, 90, 100]], expected: 90.0 },
+            { args: ["Ravi", [50, 60]], expected: 55.0 },
+            { args: ["Mina", [33, 34, 35]], expected: 34.0 }
+        ],
+        status: "active",
+        order: 31
+    },
+    {
+        id: "topic_python_oop_inheritance_vehicle",
+        title: "Vehicle Inheritance",
+        topic: "OOP",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-8",
+        topicTitle: "Introduction to Object-Oriented Programming (OOP): Classes and Objects",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that defines a Vehicle parent class and a Car child class. Return '<brand> car'.",
+        starterCode: "def solution(brand):\n    class Vehicle:\n        def __init__(self, brand):\n            self.brand = brand\n\n    class Car(Vehicle):\n        # add an info method that returns '<brand> car'\n        pass\n\n    car = Car(brand)\n    return car.info()\n",
+        tests: [
+            { args: ["Toyota"], expected: "Toyota car" },
+            { args: ["Honda"], expected: "Honda car" },
+            { args: ["Tata"], expected: "Tata car" }
+        ],
+        status: "active",
+        order: 32
+    },
+    {
+        id: "topic_python_oop_polymorphism_area",
+        title: "Polymorphism Area List",
+        topic: "OOP",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-8",
+        topicTitle: "Introduction to Object-Oriented Programming (OOP): Classes and Objects",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that defines Circle and Square classes with the same area method name and returns both areas in a list.",
+        starterCode: "def solution(radius, side):\n    class Circle:\n        def __init__(self, radius):\n            self.radius = radius\n\n        def area(self):\n            return 3.14 * self.radius * self.radius\n\n    class Square:\n        def __init__(self, side):\n            self.side = side\n\n        # add area method\n\n    shapes = [Circle(radius), Square(side)]\n    # return each shape area\n    pass\n",
+        tests: [
+            { args: [2, 3], expected: [12.56, 9] },
+            { args: [1, 4], expected: [3.14, 16] },
+            { args: [3, 5], expected: [28.26, 25] }
+        ],
+        status: "active",
+        order: 32.1
+    },
+    {
+        id: "topic_python_oop_method_overriding",
+        title: "Employee Method Overriding",
+        topic: "OOP",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-8",
+        topicTitle: "Introduction to Object-Oriented Programming (OOP): Classes and Objects",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that defines an Employee class and a Manager child class that overrides the role method.",
+        starterCode: "def solution(name):\n    class Employee:\n        def __init__(self, name):\n            self.name = name\n\n        def role(self):\n            return self.name + \" is an employee\"\n\n    class Manager(Employee):\n        # override role to return '<name> is a manager'\n        pass\n\n    person = Manager(name)\n    return person.role()\n",
+        tests: [
+            { args: ["Asha"], expected: "Asha is a manager" },
+            { args: ["Ravi"], expected: "Ravi is a manager" },
+            { args: ["Meera"], expected: "Meera is a manager" }
+        ],
+        status: "active",
+        order: 32.2
+    },
+    {
+        id: "topic_python_algorithms_binary_search",
+        title: "Find Target Index",
+        topic: "Algorithms",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-9",
+        topicTitle: "Basic Algorithms: Searching, Sorting, and Recursion",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that receives a sorted list and target and returns the index of target, or -1 when missing.",
+        starterCode: "def solution(numbers, target):\n    # search for target and return its index\n    pass\n",
+        tests: [
+            { args: [[1, 3, 5, 7], 5], expected: 2 },
+            { args: [[2, 4, 6], 3], expected: -1 },
+            { args: [[10], 10], expected: 0 }
+        ],
+        status: "active",
+        order: 33
+    },
+    {
+        id: "topic_python_algorithms_factorial",
+        title: "Recursive Factorial",
+        topic: "Algorithms",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-9",
+        topicTitle: "Basic Algorithms: Searching, Sorting, and Recursion",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns the factorial of n.",
+        starterCode: "def solution(n):\n    # 0! and 1! are 1\n    pass\n",
+        tests: [
+            { args: [0], expected: 1 },
+            { args: [5], expected: 120 },
+            { args: [3], expected: 6 }
+        ],
+        status: "active",
+        order: 34
+    },
+    {
+        id: "topic_python_libraries_numpy_like_sum",
+        title: "Column Sums",
+        topic: "Python Libraries",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-10",
+        topicTitle: "Introduction to Python Libraries for Data: NumPy and Pandas (Overview)",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives table rows as lists and returns the sum of each column.",
+        starterCode: "def solution(rows):\n    # calculate column totals\n    pass\n",
+        tests: [
+            { args: [[[1, 2], [3, 4]]], expected: [4, 6] },
+            { args: [[[5, 1, 2], [0, 4, 3]]], expected: [5, 5, 5] },
+            { args: [[]], expected: [] }
+        ],
+        status: "active",
+        order: 35
+    },
+    {
+        id: "topic_python_libraries_pandas_filter",
+        title: "Filter Table Rows",
+        topic: "Python Libraries",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-10",
+        topicTitle: "Introduction to Python Libraries for Data: NumPy and Pandas (Overview)",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives rows as dictionaries and returns rows where score is at least 50.",
+        starterCode: "def solution(rows):\n    # return rows with score >= 50\n    pass\n",
+        tests: [
+            { args: [[{ "name": "A", "score": 80 }, { "name": "B", "score": 40 }]], expected: [{ "name": "A", "score": 80 }] },
+            { args: [[{ "score": 50 }, { "score": 49 }]], expected: [{ "score": 50 }] },
+            { args: [[]], expected: [] }
+        ],
+        status: "active",
+        order: 36
+    },
+    {
+        id: "exam_python_count_digits",
+        title: "Count Digits",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns how many digit characters are in a string.",
+        starterCode: "def solution(text):\n    # count characters from 0 to 9\n    pass\n",
+        tests: [
+            { args: ["abc123"], expected: 3 },
+            { args: ["no digits"], expected: 0 },
+            { args: ["9 lives 2 cats"], expected: 2 }
+        ],
+        status: "active",
+        order: 37
+    },
+    {
+        id: "exam_python_reverse_words",
+        title: "Reverse Words",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives a sentence and returns the words in reverse order.",
+        starterCode: "def solution(sentence):\n    # split words, reverse them, and join with spaces\n    pass\n",
+        tests: [
+            { args: ["learn python daily"], expected: "daily python learn" },
+            { args: ["hello"], expected: "hello" },
+            { args: ["a b c"], expected: "c b a" }
+        ],
+        status: "active",
+        order: 38
+    },
+    {
+        id: "exam_python_second_smallest",
+        title: "Second Smallest Unique",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that returns the second smallest unique number, or None if it does not exist.",
+        starterCode: "def solution(numbers):\n    # find the second smallest unique number\n    pass\n",
+        tests: [
+            { args: [[4, 1, 2, 1]], expected: 2 },
+            { args: [[5, 5]], expected: null },
+            { args: [[9, 3, 7]], expected: 7 }
+        ],
+        status: "active",
+        order: 39
+    },
+    {
+        id: "exam_python_merge_counts",
+        title: "Merge Word Counts",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that receives two dictionaries and returns one dictionary with counts added for matching keys.",
+        starterCode: "def solution(left, right):\n    # merge dictionaries by adding matching values\n    pass\n",
+        tests: [
+            { args: [{ "a": 2 }, { "a": 3, "b": 1 }], expected: { "a": 5, "b": 1 } },
+            { args: [{ "x": 1 }, { "y": 2 }], expected: { "x": 1, "y": 2 } },
+            { args: [{}, { "z": 4 }], expected: { "z": 4 } }
+        ],
+        status: "active",
+        order: 40
+    },
+    {
+        id: "exam_python_longest_word",
+        title: "Longest Word",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns the longest word. If tied, return the first longest word.",
+        starterCode: "def solution(words):\n    # return the longest word\n    pass\n",
+        tests: [
+            { args: [["red", "green", "blue"]], expected: "green" },
+            { args: [["aa", "bb", "c"]], expected: "aa" },
+            { args: [["python"]], expected: "python" }
+        ],
+        status: "active",
+        order: 41
+    },
+    {
+        id: "exam_python_balanced_parentheses",
+        title: "Balanced Parentheses",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that returns True if parentheses are balanced in the text.",
+        starterCode: "def solution(text):\n    # track opening and closing parentheses\n    pass\n",
+        tests: [
+            { args: ["(a+b)"], expected: true },
+            { args: ["((x)"], expected: false },
+            { args: ["a)b("], expected: false }
+        ],
+        status: "active",
+        order: 42
+    },
+    {
+        id: "exam_python_run_length_encode",
+        title: "Run Length Encode",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Advanced",
+        prompt: "Create a function named solution that compresses repeated characters as character plus count.",
+        starterCode: "def solution(text):\n    # example: aaabb -> a3b2\n    pass\n",
+        tests: [
+            { args: ["aaabb"], expected: "a3b2" },
+            { args: ["abc"], expected: "a1b1c1" },
+            { args: [""], expected: "" }
+        ],
+        status: "active",
+        order: 43
+    },
+    {
+        id: "exam_python_flatten_once",
+        title: "Flatten One Level",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that flattens a list of lists by one level.",
+        starterCode: "def solution(groups):\n    # combine all inner lists\n    pass\n",
+        tests: [
+            { args: [[[1, 2], [3]]], expected: [1, 2, 3] },
+            { args: [[[], [4, 5]]], expected: [4, 5] },
+            { args: [[["a"], ["b"]]], expected: ["a", "b"] }
+        ],
+        status: "active",
+        order: 44
+    },
+    {
+        id: "exam_python_oop_library_book",
+        title: "Library Book Class",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that defines a Book class and returns '<title> by <author>'.",
+        starterCode: "def solution(title, author):\n    class Book:\n        # create constructor and summary method\n        pass\n\n    book = Book(title, author)\n    return book.summary()\n",
+        tests: [
+            { args: ["Python 101", "Asha"], expected: "Python 101 by Asha" },
+            { args: ["Data", "Ravi"], expected: "Data by Ravi" },
+            { args: ["AI", "Meera"], expected: "AI by Meera" }
+        ],
+        status: "active",
+        order: 45
+    },
+    {
+        id: "exam_python_oop_override_shape",
+        title: "Shape Method Override",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that uses a Shape class and a Rectangle child class overriding area. Return width * height.",
+        starterCode: "def solution(width, height):\n    class Shape:\n        def area(self):\n            return 0\n\n    class Rectangle(Shape):\n        # override area\n        pass\n\n    rect = Rectangle()\n    return rect.area()\n",
+        tests: [
+            { args: [3, 4], expected: 12 },
+            { args: [5, 2], expected: 10 },
+            { args: [0, 9], expected: 0 }
+        ],
+        status: "active",
+        order: 46
+    },
+    {
+        id: "exam_python_frequency_list",
+        title: "Frequency List",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns a dictionary counting each item in a list.",
+        starterCode: "def solution(items):\n    # count each item\n    pass\n",
+        tests: [
+            { args: [["a", "b", "a"]], expected: { "a": 2, "b": 1 } },
+            { args: [[1, 1, 2]], expected: { "1": 2, "2": 1 } },
+            { args: [[]], expected: {} }
+        ],
+        status: "active",
+        order: 47
+    },
+    {
+        id: "exam_python_title_case",
+        title: "Manual Title Case",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that converts every word to title case without changing word order.",
+        starterCode: "def solution(sentence):\n    # capitalize each word\n    pass\n",
+        tests: [
+            { args: ["hello world"], expected: "Hello World" },
+            { args: ["python"], expected: "Python" },
+            { args: ["a good day"], expected: "A Good Day" }
+        ],
+        status: "active",
+        order: 48
+    },
+    {
+        id: "exam_python_common_items",
+        title: "Common Items Sorted",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns sorted common unique items from two lists.",
+        starterCode: "def solution(left, right):\n    # find common unique values\n    pass\n",
+        tests: [
+            { args: [[3, 1, 2], [2, 3, 4]], expected: [2, 3] },
+            { args: [["b", "a"], ["a", "c"]], expected: ["a"] },
+            { args: [[1], [2]], expected: [] }
+        ],
+        status: "active",
+        order: 49
+    },
+    {
+        id: "exam_python_chunk_list",
+        title: "Chunk a List",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that splits a list into chunks of size n.",
+        starterCode: "def solution(items, n):\n    # return list chunks of size n\n    pass\n",
+        tests: [
+            { args: [[1, 2, 3, 4, 5], 2], expected: [[1, 2], [3, 4], [5]] },
+            { args: [["a", "b", "c"], 3], expected: [["a", "b", "c"]] },
+            { args: [[1, 2], 1], expected: [[1], [2]] }
+        ],
+        status: "active",
+        order: 50
+    },
+    {
+        id: "exam_python_fibonacci_n",
+        title: "Nth Fibonacci",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that returns the nth Fibonacci number where solution(0) is 0 and solution(1) is 1.",
+        starterCode: "def solution(n):\n    # calculate nth fibonacci number\n    pass\n",
+        tests: [
+            { args: [0], expected: 0 },
+            { args: [1], expected: 1 },
+            { args: [7], expected: 13 }
+        ],
+        status: "active",
+        order: 51
+    },
+    {
+        id: "exam_python_clean_emails",
+        title: "Clean Email List",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that trims spaces, lowercases emails, removes duplicates, and returns them sorted.",
+        starterCode: "def solution(emails):\n    # normalize, deduplicate, and sort emails\n    pass\n",
+        tests: [
+            { args: [[" A@X.COM ", "a@x.com", "b@y.com"]], expected: ["a@x.com", "b@y.com"] },
+            { args: [["Z@A.COM", "m@a.com"]], expected: ["m@a.com", "z@a.com"] },
+            { args: [[]], expected: [] }
+        ],
+        status: "active",
+        order: 52
+    },
+    {
+        id: "exam_python_password_score",
+        title: "Password Score",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that scores a password: +1 for length >= 8, +1 for a digit, +1 for an uppercase letter, +1 for a symbol.",
+        starterCode: "def solution(password):\n    # return score from 0 to 4\n    pass\n",
+        tests: [
+            { args: ["Password1!"], expected: 4 },
+            { args: ["abc"], expected: 0 },
+            { args: ["abcdef12"], expected: 2 }
+        ],
+        status: "active",
+        order: 53
+    },
+    {
+        id: "exam_python_group_by_first_letter",
+        title: "Group by First Letter",
+        topic: "Python",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Python",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that groups words by their first lowercase letter.",
+        starterCode: "def solution(words):\n    # return a dictionary of first-letter groups\n    pass\n",
+        tests: [
+            { args: [["Apple", "ant", "bat"]], expected: { "a": ["Apple", "ant"], "b": ["bat"] } },
+            { args: [["Cat", "car"]], expected: { "c": ["Cat", "car"] } },
+            { args: [[]], expected: {} }
+        ],
+        status: "active",
+        order: 54
     }
 ];
 
@@ -1759,7 +2545,8 @@ function asgNormalizeCodingChallenge(challenge, index) {
         || Object.prototype.hasOwnProperty.call(challenge, "examTopic");
     const legacyGlobal = !hasCourseTopic && storedScope !== "course-topic";
     const legacyShared = hasCourseTopic && storedScope === "shared";
-    const examEnabled = hasExamFields ? Boolean(challenge.examEnabled || challenge.examTopic) : (legacyGlobal || legacyShared);
+    const legacyPracticeOnly = !hasCourseTopic && String(challenge.id || "").startsWith("practice_");
+    const examEnabled = hasExamFields ? Boolean(challenge.examEnabled || challenge.examTopic) : (!legacyPracticeOnly && (legacyGlobal || legacyShared));
     const examTopic = examEnabled
         ? String(challenge.examTopic || challenge.topic || "Python").trim()
         : "";
@@ -1804,8 +2591,21 @@ function asgNormalizeCodingChallenge(challenge, index) {
 
 function asgGetCodingChallenges(includeDrafts = false, filters = {}) {
     asgEnsureLearningData();
-    const challenges = asgReadJSON(ASG_LEARNING_KEYS.codingChallenges, []);
-    const normalized = challenges.map(asgNormalizeCodingChallenge);
+    let challenges = asgReadJSON(ASG_LEARNING_KEYS.codingChallenges, []);
+    if (Array.isArray(challenges) && challenges.length) {
+        const challengeIds = new Set(challenges.map((challenge) => challenge && challenge.id).filter(Boolean));
+        const missingDefaults = ASG_DEFAULT_CODING_CHALLENGES.filter((challenge) => !challengeIds.has(challenge.id));
+        if (missingDefaults.length) {
+            challenges = [...challenges, ...asgClone(missingDefaults)];
+            ASG_LEARNING_SEEDING_DEFAULTS = true;
+            try {
+                asgWriteJSON(ASG_LEARNING_KEYS.codingChallenges, asgSortByOrder(challenges.map(asgNormalizeCodingChallenge)));
+            } finally {
+                ASG_LEARNING_SEEDING_DEFAULTS = false;
+            }
+        }
+    }
+    const normalized = Array.isArray(challenges) ? challenges.map(asgNormalizeCodingChallenge) : [];
     const statusFiltered = includeDrafts ? normalized : normalized.filter((challenge) => challenge.status === "active");
     const courseId = filters.courseId ? asgSlugify(filters.courseId, "course") : "";
     const topicId = filters.topicId ? asgSlugify(filters.topicId, "topic") : "";
