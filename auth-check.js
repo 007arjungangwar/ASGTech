@@ -868,11 +868,18 @@ async function initializeASGPortal() {
         await window.ASG_BACKEND.restoreSession();
     }
     if (!checkPageAccess()) return;
-    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startLearningSync === "function") {
-        window.ASG_BACKEND.startLearningSync();
-    }
-    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startUsersSync === "function") {
-        window.ASG_BACKEND.startUsersSync();
+    const startBackendSync = () => {
+        if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startLearningSync === "function") {
+            window.ASG_BACKEND.startLearningSync();
+        }
+        if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startUsersSync === "function") {
+            window.ASG_BACKEND.startUsersSync();
+        }
+    };
+    if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(startBackendSync, { timeout: 1500 });
+    } else {
+        window.setTimeout(startBackendSync, 400);
     }
     keepServiceWorkerFresh();
     updateUIForUser();

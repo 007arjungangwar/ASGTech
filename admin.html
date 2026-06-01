@@ -1071,11 +1071,16 @@
             });
 
             localStorage.setItem("asgAdminActiveSection", nextSection);
+            renderAdminSection(nextSection);
 
             if (options.scroll !== false) {
                 const commandCenter = document.querySelector(".asg-admin-command-center");
                 if (commandCenter) commandCenter.scrollIntoView({ behavior: "smooth", block: "start" });
             }
+        }
+
+        function getActiveAdminSection() {
+            return localStorage.getItem("asgAdminActiveSection") || "overview";
         }
 
         function adminSetValue(id, value) {
@@ -3918,6 +3923,45 @@
             }
         }
 
+        function renderAdminSection(sectionName = getActiveAdminSection()) {
+            if (sectionName === "overview") {
+                renderStats();
+                renderAnalytics();
+                renderQuestions();
+                renderRecentActivity();
+                return;
+            }
+            if (sectionName === "public") {
+                renderBlogPostsAdmin();
+                renderProjectShowcaseAdmin();
+                return;
+            }
+            if (sectionName === "students") {
+                renderStudentsTable();
+                renderCertificatePermissions();
+                renderCourseAccessRequests();
+                return;
+            }
+            if (sectionName === "assessments") {
+                renderExamRetakePermissions();
+                renderCodingExamSubjects();
+                renderQuizCatalog();
+                renderQuizQuestions();
+                renderCodingChallenges();
+                return;
+            }
+            if (sectionName === "courses") {
+                renderCourses();
+                return;
+            }
+            if (sectionName === "library") {
+                renderRoadmapItems();
+                renderVideoPlaylists();
+                renderVideoLibrary();
+                renderResourceLibrary();
+            }
+        }
+
         function refreshDashboard() {
             adminQuizCatalog = asgGetQuizCatalog();
             quizQuestions = asgGetQuizQuestions(true);
@@ -3934,25 +3978,7 @@
             toggleCodingPlacementFields();
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
-            renderStats();
-            renderAnalytics();
-            renderStudentsTable();
-            renderCertificatePermissions();
-            renderCourseAccessRequests();
-            renderExamRetakePermissions();
-            renderCodingExamSubjects();
-            renderQuizCatalog();
-            renderQuizQuestions();
-            renderCodingChallenges();
-            renderBlogPostsAdmin();
-            renderProjectShowcaseAdmin();
-            renderCourses();
-            renderRoadmapItems();
-            renderVideoPlaylists();
-            renderVideoLibrary();
-            renderResourceLibrary();
-            renderQuestions();
-            renderRecentActivity();
+            renderAdminSection();
         }
 
         function handleAdminDataUpdate(event) {

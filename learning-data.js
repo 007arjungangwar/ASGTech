@@ -4382,5 +4382,3 @@ function asgGetTopicById(courseId, topicId, includeDrafts = false) {
     const topics = includeDrafts ? course.topics : course.topics.filter((topic) => topic.status === "active");
     return topics.find((topic) => topic.id === resolvedTopicId) || topics[0] || null;
 }
-
-asgEnsureLearningData();

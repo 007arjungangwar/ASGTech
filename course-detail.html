@@ -103,7 +103,7 @@
                         </div>
                         <div class="asg-course-payment-box">
                             ${course.paymentQrUrl ? `
-                                <img class="asg-course-payment-qr" src="${escapeHtml(course.paymentQrUrl)}" alt="${escapeHtml(course.title)} payment QR">
+                        <img class="asg-course-payment-qr" src="${escapeHtml(course.paymentQrUrl)}" alt="${escapeHtml(course.title)} payment QR" loading="lazy" decoding="async">
                             ` : `
                                 <div class="asg-empty-state compact">
                                     <h2>QR not uploaded</h2>
