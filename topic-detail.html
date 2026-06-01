@@ -108,7 +108,7 @@
                         </div>
                         <div class="asg-course-payment-box">
                             ${course.paymentQrUrl ? `
-                                <img class="asg-course-payment-qr" src="${escapeHtml(course.paymentQrUrl)}" alt="${escapeHtml(course.title)} payment QR" loading="lazy" decoding="async">
+                                <img class="asg-course-payment-qr" src="${escapeHtml(course.paymentQrUrl)}" alt="${escapeHtml(course.title)} payment QR">
                             ` : `
                                 <div class="asg-empty-state compact">
                                     <h2>QR not uploaded</h2>
@@ -265,7 +265,7 @@
             const embedUrl = getEmbedUrl(topic.videoUrl);
             return `
                 <div class="asg-video-frame">
-                    <iframe src="${escapeHtml(embedUrl)}" title="${escapeHtml(topic.title)} video" loading="lazy" allowfullscreen></iframe>
+                    <iframe src="${escapeHtml(embedUrl)}" title="${escapeHtml(topic.title)} video" allowfullscreen></iframe>
                 </div>
                 <p><a href="${escapeHtml(topic.videoUrl)}" target="_blank" rel="noopener">Open video link</a></p>
             `;
@@ -281,7 +281,6 @@
                 <iframe
                     class="asg-content-frame"
                     title="${escapeHtml(title)}"
-                    loading="lazy"
                     sandbox="allow-scripts allow-forms allow-popups allow-modals"
                     srcdoc="${escapeHtml(html)}"
                 ></iframe>
@@ -297,7 +296,9 @@
                             <span>${escapeHtml(topic.contentFileName || "Lesson PDF")}</span>
                             <a href="${escapeHtml(pdfSource)}" target="_blank" rel="noopener">Open PDF</a>
                         </div>
-                        <iframe class="asg-content-frame" src="${escapeHtml(pdfSource)}" title="${escapeHtml(topic.title)} PDF" loading="lazy"></iframe>
+                        <object data="${escapeHtml(pdfSource)}" type="application/pdf">
+                            <iframe src="${escapeHtml(pdfSource)}" title="${escapeHtml(topic.title)} PDF"></iframe>
+                        </object>
                     </div>
                 `;
             }

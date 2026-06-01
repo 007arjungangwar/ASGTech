@@ -1,11 +1,38 @@
-const CACHE_NAME = "asg-tech-v68";
+const CACHE_NAME = "asg-tech-v67";
 const urlsToCache = [
     "/learning-with-arjun/",
     "/learning-with-arjun/index.html",
     "/learning-with-arjun/manifest.json",
     "/learning-with-arjun/icon.svg",
+    "/learning-with-arjun/ASG%20Tech%20Stamp%20without%20background.png",
     "/learning-with-arjun/style.css",
-    "/learning-with-arjun/auth-check.js"
+    "/learning-with-arjun/supabase-backend.js",
+    "/learning-with-arjun/auth-check.js",
+    "/learning-with-arjun/published-learning-data.js",
+    "/learning-with-arjun/exam-guard.js",
+    "/learning-with-arjun/learning-data.js",
+    "/learning-with-arjun/login.html",
+    "/learning-with-arjun/about.html",
+    "/learning-with-arjun/admin.html",
+    "/learning-with-arjun/admin-guide.html",
+    "/learning-with-arjun/blog.html",
+    "/learning-with-arjun/projects.html",
+    "/learning-with-arjun/questions.html",
+    "/learning-with-arjun/forum.html",
+    "/learning-with-arjun/chat.html",
+    "/learning-with-arjun/videos.html",
+    "/learning-with-arjun/roadmap.html",
+    "/learning-with-arjun/certificate.html",
+    "/learning-with-arjun/certificate-verify.html",
+    "/learning-with-arjun/assistant.html",
+    "/learning-with-arjun/quiz.html",
+    "/learning-with-arjun/coding-practice.html",
+    "/learning-with-arjun/exam-center.html",
+    "/learning-with-arjun/coding-exam.html",
+    "/learning-with-arjun/courses.html",
+    "/learning-with-arjun/course-detail.html",
+    "/learning-with-arjun/topic-detail.html",
+    "/learning-with-arjun/tracker.html"
 ];
 
 self.addEventListener("install", (event) => {
@@ -13,7 +40,9 @@ self.addEventListener("install", (event) => {
 
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(urlsToCache))
+            .then((cache) => Promise.all(
+                urlsToCache.map((url) => cache.add(new Request(url, { cache: "reload" })))
+            ))
     );
 });
 
@@ -42,12 +71,11 @@ self.addEventListener("fetch", (event) => {
     if (requestUrl.origin !== self.location.origin) return;
 
     const isHtmlPage = event.request.mode === "navigate" || requestUrl.pathname.endsWith(".html");
-    const isStaticAsset = /\.(?:css|js|svg|png|webp|avif|jpg|jpeg|gif|woff2?)$/i.test(requestUrl.pathname);
 
     event.respondWith(
-        fetch(event.request, { cache: isHtmlPage ? "no-store" : "default" })
+        fetch(event.request, { cache: "no-store" })
             .then((response) => {
-                if ((isStaticAsset || isHtmlPage) && response.ok) {
+                if (!isHtmlPage && response.ok) {
                     const copy = response.clone();
                     caches.open(CACHE_NAME)
                         .then((cache) => cache.put(event.request, copy));

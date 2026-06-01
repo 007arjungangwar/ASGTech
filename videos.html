@@ -105,7 +105,7 @@
             document.getElementById("videoPlayer").innerHTML = active ? `
                 ${isEmbeddable(active.url) ? `
                     <div class="asg-video-frame">
-                        <iframe src="${escapeHtml(getEmbedUrl(active.url))}" title="${escapeHtml(active.title)}" loading="lazy" allowfullscreen></iframe>
+                        <iframe src="${escapeHtml(getEmbedUrl(active.url))}" title="${escapeHtml(active.title)}" allowfullscreen></iframe>
                     </div>
                 ` : `
                     <div class="asg-video-placeholder">
