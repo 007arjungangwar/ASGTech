@@ -416,7 +416,7 @@
                 <div class="asg-section-header">
                     <div>
                         <h2>Coding Question Builder</h2>
-                        <p>Choose one method first: practice bank, course topic practice, or timed coding exam. Students write a function named <code>solution</code>.</p>
+                        <p>Choose the method first. Only the fields needed for that method are shown.</p>
                     </div>
                     <button class="btn-secondary" type="button" onclick="resetCodingForm()">New Challenge</button>
                 </div>
@@ -430,19 +430,19 @@
                     <label class="asg-full-field">
                         <span>Question creation method</span>
                         <select id="codingPlacement" onchange="toggleCodingPlacementFields()">
-                            <option value="practice">Practice Bank only</option>
-                            <option value="course-topic">Course Topic practice only</option>
-                            <option value="exam">Coding Exam question + practice</option>
+                            <option value="practice">Coding Practice</option>
+                            <option value="course-topic">Inside the course topic</option>
+                            <option value="exam">Coding Exam</option>
                         </select>
-                        <small class="asg-field-hint" id="codingPlacementHint">Use this for normal practice questions that should not appear in any exam.</small>
+                        <small class="asg-field-hint" id="codingPlacementHint">Practice question. It will not appear in the timed coding exam.</small>
                     </label>
-                    <label>
-                        <span>Topic / practice subject</span>
+                    <label class="asg-coding-name-field" hidden>
+                        <span id="codingTopicLabel">Coding Exam name</span>
                         <input id="codingTopic" type="text" list="codingExamTopicOptions" placeholder="Python Basics, Loops, or Arrays">
                         <datalist id="codingExamTopicOptions"></datalist>
                     </label>
                     <label class="asg-coding-exam-field">
-                        <span>Coding exam</span>
+                        <span id="codingExamSubjectLabel">Coding exam</span>
                         <select id="codingExamSubjectSelect" onchange="syncCodingTopicFromExam()"></select>
                     </label>
                     <label class="asg-coding-topic-field" hidden>
@@ -472,17 +472,17 @@
                             <option value="draft">Draft</option>
                         </select>
                     </label>
-                    <label class="asg-full-field">
+                    <label class="asg-full-field asg-coding-advanced-field" hidden>
                         <span>Prompt</span>
                         <textarea id="codingPrompt" rows="3" placeholder="Explain the coding task clearly."></textarea>
                     </label>
-                    <label class="asg-full-field">
+                    <label class="asg-full-field asg-coding-advanced-field" hidden>
                         <span>Starter code</span>
                         <textarea id="codingStarter" class="asg-mini-code" rows="7" spellcheck="false">def solution():
     pass
 </textarea>
                     </label>
-                    <div class="asg-full-field">
+                    <div class="asg-full-field asg-coding-advanced-field" hidden>
                         <div class="asg-question-head">
                             <span>Test cases</span>
                             <small>Args must be JSON arrays. Expected can be JSON or plain text.</small>
@@ -2304,15 +2304,13 @@
         function renderCodingExamSubjectPicker(selectedTopic = "") {
             const select = document.getElementById("codingExamSubjectSelect");
             if (!select) return;
-            const subjects = asgGetCodingExamSubjects(true);
-            const topics = subjects.map((subject) => subject.topic).filter(Boolean);
+            const topics = getCodingExamTopics();
             const selected = String(selectedTopic || "").trim();
             if (selected && !topics.some((topic) => topic.toLowerCase() === selected.toLowerCase())) {
                 topics.push(selected);
             }
 
             select.innerHTML = [
-                `<option value="">Manual/custom coding exam</option>`,
                 ...topics.map((topic) => `<option value="${escapeHtml(topic)}">${escapeHtml(topic)} Coding Exam</option>`)
             ].join("");
 
@@ -2321,7 +2319,7 @@
         }
 
         function syncCodingTopicFromExam() {
-            if (document.getElementById("codingPlacement").value !== "exam") return;
+            if (document.getElementById("codingPlacement").value !== "practice") return;
             const selected = document.getElementById("codingExamSubjectSelect").value;
             if (selected) document.getElementById("codingTopic").value = selected;
         }
@@ -2336,7 +2334,7 @@
             }
             const placementSelect = document.getElementById("codingPlacement");
             const selectedBuilderTopic = document.getElementById("codingTopic") ? document.getElementById("codingTopic").value : "";
-            renderCodingExamSubjectPicker(placementSelect && placementSelect.value !== "exam" ? "" : selectedBuilderTopic);
+            renderCodingExamSubjectPicker(placementSelect && placementSelect.value === "practice" ? selectedBuilderTopic : "");
             if (!target) return;
             const subjects = asgGetCodingExamSubjects(true);
             target.innerHTML = subjects.map((subject, index) => {
@@ -2826,26 +2824,32 @@
 
         function getCodingPlacementHint(placement) {
             if (placement === "course-topic") {
-                return "Use this for lesson practice. It appears inside the selected course topic, not in the coding exam.";
+                return "Course topic question. It appears inside the selected course topic.";
             }
             if (placement === "exam") {
-                return "Use this for timed coding exam questions. Students can also practice it from Coding Practice under the exam subject.";
+                return "Timed coding exam question. Students can also practice it later.";
             }
-            return "Use this for normal practice questions that should not appear in any exam.";
+            return "Practice question. It will not appear in the timed coding exam.";
         }
 
         function toggleCodingPlacementFields() {
             const placement = document.getElementById("codingPlacement").value;
+            const isPractice = placement === "practice";
+            const isCourseTopic = placement === "course-topic";
+            const isExam = placement === "exam";
             document.querySelectorAll(".asg-coding-topic-field").forEach((field) => {
-                field.hidden = placement !== "course-topic";
+                field.hidden = !isCourseTopic;
             });
             document.querySelectorAll(".asg-coding-exam-field").forEach((field) => {
-                field.hidden = placement !== "exam";
+                field.hidden = !isPractice;
+            });
+            document.querySelectorAll(".asg-coding-name-field").forEach((field) => {
+                field.hidden = !isExam;
             });
             const hint = document.getElementById("codingPlacementHint");
             if (hint) hint.textContent = getCodingPlacementHint(placement);
-            if (placement === "course-topic") syncCodingTopicFromCourseTopic();
-            if (placement === "exam") syncCodingTopicFromExam();
+            if (isCourseTopic) syncCodingTopicFromCourseTopic();
+            if (isPractice) syncCodingTopicFromExam();
         }
 
         function syncCodingTopicFromCourseTopic() {
@@ -2911,6 +2915,16 @@
             });
         }
 
+        function getDefaultCodingPrompt(title, placement, topicName) {
+            if (placement === "course-topic") {
+                return `Create a function named solution for the ${topicName} course topic: ${title}.`;
+            }
+            if (placement === "exam") {
+                return `Create a function named solution for the ${topicName} coding exam: ${title}.`;
+            }
+            return `Create a function named solution for ${topicName} coding practice: ${title}.`;
+        }
+
         function saveCodingChallenge() {
             const editId = document.getElementById("codingEditId").value;
             let tests = [];
@@ -2922,14 +2936,14 @@
                 return;
             }
 
-            if (!document.getElementById("codingTitle").value.trim() || !document.getElementById("codingPrompt").value.trim()) {
-                alert("Add a title and prompt for this coding challenge.");
+            const title = document.getElementById("codingTitle").value.trim();
+            if (!title) {
+                alert("Add a title for this coding challenge.");
                 return;
             }
 
             if (!tests.length) {
-                alert("Add at least one test case.");
-                return;
+                tests = [{ args: [3, 5], expected: 8 }];
             }
 
             const placement = document.getElementById("codingPlacement").value;
@@ -2945,10 +2959,14 @@
             }
             const builderTopic = document.getElementById("codingTopic").value.trim() || "Python";
             const timeLimitMinutes = Math.max(1, Math.round(Number(document.getElementById("codingTimeLimit").value || 5)));
+            const prompt = document.getElementById("codingPrompt").value.trim()
+                || getDefaultCodingPrompt(title, placement, attachesToCourse ? selectedTopic.title : builderTopic);
+            const starterCode = document.getElementById("codingStarter").value.trim()
+                || "def solution(a, b):\n    # write your code here\n    pass\n";
 
             const challenge = {
                 id: editId || asgCreateId(examEnabled ? "coding_exam" : "practice"),
-                title: document.getElementById("codingTitle").value.trim(),
+                title,
                 topic: attachesToCourse ? selectedTopic.title : builderTopic,
                 scope: attachesToCourse ? "course-topic" : "global",
                 examEnabled,
@@ -2958,8 +2976,8 @@
                 topicId: attachesToCourse ? selectedTopic.id : "",
                 topicTitle: attachesToCourse ? selectedTopic.title : "",
                 difficulty: document.getElementById("codingDifficulty").value,
-                prompt: document.getElementById("codingPrompt").value,
-                starterCode: document.getElementById("codingStarter").value,
+                prompt,
+                starterCode,
                 tests,
                 timeLimitSeconds: timeLimitMinutes * 60,
                 status: document.getElementById("codingStatus").value,
@@ -2995,7 +3013,7 @@
             document.getElementById("codingTopic").value = hasExam ? examTopic : challenge.topic;
             document.getElementById("codingPlacement").value = placement;
             renderCodingCourseOptions(challenge.courseId || (adminCourses[0] ? adminCourses[0].id : ""), challenge.topicId || "");
-            renderCodingExamSubjectPicker(hasExam ? examTopic : "");
+            renderCodingExamSubjectPicker(placement === "practice" ? challenge.topic : "");
             toggleCodingPlacementFields();
             document.getElementById("codingDifficulty").value = challenge.difficulty;
             document.getElementById("codingTimeLimit").value = String(Math.max(1, Math.round(Number(challenge.timeLimitSeconds || 300) / 60)));
