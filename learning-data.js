@@ -25,7 +25,7 @@ const ASG_LEARNING_KEYS = {
     dataVersion: "asgLearningDataVersion"
 };
 
-const ASG_LEARNING_DATA_VERSION = 16;
+const ASG_LEARNING_DATA_VERSION = 17;
 const ASG_CERTIFICATE_PROGRESS_REQUIRED = 70;
 const ASG_DEFAULT_QUIZ_TIME_LIMIT_MINUTES = 15;
 const ASG_DEFAULT_CODING_QUESTION_SECONDS = 300;
@@ -1103,7 +1103,7 @@ const ASG_DEFAULT_CODING_CHALLENGES = [
     },
     {
         id: "topic_python_files_count_lines",
-        title: "Count Text Lines",
+        title: "Create and Read a Text File",
         topic: "File Handling",
         scope: "course-topic",
         examEnabled: false,
@@ -1112,19 +1112,19 @@ const ASG_DEFAULT_CODING_CHALLENGES = [
         topicId: "python-beginner-topic-5",
         topicTitle: "File Handling: Reading from and Writing to Files",
         difficulty: "Beginner",
-        prompt: "Create a function named solution that receives a text string and returns how many lines it contains.",
-        starterCode: "def solution(text):\n    # count lines in the text\n    pass\n",
+        prompt: "Create a function named solution that simulates creating a text file. Receive filename and lines, store the file content, then open/read that filename and return the full text.",
+        starterCode: "def solution(filename, lines):\n    files = {}\n    # write lines into files[filename] using newline between lines\n    # then read the same filename and return the text\n    pass\n",
         tests: [
-            { args: ["a\nb\nc"], expected: 3 },
-            { args: ["single"], expected: 1 },
-            { args: [""], expected: 0 }
+            { args: ["notes.txt", ["Python", "Files"]], expected: "Python\nFiles" },
+            { args: ["todo.txt", ["read", "write", "close"]], expected: "read\nwrite\nclose" },
+            { args: ["empty.txt", []], expected: "" }
         ],
         status: "active",
         order: 25
     },
     {
         id: "topic_python_files_csv_names",
-        title: "Read CSV Names",
+        title: "JSON Student Toppers",
         topic: "File Handling",
         scope: "course-topic",
         examEnabled: false,
@@ -1132,41 +1132,20 @@ const ASG_DEFAULT_CODING_CHALLENGES = [
         courseTitle: "Python for Beginners",
         topicId: "python-beginner-topic-5",
         topicTitle: "File Handling: Reading from and Writing to Files",
-        difficulty: "Beginner",
-        prompt: "Create a function named solution that receives CSV-style text with one name per line and returns a list of non-empty names.",
-        starterCode: "def solution(text):\n    # split lines and ignore empty lines\n    pass\n",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that simulates creating a JSON file of student marks, loads the JSON, and returns overall topper plus subject-wise toppers.",
+        starterCode: "def solution(records):\n    import json\n    # dump records to JSON text, then load it again\n    # return {\"overall\": name, \"subjects\": {subject: topper}}\n    pass\n",
         tests: [
-            { args: ["Asha\nRavi\n"], expected: ["Asha", "Ravi"] },
-            { args: ["Meera\n\nOmar"], expected: ["Meera", "Omar"] },
-            { args: [""], expected: [] }
+            { args: [[{ "name": "Asha", "python": 90, "math": 80 }, { "name": "Ravi", "python": 70, "math": 95 }]], expected: { "overall": "Asha", "subjects": { "python": "Asha", "math": "Ravi" } } },
+            { args: [[{ "name": "Mina", "python": 50, "math": 50 }, { "name": "Omar", "python": 80, "math": 40 }]], expected: { "overall": "Omar", "subjects": { "python": "Omar", "math": "Mina" } } },
+            { args: [[{ "name": "Dev", "science": 88 }, { "name": "Nia", "science": 91 }]], expected: { "overall": "Nia", "subjects": { "science": "Nia" } } }
         ],
         status: "active",
         order: 26
     },
     {
         id: "topic_python_errors_safe_divide",
-        title: "Safe Divide",
-        topic: "Exception Handling",
-        scope: "course-topic",
-        examEnabled: false,
-        courseId: "python-for-beginners",
-        courseTitle: "Python for Beginners",
-        topicId: "python-beginner-topic-6",
-        topicTitle: "Error and Exception Handling: Try, Except, Finally",
-        difficulty: "Beginner",
-        prompt: "Create a function named solution that divides a by b and returns 'Cannot divide' when b is zero.",
-        starterCode: "def solution(a, b):\n    # use try/except or an if check\n    pass\n",
-        tests: [
-            { args: [10, 2], expected: 5.0 },
-            { args: [5, 0], expected: "Cannot divide" },
-            { args: [9, 3], expected: 3.0 }
-        ],
-        status: "active",
-        order: 27
-    },
-    {
-        id: "topic_python_errors_parse_ints",
-        title: "Parse Valid Integers",
+        title: "Try Except Else Finally Log",
         topic: "Exception Handling",
         scope: "course-topic",
         examEnabled: false,
@@ -1175,12 +1154,34 @@ const ASG_DEFAULT_CODING_CHALLENGES = [
         topicId: "python-beginner-topic-6",
         topicTitle: "Error and Exception Handling: Try, Except, Finally",
         difficulty: "Intermediate",
-        prompt: "Create a function named solution that receives strings and returns only the values that can be converted to integers.",
-        starterCode: "def solution(values):\n    result = []\n    # convert valid integer strings only\n    pass\n",
+        prompt: "Create a function named solution that demonstrates try, except, else, and finally. Divide a by b. Return a log list: success uses else, errors use except, and every case ends with finally.",
+        starterCode: "def solution(a, b):\n    log = []\n    try:\n        # divide a by b\n        pass\n    except ZeroDivisionError:\n        pass\n    else:\n        pass\n    finally:\n        pass\n    return log\n",
         tests: [
-            { args: [["1", "x", "3"]], expected: [1, 3] },
-            { args: [["10", "-2", "a"]], expected: [10, -2] },
-            { args: [["hi"]], expected: [] }
+            { args: [10, 2], expected: ["try", 5.0, "else", "finally"] },
+            { args: [5, 0], expected: ["try", "ZeroDivisionError", "finally"] },
+            { args: [9, 3], expected: ["try", 3.0, "else", "finally"] }
+        ],
+        status: "active",
+        order: 27
+    },
+    {
+        id: "topic_python_errors_parse_ints",
+        title: "Handle File and Import Errors",
+        topic: "Exception Handling",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "python-for-beginners",
+        courseTitle: "Python for Beginners",
+        topicId: "python-beginner-topic-6",
+        topicTitle: "Error and Exception Handling: Try, Except, Finally",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that handles common exceptions. Read filename from a files dictionary, optionally import a library name, convert file text to int, and return clear error labels for FileNotFoundError, ImportError, and ValueError.",
+        starterCode: "def solution(files, filename, library_name):\n    try:\n        # if filename missing, raise FileNotFoundError\n        # if library_name is not 'math' or 'json', raise ImportError\n        # convert file text to int and return it\n        pass\n    except FileNotFoundError:\n        return \"file not found\"\n    except ImportError:\n        return \"library not found\"\n    except ValueError:\n        return \"invalid number\"\n",
+        tests: [
+            { args: [{ "score.txt": "95" }, "score.txt", "math"], expected: 95 },
+            { args: [{}, "missing.txt", "math"], expected: "file not found" },
+            { args: [{ "score.txt": "95" }, "score.txt", "unknownlib"], expected: "library not found" },
+            { args: [{ "score.txt": "ninety" }, "score.txt", "json"], expected: "invalid number" }
         ],
         status: "active",
         order: 28
@@ -1718,8 +1719,495 @@ const ASG_DEFAULT_CODING_CHALLENGES = [
         ],
         status: "active",
         order: 54
+    },
+    {
+        id: "topic_pandas_setup_dataframe_shape",
+        title: "DataFrame Shape from Rows",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-1",
+        topicTitle: "Pandas Setup and DataFrames",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives rows as dictionaries and returns [row_count, column_count], like a Pandas DataFrame shape.",
+        starterCode: "def solution(rows):\n    # return [number of rows, number of columns]\n    pass\n",
+        tests: [
+            { args: [[{ "name": "A", "score": 80 }, { "name": "B", "score": 70 }]], expected: [2, 2] },
+            { args: [[{ "a": 1, "b": 2, "c": 3 }]], expected: [1, 3] },
+            { args: [[]], expected: [0, 0] }
+        ],
+        status: "active",
+        order: 55
+    },
+    {
+        id: "topic_pandas_import_inspect_head",
+        title: "Inspect First Rows",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-2",
+        topicTitle: "Importing and Inspecting Data",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that simulates df.head(n): return the first n rows from imported table data.",
+        starterCode: "def solution(rows, n):\n    # return first n rows\n    pass\n",
+        tests: [
+            { args: [[{ "id": 1 }, { "id": 2 }, { "id": 3 }], 2], expected: [{ "id": 1 }, { "id": 2 }] },
+            { args: [[{ "x": 5 }], 3], expected: [{ "x": 5 }] },
+            { args: [[], 2], expected: [] }
+        ],
+        status: "active",
+        order: 56
+    },
+    {
+        id: "topic_pandas_select_columns",
+        title: "Select Columns",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-3",
+        topicTitle: "Selecting Rows and Columns",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that receives table rows and selected columns, then returns rows containing only those columns.",
+        starterCode: "def solution(rows, columns):\n    # keep only selected columns in each row\n    pass\n",
+        tests: [
+            { args: [[{ "name": "A", "score": 80, "city": "Delhi" }], ["name", "score"]], expected: [{ "name": "A", "score": 80 }] },
+            { args: [[{ "a": 1, "b": 2 }, { "a": 3, "b": 4 }], ["b"]], expected: [{ "b": 2 }, { "b": 4 }] },
+            { args: [[], ["name"]], expected: [] }
+        ],
+        status: "active",
+        order: 57
+    },
+    {
+        id: "topic_pandas_clean_missing_fill",
+        title: "Fill Missing Values",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-4",
+        topicTitle: "Cleaning Missing Data",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that replaces None values in a selected column with a fill value.",
+        starterCode: "def solution(rows, column, fill_value):\n    # replace None in column with fill_value\n    pass\n",
+        tests: [
+            { args: [[{ "score": 80 }, { "score": null }], "score", 0], expected: [{ "score": 80 }, { "score": 0 }] },
+            { args: [[{ "city": null }, { "city": "Pune" }], "city", "Unknown"], expected: [{ "city": "Unknown" }, { "city": "Pune" }] },
+            { args: [[], "x", 1], expected: [] }
+        ],
+        status: "active",
+        order: 58
+    },
+    {
+        id: "topic_pandas_groupby_sum",
+        title: "GroupBy Sum",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-5",
+        topicTitle: "GroupBy and Aggregation",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that groups rows by one column and returns the sum of a numeric column for each group.",
+        starterCode: "def solution(rows, group_col, value_col):\n    # group by group_col and sum value_col\n    pass\n",
+        tests: [
+            { args: [[{ "dept": "A", "sales": 10 }, { "dept": "A", "sales": 5 }, { "dept": "B", "sales": 7 }], "dept", "sales"], expected: { "A": 15, "B": 7 } },
+            { args: [[{ "city": "Pune", "qty": 2 }, { "city": "Delhi", "qty": 3 }], "city", "qty"], expected: { "Pune": 2, "Delhi": 3 } },
+            { args: [[], "x", "y"], expected: {} }
+        ],
+        status: "active",
+        order: 59
+    },
+    {
+        id: "topic_pandas_merge_by_id",
+        title: "Merge Rows by ID",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-6",
+        topicTitle: "Merging DataFrames",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that simulates a left merge on id. Combine matching right row fields into each left row.",
+        starterCode: "def solution(left_rows, right_rows):\n    # merge right rows into left rows by id\n    pass\n",
+        tests: [
+            { args: [[{ "id": 1, "name": "A" }], [{ "id": 1, "score": 90 }]], expected: [{ "id": 1, "name": "A", "score": 90 }] },
+            { args: [[{ "id": 1 }, { "id": 2 }], [{ "id": 2, "city": "Pune" }]], expected: [{ "id": 1 }, { "id": 2, "city": "Pune" }] },
+            { args: [[], [{ "id": 1 }]], expected: [] }
+        ],
+        status: "active",
+        order: 60
+    },
+    {
+        id: "topic_pandas_time_series_month_total",
+        title: "Monthly Sales Total",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-7",
+        topicTitle: "Time Series Basics",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that groups rows by YYYY-MM from a date string and returns monthly sales totals.",
+        starterCode: "def solution(rows):\n    # use the first 7 characters of date as month key\n    pass\n",
+        tests: [
+            { args: [[{ "date": "2026-01-02", "sales": 10 }, { "date": "2026-01-20", "sales": 5 }, { "date": "2026-02-01", "sales": 7 }]], expected: { "2026-01": 15, "2026-02": 7 } },
+            { args: [[{ "date": "2026-03-01", "sales": 3 }]], expected: { "2026-03": 3 } },
+            { args: [[]], expected: {} }
+        ],
+        status: "active",
+        order: 61
+    },
+    {
+        id: "topic_pandas_analysis_project_top_category",
+        title: "Top Sales Category",
+        topic: "Pandas",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "data-analysis-with-pandas",
+        courseTitle: "Data Analysis with Pandas",
+        topicId: "pandas-topic-8",
+        topicTitle: "Analysis Project",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that completes a mini analysis project: group sales by category and return the category with the highest total.",
+        starterCode: "def solution(rows):\n    # return category with highest total sales\n    pass\n",
+        tests: [
+            { args: [[{ "category": "A", "sales": 10 }, { "category": "B", "sales": 15 }, { "category": "A", "sales": 8 }]], expected: "A" },
+            { args: [[{ "category": "Books", "sales": 5 }, { "category": "Pens", "sales": 9 }]], expected: "Pens" },
+            { args: [[]], expected: "" }
+        ],
+        status: "active",
+        order: 62
+    },
+    {
+        id: "topic_ml_workflow_split_summary",
+        title: "ML Workflow Split Summary",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-1",
+        topicTitle: "Machine Learning Workflow",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns how many rows go to train and test sets for a machine learning workflow.",
+        starterCode: "def solution(total_rows, test_percent):\n    # return {\"train\": train_count, \"test\": test_count}\n    pass\n",
+        tests: [
+            { args: [100, 20], expected: { "train": 80, "test": 20 } },
+            { args: [50, 30], expected: { "train": 35, "test": 15 } },
+            { args: [10, 50], expected: { "train": 5, "test": 5 } }
+        ],
+        status: "active",
+        order: 63
+    },
+    {
+        id: "topic_ml_supervised_label_check",
+        title: "Supervised Label Check",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-2",
+        topicTitle: "Supervised vs Unsupervised Learning",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns 'supervised' when every row has the target column, otherwise 'unsupervised'.",
+        starterCode: "def solution(rows, target_col):\n    # check whether every row has target_col\n    pass\n",
+        tests: [
+            { args: [[{ "x": 1, "label": 0 }, { "x": 2, "label": 1 }], "label"], expected: "supervised" },
+            { args: [[{ "x": 1 }, { "x": 2, "label": 1 }], "label"], expected: "unsupervised" },
+            { args: [[], "label"], expected: "unsupervised" }
+        ],
+        status: "active",
+        order: 64
+    },
+    {
+        id: "topic_ml_regression_mae",
+        title: "Regression MAE",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-3",
+        topicTitle: "Regression Models",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that calculates mean absolute error for regression predictions rounded to two decimals.",
+        starterCode: "def solution(y_true, y_pred):\n    # calculate average absolute error\n    pass\n",
+        tests: [
+            { args: [[10, 20, 30], [12, 18, 33]], expected: 2.33 },
+            { args: [[1, 2], [1, 2]], expected: 0.0 },
+            { args: [[5], [8]], expected: 3.0 }
+        ],
+        status: "active",
+        order: 65
+    },
+    {
+        id: "topic_ml_classification_confusion",
+        title: "Binary Confusion Matrix",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-4",
+        topicTitle: "Classification Models",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that returns TP, TN, FP, and FN for binary classification labels 0 and 1.",
+        starterCode: "def solution(y_true, y_pred):\n    # return {\"tp\": ..., \"tn\": ..., \"fp\": ..., \"fn\": ...}\n    pass\n",
+        tests: [
+            { args: [[1, 0, 1, 0], [1, 0, 0, 1]], expected: { "tp": 1, "tn": 1, "fp": 1, "fn": 1 } },
+            { args: [[1, 1], [1, 1]], expected: { "tp": 2, "tn": 0, "fp": 0, "fn": 0 } },
+            { args: [[0, 0], [1, 0]], expected: { "tp": 0, "tn": 1, "fp": 1, "fn": 0 } }
+        ],
+        status: "active",
+        order: 66
+    },
+    {
+        id: "topic_ml_metrics_precision_recall",
+        title: "Precision and Recall",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-5",
+        topicTitle: "Model Evaluation Metrics",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that calculates precision and recall from tp, fp, and fn, rounded to two decimals.",
+        starterCode: "def solution(tp, fp, fn):\n    # return {\"precision\": value, \"recall\": value}\n    pass\n",
+        tests: [
+            { args: [8, 2, 4], expected: { "precision": 0.8, "recall": 0.67 } },
+            { args: [5, 0, 0], expected: { "precision": 1.0, "recall": 1.0 } },
+            { args: [0, 0, 3], expected: { "precision": 0, "recall": 0.0 } }
+        ],
+        status: "active",
+        order: 67
+    },
+    {
+        id: "topic_ml_feature_engineering_scale",
+        title: "Min Max Scale Feature",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-6",
+        topicTitle: "Feature Engineering",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that min-max scales a list of numbers to values between 0 and 1 rounded to two decimals.",
+        starterCode: "def solution(values):\n    # scale each value using (x - min) / (max - min)\n    pass\n",
+        tests: [
+            { args: [[10, 20, 30]], expected: [0.0, 0.5, 1.0] },
+            { args: [[5, 5]], expected: [0, 0] },
+            { args: [[2, 4]], expected: [0.0, 1.0] }
+        ],
+        status: "active",
+        order: 68
+    },
+    {
+        id: "topic_ml_overfitting_gap",
+        title: "Detect Overfitting Gap",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-7",
+        topicTitle: "Overfitting and Regularization",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns True when train accuracy minus validation accuracy is greater than the allowed gap.",
+        starterCode: "def solution(train_accuracy, validation_accuracy, max_gap):\n    # return True if model is likely overfitting\n    pass\n",
+        tests: [
+            { args: [0.98, 0.75, 0.1], expected: true },
+            { args: [0.88, 0.82, 0.1], expected: false },
+            { args: [0.9, 0.7, 0.2], expected: false }
+        ],
+        status: "active",
+        order: 69
+    },
+    {
+        id: "topic_ml_project_best_model",
+        title: "Choose Best Model",
+        topic: "Machine Learning",
+        scope: "course-topic",
+        examEnabled: false,
+        courseId: "machine-learning-mastery",
+        courseTitle: "Machine Learning Mastery",
+        topicId: "machine-learning-topic-8",
+        topicTitle: "End-to-End ML Project",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that receives model result dictionaries and returns the model name with highest validation_score.",
+        starterCode: "def solution(results):\n    # choose model with highest validation_score\n    pass\n",
+        tests: [
+            { args: [[{ "name": "A", "validation_score": 0.8 }, { "name": "B", "validation_score": 0.86 }]], expected: "B" },
+            { args: [[{ "name": "Tree", "validation_score": 0.7 }]], expected: "Tree" },
+            { args: [[]], expected: "" }
+        ],
+        status: "active",
+        order: 70
+    },
+    {
+        id: "exam_pandas_drop_duplicates",
+        title: "Drop Duplicate Rows",
+        topic: "Pandas",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Pandas",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that removes duplicate dictionaries while keeping the first occurrence.",
+        starterCode: "def solution(rows):\n    # remove duplicate rows\n    pass\n",
+        tests: [
+            { args: [[{ "id": 1 }, { "id": 1 }, { "id": 2 }]], expected: [{ "id": 1 }, { "id": 2 }] },
+            { args: [[{ "a": 1 }, { "a": 1 }]], expected: [{ "a": 1 }] },
+            { args: [[]], expected: [] }
+        ],
+        status: "active",
+        order: 71
+    },
+    {
+        id: "exam_pandas_average_by_group",
+        title: "Average by Group",
+        topic: "Pandas",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Pandas",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that groups rows and returns average of a numeric column rounded to two decimals.",
+        starterCode: "def solution(rows, group_col, value_col):\n    # calculate group averages\n    pass\n",
+        tests: [
+            { args: [[{ "dept": "A", "score": 80 }, { "dept": "A", "score": 90 }, { "dept": "B", "score": 70 }], "dept", "score"], expected: { "A": 85.0, "B": 70.0 } },
+            { args: [[{ "g": "x", "v": 1 }, { "g": "x", "v": 2 }], "g", "v"], expected: { "x": 1.5 } },
+            { args: [[], "g", "v"], expected: {} }
+        ],
+        status: "active",
+        order: 72
+    },
+    {
+        id: "exam_pandas_sort_by_column",
+        title: "Sort Rows by Column",
+        topic: "Pandas",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Pandas",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that sorts rows by the given column in ascending order.",
+        starterCode: "def solution(rows, column):\n    # sort rows by column\n    pass\n",
+        tests: [
+            { args: [[{ "score": 90 }, { "score": 70 }], "score"], expected: [{ "score": 70 }, { "score": 90 }] },
+            { args: [[{ "name": "B" }, { "name": "A" }], "name"], expected: [{ "name": "A" }, { "name": "B" }] },
+            { args: [[], "x"], expected: [] }
+        ],
+        status: "active",
+        order: 73
+    },
+    {
+        id: "exam_pandas_pivot_counts",
+        title: "Pivot Counts",
+        topic: "Pandas",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Pandas",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that counts rows by two columns and returns a nested dictionary like a pivot table.",
+        starterCode: "def solution(rows, row_col, col_col):\n    # build nested count table\n    pass\n",
+        tests: [
+            { args: [[{ "city": "Pune", "status": "pass" }, { "city": "Pune", "status": "fail" }, { "city": "Pune", "status": "pass" }], "city", "status"], expected: { "Pune": { "pass": 2, "fail": 1 } } },
+            { args: [[{ "a": "x", "b": "y" }], "a", "b"], expected: { "x": { "y": 1 } } },
+            { args: [[], "a", "b"], expected: {} }
+        ],
+        status: "active",
+        order: 74
+    },
+    {
+        id: "exam_ml_f1_score",
+        title: "F1 Score",
+        topic: "Machine Learning",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Machine Learning",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that calculates F1 score from precision and recall rounded to two decimals.",
+        starterCode: "def solution(precision, recall):\n    # return 2 * precision * recall / (precision + recall)\n    pass\n",
+        tests: [
+            { args: [0.8, 0.6], expected: 0.69 },
+            { args: [1.0, 1.0], expected: 1.0 },
+            { args: [0, 0], expected: 0 }
+        ],
+        status: "active",
+        order: 75
+    },
+    {
+        id: "exam_ml_majority_class",
+        title: "Majority Class Baseline",
+        topic: "Machine Learning",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Machine Learning",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that returns the most frequent label from a list. If tied, return the label that appears first.",
+        starterCode: "def solution(labels):\n    # find majority class\n    pass\n",
+        tests: [
+            { args: [["yes", "no", "yes"]], expected: "yes" },
+            { args: [[1, 2, 2, 1]], expected: 1 },
+            { args: [["cat"]], expected: "cat" }
+        ],
+        status: "active",
+        order: 76
+    },
+    {
+        id: "exam_ml_normalize_features",
+        title: "Normalize Feature Column",
+        topic: "Machine Learning",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Machine Learning",
+        difficulty: "Intermediate",
+        prompt: "Create a function named solution that normalizes one numeric feature column in row dictionaries using min-max scaling.",
+        starterCode: "def solution(rows, column):\n    # return new rows with scaled column values rounded to 2 decimals\n    pass\n",
+        tests: [
+            { args: [[{ "age": 10 }, { "age": 20 }, { "age": 30 }], "age"], expected: [{ "age": 0.0 }, { "age": 0.5 }, { "age": 1.0 }] },
+            { args: [[{ "x": 5 }, { "x": 5 }], "x"], expected: [{ "x": 0 }, { "x": 0 }] },
+            { args: [[], "x"], expected: [] }
+        ],
+        status: "active",
+        order: 77
+    },
+    {
+        id: "exam_ml_prediction_threshold",
+        title: "Probability Threshold",
+        topic: "Machine Learning",
+        scope: "global",
+        examEnabled: true,
+        examTopic: "Machine Learning",
+        difficulty: "Beginner",
+        prompt: "Create a function named solution that converts prediction probabilities into 0/1 labels using a threshold.",
+        starterCode: "def solution(probabilities, threshold):\n    # return 1 when probability >= threshold else 0\n    pass\n",
+        tests: [
+            { args: [[0.2, 0.7, 0.5], 0.5], expected: [0, 1, 1] },
+            { args: [[0.9, 0.1], 0.8], expected: [1, 0] },
+            { args: [[], 0.5], expected: [] }
+        ],
+        status: "active",
+        order: 78
     }
 ];
+
+const ASG_REFRESHED_DEFAULT_CODING_IDS = new Set([
+    "topic_python_files_count_lines",
+    "topic_python_files_csv_names",
+    "topic_python_errors_safe_divide",
+    "topic_python_errors_parse_ints"
+]);
 
 const ASG_PYTHON_BEGINNER_TOPICS = [
     "Python Basics: Variables, Data Types, Operators, and Input/Output",
@@ -2593,10 +3081,24 @@ function asgGetCodingChallenges(includeDrafts = false, filters = {}) {
     asgEnsureLearningData();
     let challenges = asgReadJSON(ASG_LEARNING_KEYS.codingChallenges, []);
     if (Array.isArray(challenges) && challenges.length) {
+        const refreshedDefaults = new Map(
+            ASG_DEFAULT_CODING_CHALLENGES
+                .filter((challenge) => ASG_REFRESHED_DEFAULT_CODING_IDS.has(challenge.id))
+                .map((challenge) => [challenge.id, challenge])
+        );
+        let refreshedExisting = false;
+        challenges = challenges.map((challenge) => {
+            const refreshed = challenge && refreshedDefaults.get(challenge.id);
+            if (!refreshed) return challenge;
+            refreshedExisting = true;
+            return asgClone(refreshed);
+        });
         const challengeIds = new Set(challenges.map((challenge) => challenge && challenge.id).filter(Boolean));
         const missingDefaults = ASG_DEFAULT_CODING_CHALLENGES.filter((challenge) => !challengeIds.has(challenge.id));
         if (missingDefaults.length) {
             challenges = [...challenges, ...asgClone(missingDefaults)];
+        }
+        if (missingDefaults.length || refreshedExisting) {
             ASG_LEARNING_SEEDING_DEFAULTS = true;
             try {
                 asgWriteJSON(ASG_LEARNING_KEYS.codingChallenges, asgSortByOrder(challenges.map(asgNormalizeCodingChallenge)));
