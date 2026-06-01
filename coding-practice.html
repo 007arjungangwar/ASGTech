@@ -123,6 +123,24 @@
                 });
             });
 
+            const practiceBanks = new Map();
+            allChallenges
+                .filter((challenge) => !challenge.examEnabled && !challenge.courseId && !challenge.topicId)
+                .forEach((challenge) => {
+                    const topic = String(challenge.topic || "Practice Bank").trim() || "Practice Bank";
+                    const key = topic.toLowerCase();
+                    const group = practiceBanks.get(key) || {
+                        key: practiceSubjectKey(["practice", topic]),
+                        kind: "practice",
+                        title: topic,
+                        subtitle: "Practice Bank only",
+                        challenges: []
+                    };
+                    group.challenges.push(challenge);
+                    practiceBanks.set(key, group);
+                });
+            subjects.push(...practiceBanks.values());
+
             asgGetCodingExamSubjects(false).forEach((subject) => {
                 const topicChallenges = allChallenges.filter((challenge) => (
                     challenge.examEnabled &&
@@ -133,7 +151,7 @@
                     key: practiceSubjectKey(["exam", subject.topic]),
                     kind: "exam",
                     title: subject.topic,
-                    subtitle: "General practice and coding exam subject",
+                    subtitle: "Coding exam questions available for practice",
                     challenges: topicChallenges
                 });
             });
