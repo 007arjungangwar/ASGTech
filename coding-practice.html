@@ -101,62 +101,63 @@
             return parts.map((part) => String(part || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")).join("::");
         }
 
+        function getPracticeSubjectForChallenge(challenge) {
+            const searchable = [
+                challenge.topic,
+                challenge.examTopic,
+                challenge.courseTitle,
+                challenge.topicTitle,
+                challenge.title,
+                challenge.prompt
+            ].filter(Boolean).join(" ").toLowerCase();
+
+            if (searchable.includes("pandas") || searchable.includes("dataframe")) {
+                return {
+                    key: "pandas",
+                    title: "Pandas Practice",
+                    subtitle: "Pandas coding questions"
+                };
+            }
+            if (
+                searchable.includes("machine learning") ||
+                searchable.includes("classification") ||
+                searchable.includes("model") ||
+                searchable.includes("train test")
+            ) {
+                return {
+                    key: "machine-learning",
+                    title: "Machine Learning Practice",
+                    subtitle: "Machine learning coding questions"
+                };
+            }
+            return {
+                key: "python",
+                title: "Python Practice",
+                subtitle: "Python coding questions"
+            };
+        }
+
         function buildPracticeSubjects() {
             const allChallenges = asgGetCodingChallenges(false);
-            const subjects = [];
-            const courses = asgGetCourses(false);
+            const subjectOrder = ["python", "machine-learning", "pandas"];
+            const groupedSubjects = new Map();
 
-            courses.forEach((course) => {
-                (course.topics || []).forEach((topic) => {
-                    const topicChallenges = allChallenges.filter((challenge) => (
-                        challenge.courseId === course.id &&
-                        challenge.topicId === topic.id
-                    ));
-                    if (!topicChallenges.length) return;
-                    subjects.push({
-                        key: practiceSubjectKey(["course", course.id, topic.id]),
-                        kind: "course",
-                        title: topic.title,
-                        subtitle: course.title,
-                        challenges: topicChallenges
-                    });
-                });
+            allChallenges.forEach((challenge) => {
+                const subject = getPracticeSubjectForChallenge(challenge);
+                const group = groupedSubjects.get(subject.key) || {
+                    key: practiceSubjectKey(["practice", subject.key]),
+                    kind: subject.key,
+                    title: subject.title,
+                    subtitle: subject.subtitle,
+                    challenges: []
+                };
+                group.challenges.push(challenge);
+                groupedSubjects.set(subject.key, group);
             });
 
-            const practiceBanks = new Map();
-            allChallenges
-                .filter((challenge) => !challenge.examEnabled && !challenge.courseId && !challenge.topicId)
-                .forEach((challenge) => {
-                    const topic = String(challenge.topic || "Practice Bank").trim() || "Practice Bank";
-                    const key = topic.toLowerCase();
-                    const group = practiceBanks.get(key) || {
-                        key: practiceSubjectKey(["practice", topic]),
-                        kind: "practice",
-                        title: topic,
-                        subtitle: "Practice Bank only",
-                        challenges: []
-                    };
-                    group.challenges.push(challenge);
-                    practiceBanks.set(key, group);
-                });
-            subjects.push(...practiceBanks.values());
-
-            asgGetCodingExamSubjects(false).forEach((subject) => {
-                const topicChallenges = allChallenges.filter((challenge) => (
-                    challenge.examEnabled &&
-                    String(challenge.examTopic || challenge.topic || "").toLowerCase() === subject.topic.toLowerCase()
-                ));
-                if (!topicChallenges.length) return;
-                subjects.push({
-                    key: practiceSubjectKey(["exam", subject.topic]),
-                    kind: "exam",
-                    title: subject.topic,
-                    subtitle: "Coding exam questions available for practice",
-                    challenges: topicChallenges
-                });
-            });
-
-            return subjects;
+            return subjectOrder
+                .map((key) => groupedSubjects.get(key))
+                .filter(Boolean);
         }
 
         function getActiveSubject() {
