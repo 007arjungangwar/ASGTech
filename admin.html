@@ -846,6 +846,8 @@
         let adminVideoPlaylists = [];
         let adminVideoLibrary = [];
         let adminResourceLibrary = [];
+        let activeAdminSection = "overview";
+        let adminRefreshTimer = null;
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -1059,6 +1061,7 @@
         function setAdminSection(sectionName, options = {}) {
             const validSections = ["overview", "public", "students", "assessments", "courses", "library"];
             const nextSection = validSections.includes(sectionName) ? sectionName : "overview";
+            activeAdminSection = nextSection;
 
             document.querySelectorAll("[data-admin-section]").forEach((section) => {
                 section.classList.toggle("is-active", section.dataset.adminSection === nextSection);
@@ -1071,6 +1074,7 @@
             });
 
             localStorage.setItem("asgAdminActiveSection", nextSection);
+            renderDashboardSection(nextSection);
 
             if (options.scroll !== false) {
                 const commandCenter = document.querySelector(".asg-admin-command-center");
@@ -3929,30 +3933,66 @@
             adminVideoPlaylists = asgGetVideoPlaylists(true);
             adminVideoLibrary = asgGetVideoLibrary(true);
             adminResourceLibrary = asgGetResourceLibrary(true);
-            renderQuizSetOptions(document.getElementById("quizSet").value);
-            renderCodingCourseOptions(document.getElementById("codingCourse").value, document.getElementById("codingTopicId").value);
-            toggleCodingPlacementFields();
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
-            renderStats();
-            renderAnalytics();
-            renderStudentsTable();
-            renderCertificatePermissions();
-            renderCourseAccessRequests();
-            renderExamRetakePermissions();
-            renderCodingExamSubjects();
-            renderQuizCatalog();
-            renderQuizQuestions();
-            renderCodingChallenges();
-            renderBlogPostsAdmin();
-            renderProjectShowcaseAdmin();
-            renderCourses();
-            renderRoadmapItems();
-            renderVideoPlaylists();
-            renderVideoLibrary();
-            renderResourceLibrary();
-            renderQuestions();
-            renderRecentActivity();
+            renderDashboardSection(activeAdminSection);
+        }
+
+        function renderDashboardSection(sectionName = activeAdminSection) {
+            if (!adminAccessGranted) return;
+
+            if (sectionName === "overview") {
+                renderStats();
+                renderAnalytics();
+                renderQuestions();
+                renderRecentActivity();
+                return;
+            }
+
+            if (sectionName === "public") {
+                renderBlogPostsAdmin();
+                renderProjectShowcaseAdmin();
+                return;
+            }
+
+            if (sectionName === "students") {
+                renderStudentsTable();
+                renderCertificatePermissions();
+                renderCourseAccessRequests();
+                renderExamRetakePermissions();
+                return;
+            }
+
+            if (sectionName === "assessments") {
+                const quizSet = document.getElementById("quizSet");
+                const codingCourse = document.getElementById("codingCourse");
+                const codingTopic = document.getElementById("codingTopicId");
+                renderQuizSetOptions(quizSet ? quizSet.value : "");
+                renderCodingCourseOptions(codingCourse ? codingCourse.value : "", codingTopic ? codingTopic.value : "");
+                toggleCodingPlacementFields();
+                renderCodingExamSubjects();
+                renderQuizCatalog();
+                renderQuizQuestions();
+                renderCodingChallenges();
+                return;
+            }
+
+            if (sectionName === "courses") {
+                renderCourses();
+                return;
+            }
+
+            if (sectionName === "library") {
+                renderRoadmapItems();
+                renderVideoPlaylists();
+                renderVideoLibrary();
+                renderResourceLibrary();
+            }
+        }
+
+        function scheduleDashboardRefresh() {
+            clearTimeout(adminRefreshTimer);
+            adminRefreshTimer = setTimeout(refreshDashboard, 120);
         }
 
         function handleAdminDataUpdate(event) {
@@ -3982,7 +4022,7 @@
                 "asgCertificateRequests"
             ];
             const key = event.detail ? event.detail.key : event.key;
-            if (watchedKeys.includes(key)) refreshDashboard();
+            if (watchedKeys.includes(key)) scheduleDashboardRefresh();
         }
 
         window.addEventListener("asg:data-updated", handleAdminDataUpdate);
