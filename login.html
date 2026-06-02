@@ -256,6 +256,20 @@
             return `Could not connect to Supabase right now${code ? ` (${code})` : ""}. Please try again.`;
         }
 
+        function waitForAuthBackend(promise, timeoutMs = 4500) {
+            return Promise.race([
+                promise,
+                new Promise((resolve) => setTimeout(resolve, timeoutMs))
+            ]);
+        }
+
+        function runAuthActionWithTimeout(promise, timeoutMs, message) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(message)), timeoutMs))
+            ]);
+        }
+
         function isPasswordRecoveryMode() {
             const search = new URLSearchParams(window.location.search);
             const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -343,7 +357,11 @@
             let backendError = null;
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.signIn === "function") {
                 try {
-                    const cloudUser = await window.ASG_BACKEND.signIn(email, password);
+                    const cloudUser = await runAuthActionWithTimeout(
+                        window.ASG_BACKEND.signIn(email, password),
+                        5500,
+                        "Supabase login timed out."
+                    );
                     setCurrentUser(cloudUser);
                     window.location.href = safeNextFor(cloudUser);
                     return;
@@ -362,7 +380,11 @@
 
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.migrateLocalUser === "function" && !isEmailConfirmationError(backendError)) {
                 try {
-                    const migratedUser = await window.ASG_BACKEND.migrateLocalUser(user, password);
+                    const migratedUser = await runAuthActionWithTimeout(
+                        window.ASG_BACKEND.migrateLocalUser(user, password),
+                        5500,
+                        "Supabase migration timed out."
+                    );
                     setCurrentUser(migratedUser);
                     window.location.href = safeNextFor(migratedUser);
                     return;
@@ -419,7 +441,11 @@
 
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.register === "function") {
                 try {
-                    const cloudUser = await window.ASG_BACKEND.register({ name, email, password });
+                    const cloudUser = await runAuthActionWithTimeout(
+                        window.ASG_BACKEND.register({ name, email, password }),
+                        5500,
+                        "Supabase registration timed out."
+                    );
                     localUser = saveLocalUserAccount({
                         id: cloudUser.id,
                         name: cloudUser.name || name,
@@ -469,7 +495,7 @@
 
         (async function redirectSignedInUser() {
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
-                await window.ASG_BACKEND.restoreSession();
+                await waitForAuthBackend(window.ASG_BACKEND.restoreSession());
             }
             if (isPasswordRecoveryMode()) return;
             const currentUser = sessionStorage.getItem("currentUser");

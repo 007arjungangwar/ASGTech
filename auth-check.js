@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v67",
+    cacheName: "asg-tech-v68",
     publicPages: [
         "",
         "index.html",
@@ -803,6 +803,15 @@ function keepServiceWorkerFresh() {
     }
 }
 
+function waitForASGBackend(promise, timeoutMs = 4500) {
+    return Promise.race([
+        promise,
+        new Promise((resolve) => {
+            setTimeout(() => resolve(getCurrentUser()), timeoutMs);
+        })
+    ]);
+}
+
 function updateUIForUser() {
     const body = document.body;
     if (!body) return;
@@ -865,7 +874,7 @@ async function initializeASGPortal() {
     }
 
     if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
-        await window.ASG_BACKEND.restoreSession();
+        await waitForASGBackend(window.ASG_BACKEND.restoreSession());
     }
     if (!checkPageAccess()) return;
     if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startLearningSync === "function") {

@@ -246,6 +246,13 @@
         });
     }
 
+    function withTimeout(promise, ms, message) {
+        return Promise.race([
+            promise,
+            timeoutAfter(ms, message)
+        ]);
+    }
+
     async function getSessionAccessToken(services) {
         const storedToken = getStoredAccessToken(services.config);
         if (storedToken) return storedToken;
@@ -450,7 +457,11 @@
             return servicesPromise;
         }
 
-        servicesPromise = import(ASG_SUPABASE_SDK_URL).then(({ createClient }) => {
+        servicesPromise = withTimeout(
+            import(ASG_SUPABASE_SDK_URL),
+            8000,
+            "Supabase SDK load timed out."
+        ).then(({ createClient }) => {
             const client = createClient(config.url, config.anonKey, {
                 auth: {
                     persistSession: true,
@@ -547,7 +558,11 @@
                 });
             }
 
-            const { data, error } = await client.auth.getSession();
+            const { data, error } = await withTimeout(
+                client.auth.getSession(),
+                6000,
+                "Supabase session restore timed out."
+            );
             if (error) throw error;
             const profile = await applySupabaseSession(data.session);
             dispatchBackendStatus(profile ? "signed-in" : "signed-out", { profile });
@@ -565,10 +580,14 @@
 
     async function signIn(email, password) {
         const services = await loadServices();
-        const { data, error } = await services.client.auth.signInWithPassword({
-            email: normalizeEmail(email),
-            password
-        });
+        const { data, error } = await withTimeout(
+            services.client.auth.signInWithPassword({
+                email: normalizeEmail(email),
+                password
+            }),
+            8000,
+            "Supabase login timed out."
+        );
         if (error) throw error;
         authReadyPromise = Promise.resolve(profileFromSupabaseUser(data.user));
         return authReadyPromise;
@@ -598,13 +617,17 @@
         const services = await loadServices();
         const email = normalizeEmail(account.email);
         const name = String(account.name || localNameFromEmail(email)).trim();
-        const { data, error } = await services.client.auth.signUp({
-            email,
-            password: account.password,
-            options: {
-                data: { name }
-            }
-        });
+        const { data, error } = await withTimeout(
+            services.client.auth.signUp({
+                email,
+                password: account.password,
+                options: {
+                    data: { name }
+                }
+            }),
+            8000,
+            "Supabase registration timed out."
+        );
         if (error) throw error;
 
         const profile = {
