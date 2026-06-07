@@ -10073,3 +10073,15 @@ body.asg-theme-dark.has-asg-shell :where(input, textarea, select, .asg-global-se
     color: var(--asg-ink);
     border-color: var(--asg-border);
 }
+
+@media (min-width: 1024px) {
+    body {
+        zoom: 80%;
+        width: 125%;
+        max-width: none;
+    }
+
+    html {
+        overflow-x: hidden;
+    }
+}
