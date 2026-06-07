@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v69",
+    cacheName: "asg-tech-v70",
     publicPages: [
         "",
         "index.html",
@@ -40,6 +40,18 @@ const ASG_AUTH = {
         "admin-guide.html"
     ]
 };
+
+let asgServiceWorkerRefreshStarted = false;
+let asgLastRenderedShellKey = "";
+
+function asgRunWhenIdle(callback, timeout = 1200) {
+    if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(callback, { timeout });
+        return;
+    }
+
+    window.setTimeout(callback, 80);
+}
 
 const ASG_SOCIAL_LINKS = [
     {
@@ -768,40 +780,44 @@ function renderSiteFooter() {
 
 function keepServiceWorkerFresh() {
     if (!("serviceWorker" in navigator)) return;
+    if (asgServiceWorkerRefreshStarted) return;
+    asgServiceWorkerRefreshStarted = true;
 
-    const serviceWorkerUrl = asgUrl("sw.js");
-    navigator.serviceWorker.register(serviceWorkerUrl)
-        .then((registration) => {
-            if (!registration) return;
+    asgRunWhenIdle(() => {
+        const serviceWorkerUrl = asgUrl("sw.js");
+        navigator.serviceWorker.register(serviceWorkerUrl)
+            .then((registration) => {
+                if (!registration) return;
 
-            registration.update().catch(() => {});
+                registration.update().catch(() => {});
 
-            if (registration.waiting) {
-                registration.waiting.postMessage({ type: "SKIP_WAITING" });
-            }
+                if (registration.waiting) {
+                    registration.waiting.postMessage({ type: "SKIP_WAITING" });
+                }
 
-            registration.addEventListener("updatefound", () => {
-                const worker = registration.installing;
-                if (!worker) return;
+                registration.addEventListener("updatefound", () => {
+                    const worker = registration.installing;
+                    if (!worker) return;
 
-                worker.addEventListener("statechange", () => {
-                    if (worker.state === "installed" && navigator.serviceWorker.controller) {
-                        worker.postMessage({ type: "SKIP_WAITING" });
-                    }
+                    worker.addEventListener("statechange", () => {
+                        if (worker.state === "installed" && navigator.serviceWorker.controller) {
+                            worker.postMessage({ type: "SKIP_WAITING" });
+                        }
+                    });
                 });
-            });
-        })
-        .catch(() => {});
-
-    if ("caches" in window) {
-        caches.keys()
-            .then((cacheNames) => Promise.all(
-                cacheNames
-                    .filter((cacheName) => cacheName.startsWith("asg-tech-") && cacheName !== ASG_AUTH.cacheName)
-                    .map((cacheName) => caches.delete(cacheName))
-            ))
+            })
             .catch(() => {});
-    }
+
+        if ("caches" in window) {
+            caches.keys()
+                .then((cacheNames) => Promise.all(
+                    cacheNames
+                        .filter((cacheName) => cacheName.startsWith("asg-tech-") && cacheName !== ASG_AUTH.cacheName)
+                        .map((cacheName) => caches.delete(cacheName))
+                ))
+                .catch(() => {});
+        }
+    });
 }
 
 function waitForASGBackend(promise, timeoutMs = 4500) {
@@ -818,6 +834,21 @@ function updateUIForUser() {
     if (!body) return;
 
     const user = getCurrentUser();
+    const shellKey = JSON.stringify({
+        page: getCurrentPage(),
+        userId: user ? user.id : "",
+        role: user ? user.role : "guest",
+        theme: localStorage.getItem("asgTheme") || "light",
+        sidebar: localStorage.getItem("asgSidebarCollapsed") || ""
+    });
+
+    if (asgLastRenderedShellKey === shellKey && body.classList.contains("has-asg-shell")) {
+        renderStudentAnnouncement(user);
+        showAuthNotice();
+        return;
+    }
+    asgLastRenderedShellKey = shellKey;
+
     body.classList.add("has-asg-shell");
     body.dataset.userRole = user ? user.role : "guest";
     applyThemePreference();
@@ -868,24 +899,33 @@ async function initializeASGPortal() {
     const page = getCurrentPage();
     const hasCachedUser = Boolean(getCurrentUser());
     const isPublicPage = ASG_AUTH.publicPages.includes(page);
+    const isProtectedPage = ASG_AUTH.studentPages.includes(page) || ASG_AUTH.adminPages.includes(page);
+    const isAdminPage = ASG_AUTH.adminPages.includes(page);
 
     if (isPublicPage || hasCachedUser) {
         keepServiceWorkerFresh();
         updateUIForUser();
     }
 
-    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
+    if (isProtectedPage && !hasCachedUser && window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
         await waitForASGBackend(window.ASG_BACKEND.restoreSession());
     }
     if (!checkPageAccess()) return;
-    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startLearningSync === "function") {
-        window.ASG_BACKEND.startLearningSync();
-    }
-    if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startUsersSync === "function") {
-        window.ASG_BACKEND.startUsersSync();
-    }
     keepServiceWorkerFresh();
     updateUIForUser();
+
+    asgRunWhenIdle(async () => {
+        if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
+            await waitForASGBackend(window.ASG_BACKEND.restoreSession(), 3000);
+        }
+        if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startLearningSync === "function") {
+            window.ASG_BACKEND.startLearningSync();
+        }
+        if (isAdminPage && window.ASG_BACKEND && typeof window.ASG_BACKEND.startUsersSync === "function") {
+            window.ASG_BACKEND.startUsersSync();
+        }
+        updateUIForUser();
+    }, 1800);
 }
 
 if (document.readyState === "loading") {

@@ -9719,6 +9719,99 @@ body.asg-auth-page {
     color: var(--asg-ink);
 }
 
+/* Performance and device polish */
+body.has-asg-shell main > section,
+body.has-asg-shell main > article,
+body.has-asg-shell .asg-live-panel,
+body.has-asg-shell .asg-course-card,
+body.has-asg-shell .asg-public-card,
+body.has-asg-shell .asg-resource-card,
+body.has-asg-shell .asg-admin-list-item {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 360px;
+}
+
+body.has-asg-shell .asg-navbar,
+body.has-asg-shell .asg-sidebar,
+body.has-asg-shell .asg-notification-panel,
+body.has-asg-shell .user-dropdown {
+    content-visibility: visible;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    body.has-asg-shell .asg-course-card:hover,
+    body.has-asg-shell .asg-public-card:hover,
+    body.has-asg-shell .asg-resource-card:hover,
+    body.has-asg-shell .resource-card:hover,
+    body.has-asg-shell .btn-primary:hover,
+    body.has-asg-shell .btn-secondary:hover {
+        transform: none;
+        filter: none;
+    }
+}
+
+@media (max-width: 620px) {
+    body.has-asg-shell,
+    body.asg-auth-page {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    body.has-asg-shell .asg-topbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    body.has-asg-shell .asg-logo-copy small,
+    body.has-asg-shell .asg-search-submit strong {
+        display: none;
+    }
+
+    body.has-asg-shell .asg-auth-area {
+        gap: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body.has-asg-shell .asg-login-link,
+    body.has-asg-shell .asg-register-link,
+    body.has-asg-shell .btn-primary,
+    body.has-asg-shell .btn-secondary,
+    body.has-asg-shell .asg-card-link {
+        min-height: 44px;
+        white-space: normal;
+    }
+
+    body.has-asg-shell .asg-page-hero,
+    body.has-asg-shell .asg-home-hero,
+    body.has-asg-shell .asg-live-panel,
+    body.has-asg-shell .asg-admin-command-center {
+        padding: clamp(16px, 4.6vw, 22px);
+    }
+
+    body.has-asg-shell h1,
+    body.has-asg-shell .asg-page-hero h1,
+    body.has-asg-shell .asg-home-hero h1 {
+        font-size: clamp(1.75rem, 8vw, 2.35rem);
+        line-height: 1.08;
+    }
+
+    body.has-asg-shell .asg-section-header,
+    body.has-asg-shell .asg-admin-command-top,
+    body.has-asg-shell .asg-question-head,
+    body.has-asg-shell .asg-card-head {
+        gap: 12px;
+    }
+
+    body.has-asg-shell input,
+    body.has-asg-shell select,
+    body.has-asg-shell textarea,
+    body.has-asg-shell button {
+        max-width: 100%;
+    }
+}
+
 body.has-asg-shell nav.asg-navbar,
 body.asg-auth-page nav.asg-navbar {
     background: color-mix(in srgb, var(--asg-surface) 94%, transparent);
