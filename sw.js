@@ -1,4 +1,4 @@
-const CACHE_NAME = "asg-tech-v68";
+const CACHE_NAME = "asg-tech-v69";
 
 self.addEventListener("install", (event) => {
     self.skipWaiting();
@@ -31,14 +31,28 @@ self.addEventListener("fetch", (event) => {
     const isHtmlPage = event.request.mode === "navigate" || requestUrl.pathname.endsWith(".html");
     const isLocalAsset = /\.(?:css|js|svg|png|jpg|jpeg|webp|json)$/i.test(requestUrl.pathname);
 
+    if (isLocalAsset && !isHtmlPage) {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                const freshResponse = fetch(event.request)
+                    .then((response) => {
+                        if (response.ok) {
+                            const copy = response.clone();
+                            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+                        }
+                        return response;
+                    })
+                    .catch(() => cachedResponse);
+
+                return cachedResponse || freshResponse;
+            })
+        );
+        return;
+    }
+
     event.respondWith(
-        fetch(event.request, { cache: "no-store" })
+        fetch(event.request)
             .then((response) => {
-                if (!isHtmlPage && isLocalAsset && response.ok) {
-                    const copy = response.clone();
-                    caches.open(CACHE_NAME)
-                        .then((cache) => cache.put(event.request, copy));
-                }
                 return response;
             })
             .catch(() => caches.match(event.request))

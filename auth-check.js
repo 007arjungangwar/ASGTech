@@ -3,7 +3,7 @@
 const ASG_AUTH = {
     brand: "ASG Tech",
     loginPage: "login.html",
-    cacheName: "asg-tech-v68",
+    cacheName: "asg-tech-v69",
     publicPages: [
         "",
         "index.html",
@@ -769,7 +769,8 @@ function renderSiteFooter() {
 function keepServiceWorkerFresh() {
     if (!("serviceWorker" in navigator)) return;
 
-    navigator.serviceWorker.getRegistration()
+    const serviceWorkerUrl = asgUrl("sw.js");
+    navigator.serviceWorker.register(serviceWorkerUrl)
         .then((registration) => {
             if (!registration) return;
 
