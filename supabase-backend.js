@@ -268,6 +268,13 @@
         }
     }
 
+    async function getRestAccessToken(config, services = null) {
+        const storedToken = getStoredAccessToken(config);
+        if (storedToken) return storedToken;
+        if (!services || !services.client || !services.client.auth) return "";
+        return getSessionAccessToken(services);
+    }
+
     function parseRestResponse(text) {
         if (!text) return null;
         try {
@@ -278,9 +285,10 @@
     }
 
     async function restRequest(path, options = {}) {
-        const services = options.services || await loadServices();
-        const { config } = services;
-        const token = await getSessionAccessToken(services);
+        const services = options.services || null;
+        const config = services && services.config ? services.config : getConfig();
+        if (!hasUsableConfig(config)) throw createConfigError();
+        const token = await getRestAccessToken(config, services);
         const headers = {
             apikey: config.anonKey,
             Authorization: `Bearer ${token || config.anonKey}`,
@@ -1173,10 +1181,8 @@
     }
 
     async function loadSiteDataRows(keysToSync) {
-        const services = await loadServices();
         const data = await restRequest(
-            `site_data?select=key,value,updated_at,updated_by&key=${restInFilter(keysToSync)}`,
-            { services }
+            `site_data?select=key,value,updated_at,updated_by&key=${restInFilter(keysToSync)}`
         );
 
         const seen = new Set();
@@ -1230,16 +1236,18 @@
         if (learningSyncStarted) return;
         learningSyncStarted = true;
 
-        const services = await loadServices().catch(() => null);
-        if (!services) return;
-
-        const profile = currentProfile || await restoreSession();
+        const profile = currentProfile || getStoredSessionUser();
         const keysToSync = profile ? [...ASG_CONTENT_KEYS, ...ASG_ADMIN_KEYS] : ASG_CONTENT_KEYS;
 
         await loadSiteDataRows(keysToSync).catch((error) => {
             console.warn("Supabase learning data sync failed.", error);
             dispatchBackendStatus("sync-error", { key: "site_data", error: error.message || String(error) });
         });
+
+        if (!profile) return;
+
+        const services = await loadServices().catch(() => null);
+        if (!services) return;
 
         const channel = services.client
             .channel(ensureChannelName("asg-site-data"))

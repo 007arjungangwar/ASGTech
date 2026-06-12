@@ -915,7 +915,7 @@ async function initializeASGPortal() {
     updateUIForUser();
 
     asgRunWhenIdle(async () => {
-        if (window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
+        if ((hasCachedUser || isProtectedPage) && window.ASG_BACKEND && typeof window.ASG_BACKEND.restoreSession === "function") {
             await waitForASGBackend(window.ASG_BACKEND.restoreSession(), 3000);
         }
         if (window.ASG_BACKEND && typeof window.ASG_BACKEND.startLearningSync === "function") {

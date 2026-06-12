@@ -848,6 +848,9 @@
         let adminResourceLibrary = [];
         let activeAdminSection = "overview";
         let adminRefreshTimer = null;
+        let adminLastRenderedSection = "";
+        let adminAnalyticsTimer = null;
+        let adminAnalyticsRunId = 0;
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -1061,6 +1064,7 @@
         function setAdminSection(sectionName, options = {}) {
             const validSections = ["overview", "public", "students", "assessments", "courses", "library"];
             const nextSection = validSections.includes(sectionName) ? sectionName : "overview";
+            const sectionChanged = activeAdminSection !== nextSection;
             activeAdminSection = nextSection;
 
             document.querySelectorAll("[data-admin-section]").forEach((section) => {
@@ -1074,7 +1078,7 @@
             });
 
             localStorage.setItem("asgAdminActiveSection", nextSection);
-            renderDashboardSection(nextSection);
+            refreshDashboard(nextSection, { forceRender: sectionChanged });
 
             if (options.scroll !== false) {
                 const commandCenter = document.querySelector(".asg-admin-command-center");
@@ -3922,20 +3926,64 @@
             }
         }
 
-        function refreshDashboard() {
-            adminQuizCatalog = asgGetQuizCatalog();
-            quizQuestions = asgGetQuizQuestions(true);
-            codingChallenges = asgGetCodingChallenges(true);
-            adminCourses = asgGetCourses(true);
-            adminRoadmapItems = asgGetRoadmapItems(true);
-            adminBlogPosts = asgGetBlogPosts(true);
-            adminProjectShowcase = asgGetProjectShowcase(true);
-            adminVideoPlaylists = asgGetVideoPlaylists(true);
-            adminVideoLibrary = asgGetVideoLibrary(true);
-            adminResourceLibrary = asgGetResourceLibrary(true);
+        function hydrateAdminSectionData(sectionName = activeAdminSection) {
+            if (sectionName === "overview") {
+                adminQuizCatalog = asgGetQuizCatalog();
+                quizQuestions = asgGetQuizQuestions(true);
+                codingChallenges = asgGetCodingChallenges(true);
+                adminCourses = asgGetCourses(true);
+                adminRoadmapItems = asgGetRoadmapItems(true);
+                adminBlogPosts = asgGetBlogPosts(true);
+                adminProjectShowcase = asgGetProjectShowcase(true);
+                adminVideoPlaylists = asgGetVideoPlaylists(true);
+                adminVideoLibrary = asgGetVideoLibrary(true);
+                adminResourceLibrary = asgGetResourceLibrary(true);
+                return;
+            }
+
+            if (sectionName === "public") {
+                adminBlogPosts = asgGetBlogPosts(true);
+                adminProjectShowcase = asgGetProjectShowcase(true);
+                return;
+            }
+
+            if (sectionName === "students") {
+                adminCourses = asgGetCourses(true);
+                return;
+            }
+
+            if (sectionName === "assessments") {
+                adminQuizCatalog = asgGetQuizCatalog();
+                quizQuestions = asgGetQuizQuestions(true);
+                codingChallenges = asgGetCodingChallenges(true);
+                adminCourses = asgGetCourses(true);
+                return;
+            }
+
+            if (sectionName === "courses") {
+                adminCourses = asgGetCourses(true);
+                return;
+            }
+
+            if (sectionName === "library") {
+                adminRoadmapItems = asgGetRoadmapItems(true);
+                adminVideoPlaylists = asgGetVideoPlaylists(true);
+                adminVideoLibrary = asgGetVideoLibrary(true);
+                adminResourceLibrary = asgGetResourceLibrary(true);
+            }
+        }
+
+        function refreshDashboard(sectionName = activeAdminSection, options = {}) {
+            const targetSection = sectionName || activeAdminSection;
+            hydrateAdminSectionData(targetSection);
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
-            renderDashboardSection(activeAdminSection);
+            if (options.forceRender || adminLastRenderedSection !== targetSection) {
+                renderDashboardSection(targetSection);
+                adminLastRenderedSection = targetSection;
+                return;
+            }
+            renderDashboardSection(targetSection);
         }
 
         function renderDashboardSection(sectionName = activeAdminSection) {
@@ -3943,7 +3991,7 @@
 
             if (sectionName === "overview") {
                 renderStats();
-                renderAnalytics();
+                scheduleAdminAnalyticsRender();
                 renderQuestions();
                 renderRecentActivity();
                 return;
@@ -3990,9 +4038,31 @@
             }
         }
 
+        function scheduleAdminAnalyticsRender() {
+            const target = document.getElementById("adminAnalytics");
+            if (target && !target.children.length) {
+                target.innerHTML = `<div class="asg-empty-state"><h2>Loading analytics</h2><p>Preparing the latest learning insights.</p></div>`;
+            }
+
+            clearTimeout(adminAnalyticsTimer);
+            const runId = ++adminAnalyticsRunId;
+            const runAnalytics = () => {
+                if (runId !== adminAnalyticsRunId) return;
+                if (activeAdminSection !== "overview") return;
+                renderAnalytics();
+            };
+
+            if (typeof asgRunWhenIdle === "function") {
+                asgRunWhenIdle(runAnalytics, 350);
+                return;
+            }
+
+            adminAnalyticsTimer = setTimeout(runAnalytics, 120);
+        }
+
         function scheduleDashboardRefresh() {
             clearTimeout(adminRefreshTimer);
-            adminRefreshTimer = setTimeout(refreshDashboard, 120);
+            adminRefreshTimer = setTimeout(() => refreshDashboard(activeAdminSection), 180);
         }
 
         function handleAdminDataUpdate(event) {
@@ -4031,7 +4101,9 @@
 
         if (adminAccessGranted) {
             loadAnnouncement();
-            refreshDashboard();
+            hydrateAdminSectionData("assessments");
+            hydrateAdminSectionData("courses");
+            hydrateAdminSectionData("library");
             resetQuizForm();
             resetCodingForm();
             resetCodingExamSubjectForm();
