@@ -216,7 +216,11 @@
         window.addEventListener("storage", handleCourseDataUpdate);
 
         renderCourse();
-        refreshCourseAccessStatusFromCloud();
+        if (typeof asgRunWhenIdle === "function") {
+            asgRunWhenIdle(refreshCourseAccessStatusFromCloud, 900);
+        } else {
+            setTimeout(refreshCourseAccessStatusFromCloud, 120);
+        }
         if (sessionStorage.getItem("asgCourseFullscreen") === "1") {
             ASGExamGuard.requestFullscreen();
             window.addEventListener("pointerdown", requestCourseFullscreen, { once: true });

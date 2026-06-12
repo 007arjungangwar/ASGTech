@@ -804,7 +804,11 @@ json.dumps(payload, default=str)
         window.addEventListener("storage", handleTopicDataUpdate);
 
         renderTopic();
-        refreshCourseAccessStatusFromCloud();
+        if (typeof asgRunWhenIdle === "function") {
+            asgRunWhenIdle(refreshCourseAccessStatusFromCloud, 900);
+        } else {
+            setTimeout(refreshCourseAccessStatusFromCloud, 120);
+        }
         sessionStorage.removeItem("asgCourseFullscreen");
 
         document.addEventListener("fullscreenchange", () => {

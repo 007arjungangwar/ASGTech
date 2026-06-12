@@ -846,6 +846,7 @@
         let adminVideoPlaylists = [];
         let adminVideoLibrary = [];
         let adminResourceLibrary = [];
+        let activeAdminSection = "overview";
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -1059,6 +1060,7 @@
         function setAdminSection(sectionName, options = {}) {
             const validSections = ["overview", "public", "students", "assessments", "courses", "library"];
             const nextSection = validSections.includes(sectionName) ? sectionName : "overview";
+            activeAdminSection = nextSection;
 
             document.querySelectorAll("[data-admin-section]").forEach((section) => {
                 section.classList.toggle("is-active", section.dataset.adminSection === nextSection);
@@ -1071,6 +1073,7 @@
             });
 
             localStorage.setItem("asgAdminActiveSection", nextSection);
+            refreshDashboard(nextSection);
 
             if (options.scroll !== false) {
                 const commandCenter = document.querySelector(".asg-admin-command-center");
@@ -3918,41 +3921,109 @@
             }
         }
 
-        function refreshDashboard() {
-            adminQuizCatalog = asgGetQuizCatalog();
-            quizQuestions = asgGetQuizQuestions(true);
-            codingChallenges = asgGetCodingChallenges(true);
-            adminCourses = asgGetCourses(true);
-            adminRoadmapItems = asgGetRoadmapItems(true);
-            adminBlogPosts = asgGetBlogPosts(true);
-            adminProjectShowcase = asgGetProjectShowcase(true);
-            adminVideoPlaylists = asgGetVideoPlaylists(true);
-            adminVideoLibrary = asgGetVideoLibrary(true);
-            adminResourceLibrary = asgGetResourceLibrary(true);
-            renderQuizSetOptions(document.getElementById("quizSet").value);
-            renderCodingCourseOptions(document.getElementById("codingCourse").value, document.getElementById("codingTopicId").value);
-            toggleCodingPlacementFields();
+        function hydrateAdminData(sectionName = activeAdminSection) {
+            if (sectionName === "overview") {
+                adminQuizCatalog = asgGetQuizCatalog();
+                quizQuestions = asgGetQuizQuestions(true);
+                codingChallenges = asgGetCodingChallenges(true);
+                adminCourses = asgGetCourses(true);
+                adminRoadmapItems = asgGetRoadmapItems(true);
+                adminBlogPosts = asgGetBlogPosts(true);
+                adminProjectShowcase = asgGetProjectShowcase(true);
+                adminVideoPlaylists = asgGetVideoPlaylists(true);
+                adminVideoLibrary = asgGetVideoLibrary(true);
+                adminResourceLibrary = asgGetResourceLibrary(true);
+                return;
+            }
+
+            if (sectionName === "public") {
+                adminBlogPosts = asgGetBlogPosts(true);
+                adminProjectShowcase = asgGetProjectShowcase(true);
+                return;
+            }
+
+            if (sectionName === "students") {
+                adminCourses = asgGetCourses(true);
+                return;
+            }
+
+            if (sectionName === "assessments") {
+                adminQuizCatalog = asgGetQuizCatalog();
+                quizQuestions = asgGetQuizQuestions(true);
+                codingChallenges = asgGetCodingChallenges(true);
+                adminCourses = asgGetCourses(true);
+                return;
+            }
+
+            if (sectionName === "courses") {
+                adminCourses = asgGetCourses(true);
+                codingChallenges = asgGetCodingChallenges(true);
+                return;
+            }
+
+            if (sectionName === "library") {
+                adminRoadmapItems = asgGetRoadmapItems(true);
+                adminVideoPlaylists = asgGetVideoPlaylists(true);
+                adminVideoLibrary = asgGetVideoLibrary(true);
+                adminResourceLibrary = asgGetResourceLibrary(true);
+            }
+        }
+
+        function refreshDashboard(sectionName = activeAdminSection) {
+            const targetSection = sectionName || activeAdminSection;
+            hydrateAdminData(targetSection);
             document.getElementById("adminIdentity").textContent = `${adminUser.name} (${adminUser.email})`;
             document.getElementById("lastSync").textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
-            renderStats();
-            renderAnalytics();
-            renderStudentsTable();
-            renderCertificatePermissions();
-            renderCourseAccessRequests();
-            renderExamRetakePermissions();
-            renderCodingExamSubjects();
-            renderQuizCatalog();
-            renderQuizQuestions();
-            renderCodingChallenges();
-            renderBlogPostsAdmin();
-            renderProjectShowcaseAdmin();
-            renderCourses();
-            renderRoadmapItems();
-            renderVideoPlaylists();
-            renderVideoLibrary();
-            renderResourceLibrary();
-            renderQuestions();
-            renderRecentActivity();
+            renderDashboardSection(targetSection);
+        }
+
+        function renderDashboardSection(sectionName = activeAdminSection) {
+            if (!adminAccessGranted) return;
+
+            if (sectionName === "overview") {
+                renderStats();
+                renderAnalytics();
+                renderQuestions();
+                renderRecentActivity();
+                return;
+            }
+
+            if (sectionName === "public") {
+                renderBlogPostsAdmin();
+                renderProjectShowcaseAdmin();
+                return;
+            }
+
+            if (sectionName === "students") {
+                renderStudentsTable();
+                renderCertificatePermissions();
+                renderCourseAccessRequests();
+                renderExamRetakePermissions();
+                return;
+            }
+
+            if (sectionName === "assessments") {
+                renderQuizSetOptions(document.getElementById("quizSet").value);
+                renderCodingCourseOptions(document.getElementById("codingCourse").value, document.getElementById("codingTopicId").value);
+                toggleCodingPlacementFields();
+                renderCodingExamSubjects();
+                renderQuizCatalog();
+                renderQuizQuestions();
+                renderCodingChallenges();
+                return;
+            }
+
+            if (sectionName === "courses") {
+                renderCourses();
+                return;
+            }
+
+            if (sectionName === "library") {
+                renderRoadmapItems();
+                renderVideoPlaylists();
+                renderVideoLibrary();
+                renderResourceLibrary();
+            }
         }
 
         function handleAdminDataUpdate(event) {
@@ -3991,7 +4062,6 @@
 
         if (adminAccessGranted) {
             loadAnnouncement();
-            refreshDashboard();
             resetQuizForm();
             resetCodingForm();
             resetCodingExamSubjectForm();
