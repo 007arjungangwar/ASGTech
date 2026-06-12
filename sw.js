@@ -1,4 +1,4 @@
-const CACHE_NAME = "asg-tech-v71";
+const CACHE_NAME = "asg-tech-v72";
 
 self.addEventListener("install", (event) => {
     self.skipWaiting();
