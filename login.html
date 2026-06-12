@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login | ASG Tech</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://prktqmhssywmwdmtekpj.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <script src="supabase-backend.js"></script>
 </head>
 <body class="asg-auth-page">
@@ -83,7 +85,7 @@
                         <span>Password</span>
                         <input type="password" id="loginPassword" placeholder="Enter your password" class="auth-input" autocomplete="current-password">
                     </label>
-                    <button class="auth-btn" type="button" onclick="login()">Login</button>
+                    <button class="auth-btn" id="loginButton" type="button" onclick="login()">Login</button>
                     <button class="asg-link-button" type="button" onclick="showPasswordResetRequest()">Forgot password?</button>
                     <div id="loginError" class="error-msg"></div>
 
@@ -109,7 +111,7 @@
                         <span>Confirm password</span>
                         <input type="password" id="regConfirm" placeholder="Repeat password" class="auth-input" autocomplete="new-password">
                     </label>
-                    <button class="auth-btn" type="button" onclick="register()">Create account</button>
+                    <button class="auth-btn" id="registerButton" type="button" onclick="register()">Create account</button>
                     <div id="regError" class="error-msg"></div>
                     <div id="regSuccess" class="success-msg"></div>
                 </div>
@@ -270,6 +272,14 @@
             ]);
         }
 
+        function setAuthButtonBusy(buttonId, isBusy, label) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            if (!button.dataset.defaultLabel) button.dataset.defaultLabel = button.textContent;
+            button.disabled = isBusy;
+            button.textContent = isBusy ? label : button.dataset.defaultLabel;
+        }
+
         function isPasswordRecoveryMode() {
             const search = new URLSearchParams(window.location.search);
             const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -354,12 +364,22 @@
                 return;
             }
 
+            setAuthButtonBusy("loginButton", true, "Opening...");
+            const users = ensureDefaultUsers();
+            const user = users.find((item) => item.email && item.email.toLowerCase() === email && item.password === password);
+
+            if (user) {
+                setCurrentUser(user);
+                window.location.href = safeNextFor(user);
+                return;
+            }
+
             let backendError = null;
             if (window.ASG_BACKEND && typeof window.ASG_BACKEND.signIn === "function") {
                 try {
                     const cloudUser = await runAuthActionWithTimeout(
                         window.ASG_BACKEND.signIn(email, password),
-                        5500,
+                        3200,
                         "Supabase login timed out."
                     );
                     setCurrentUser(cloudUser);
@@ -370,31 +390,8 @@
                 }
             }
 
-            const users = ensureDefaultUsers();
-            const user = users.find((item) => item.email && item.email.toLowerCase() === email && item.password === password);
-
-            if (!user) {
-                error.textContent = backendError ? formatBackendAuthError(backendError) : "Invalid email or password.";
-                return;
-            }
-
-            if (window.ASG_BACKEND && typeof window.ASG_BACKEND.migrateLocalUser === "function" && !isEmailConfirmationError(backendError)) {
-                try {
-                    const migratedUser = await runAuthActionWithTimeout(
-                        window.ASG_BACKEND.migrateLocalUser(user, password),
-                        5500,
-                        "Supabase migration timed out."
-                    );
-                    setCurrentUser(migratedUser);
-                    window.location.href = safeNextFor(migratedUser);
-                    return;
-                } catch (migrationError) {
-                    console.warn("Could not migrate local account to Supabase.", migrationError);
-                }
-            }
-
-            setCurrentUser(user);
-            window.location.href = safeNextFor(user);
+            error.textContent = backendError ? formatBackendAuthError(backendError) : "Invalid email or password.";
+            setAuthButtonBusy("loginButton", false);
         }
 
         async function register() {
@@ -431,6 +428,7 @@
                 return;
             }
 
+            setAuthButtonBusy("registerButton", true, "Creating...");
             let localUser = saveLocalUserAccount({
                 name,
                 email,
@@ -443,7 +441,7 @@
                 try {
                     const cloudUser = await runAuthActionWithTimeout(
                         window.ASG_BACKEND.register({ name, email, password }),
-                        5500,
+                        1800,
                         "Supabase registration timed out."
                     );
                     localUser = saveLocalUserAccount({

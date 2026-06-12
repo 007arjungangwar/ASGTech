@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="supabase-backend.js"></script>
-    <script src="auth-check.js"></script>
-    <script src="published-learning-data.js"></script>
-    <script src="learning-data.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASG Tech | Practical Learning Institute</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://prktqmhssywmwdmtekpj.supabase.co">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <meta name="theme-color" content="#0f766e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="supabase-backend.js" defer></script>
+    <script src="auth-check.js" defer></script>
 </head>
 <body>
     <nav></nav>
@@ -259,9 +259,39 @@
                 .replace(/'/g, "&#039;");
         }
 
+        let learningDataLoadPromise = null;
+
+        function loadHomeScript(src) {
+            return new Promise((resolve) => {
+                const script = document.createElement("script");
+                script.src = src;
+                script.async = false;
+                script.onload = () => resolve(true);
+                script.onerror = () => resolve(false);
+                document.head.appendChild(script);
+            });
+        }
+
+        function ensureLearningDataReady() {
+            if (typeof asgGetCourses === "function") return Promise.resolve(true);
+            if (learningDataLoadPromise) return learningDataLoadPromise;
+
+            learningDataLoadPromise = loadHomeScript("published-learning-data.js")
+                .then(() => loadHomeScript("learning-data.js"));
+
+            return learningDataLoadPromise;
+        }
+
         function renderStudentLearningHub() {
             const user = getCurrentUser();
             if (!user) return;
+
+            if (typeof asgGetCourses !== "function") {
+                ensureLearningDataReady().then((ready) => {
+                    if (ready) renderStudentLearningHub();
+                });
+                return;
+            }
 
             const progress = asgGetStudentProgress(user);
             const courses = asgGetCourses().slice(0, 4);

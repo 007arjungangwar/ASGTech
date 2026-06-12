@@ -9719,6 +9719,11 @@ body.asg-auth-page {
     color: var(--asg-ink);
 }
 
+.asg-auth-page .auth-btn:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
 /* Performance and device polish */
 body.has-asg-shell main > section,
 body.has-asg-shell main > article,
