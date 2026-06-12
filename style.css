@@ -10081,12 +10081,58 @@ body.asg-theme-dark.has-asg-shell :where(input, textarea, select, .asg-global-se
 
 @media (min-width: 1024px) {
     body {
-        zoom: 80%;
-        width: 125%;
-        max-width: none;
+        zoom: 1;
+        width: 100%;
+        max-width: 100%;
     }
 
     html {
         overflow-x: hidden;
     }
+}
+
+/* Final viewport guard: keep every page inside the visible display. */
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    min-width: 0;
+}
+
+body.has-asg-shell main,
+body.has-asg-shell nav,
+body.has-asg-shell footer,
+body.has-asg-shell .asg-topbar,
+body.has-asg-shell .asg-breadcrumbs,
+body.has-asg-shell .asg-dashboard-shell,
+body.has-asg-shell .asg-admin-command-center,
+body.has-asg-shell .asg-page-hero,
+body.has-asg-shell .asg-home-hero,
+body.has-asg-shell .asg-auth-layout {
+    max-width: 100%;
+}
+
+body.has-asg-shell :where(
+    section,
+    article,
+    div,
+    form,
+    table,
+    pre,
+    code,
+    input,
+    textarea,
+    select,
+    button
+) {
+    min-width: 0;
+}
+
+body.has-asg-shell :where(.asg-table-scroll, .asg-admin-table, .asg-progress-table, .asg-code-editor, .asg-run-output, pre) {
+    max-width: 100%;
+    overflow-x: auto;
 }
