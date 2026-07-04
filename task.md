@@ -1,0 +1,26 @@
+# ASG Tech Modernization Task List
+
+- `[x]` Infrastructure Setup
+  - `[x]` Relocate static legacy files to `legacy-src/`
+  - `[x]` Configure React + TypeScript + Vite project files
+  - `[x]` Setup global CSS design system variables
+- `[x]` Core Integration & State Services
+  - `[x]` Supabase Client Configuration
+  - `[x]` Fallback Database Seed Snapshot
+  - `[x]` Zustand Auth Store (`useAuthStore`)
+  - `[x]` Zustand Database Store (`useDatabaseStore`)
+- `[x]` Glassmorphism Navigation Shells
+  - `[x]` Theme Context (light/dark/system theme support)
+  - `[x]` Dashboard Layout (collapsible sidebar, global search, alerts drawer)
+- `[x]` Upgraded Student Pages
+  - `[x]` Student Dashboard (learning streak, study charts, Pomodoro focus timer, deadline calendar, leaderboard)
+  - `[x]` Courses Platform (module sidebar, custom video player, notes, questions)
+  - `[x]` LeetCode Coding Workspace (Pyodide Python execution engine, custom test runner)
+  - `[x]` Assessment Environment (quiz/coding exam full screen lock, tab blur violations, proctor timer)
+  - `[x]` ChatGPT AI Assistant (n8n webhook configurability, copy code selectors, history sessions)
+  - `[x]` Certificate Portal (animated canvas verification, print-ready PDF generator)
+  - `[x]` Community Forums & Live Chat
+- `[x]` PWA Installability
+  - `[x]` Caching assets & offline course catalogs
+- `[x]` Verification & Walkthrough
+  - `[x]` Build confirmation & walkthrough reports
